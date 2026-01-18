@@ -1,18 +1,20 @@
 package dev.atinroy.financebackend.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@Data
 @Entity
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long transactionId;
-    private String transactionType;
-    LocalDateTime transactionDate;
-    Double transactionAmount;
+    @ManyToOne
+    @JoinColumn(name = "transaction_type")
+    private TransactionType transactionType;
+    private LocalDateTime transactionDate;
+    private BigDecimal transactionAmount;
 }
