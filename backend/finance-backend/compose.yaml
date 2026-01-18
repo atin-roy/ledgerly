@@ -1,0 +1,13 @@
+services:
+  postgres:
+    image: 'postgres:18'
+    environment:
+      - 'POSTGRES_DB=finance'
+      - 'POSTGRES_PASSWORD=dev'
+      - 'POSTGRES_USER=dev'
+    ports:
+      - '5432:5432'
+    volumes:
+      - finance-data:/var/lib/postgresql
+volumes:
+  finance-data:
