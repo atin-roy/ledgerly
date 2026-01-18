@@ -11,10 +11,16 @@ import java.time.LocalDateTime;
 public class Bill {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Enumerated(EnumType.STRING)
+
     private Long billId;
     private String billName;
     private BigDecimal billAmount;
     private LocalDateTime billDate;
+
+    @Enumerated(EnumType.STRING)
     private BillStatus billStatus;
+    
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 }

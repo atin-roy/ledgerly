@@ -1,9 +1,6 @@
 package dev.atinroy.financebackend.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -17,4 +14,7 @@ public class Pot {
     private String potName;
     private BigDecimal potTarget;
     private BigDecimal potSaved;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 }

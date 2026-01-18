@@ -17,4 +17,7 @@ public class Transaction {
     private TransactionType transactionType;
     private LocalDateTime transactionDate;
     private BigDecimal transactionAmount;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 }
