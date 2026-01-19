@@ -12,11 +12,12 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
 public class Bill {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     private Long billId;
+
     @Column(nullable = false, length = 100)
     private String billName;
 
@@ -27,7 +28,12 @@ public class Bill {
     private LocalDateTime billDate;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private BillStatus billStatus;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -36,8 +42,4 @@ public class Bill {
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
 }

@@ -11,21 +11,22 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"transactionTypeName", "user_id"}))
 public class TransactionType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long transactionTypeId;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, length = 50)
     private String transactionTypeName;
-
-    // ADD THIS:
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = true) // null = system-wide category
-    private User user;
 
     @Column(nullable = false)
     private Boolean isSystemCategory = false; // true for INCOME, EXPENSE, etc.
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = true) // null = system-wide category
+    private User user;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

@@ -2,13 +2,17 @@ package dev.atinroy.financebackend.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
 public class Pot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,9 +23,19 @@ public class Pot {
 
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal potTarget;
+
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal potSaved;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
 }

@@ -11,15 +11,16 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"partyName", "user_id"}))
 public class Party {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long partyId;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(nullable = false, length = 100)
     private String partyName;
 
-    // ADD THIS - so each user has their own party list
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

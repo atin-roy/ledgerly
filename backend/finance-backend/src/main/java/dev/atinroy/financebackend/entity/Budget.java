@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
 public class Budget {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,6 +27,15 @@ public class Budget {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal budgetSpent;
 
+    @Transient
+    public BigDecimal getBudgetRemaining() {
+        if (budgetAmount == null || budgetSpent == null) {
+            return BigDecimal.ZERO;
+        }
+
+        return budgetAmount.subtract(budgetSpent);
+    }
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
@@ -37,13 +47,4 @@ public class Budget {
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
-
-    @Transient
-    public BigDecimal getBudgetRemaining() {
-        if (budgetAmount == null || budgetSpent == null) {
-            return BigDecimal.ZERO;
-        }
-
-        return budgetAmount.subtract(budgetSpent);
-    }
 }
