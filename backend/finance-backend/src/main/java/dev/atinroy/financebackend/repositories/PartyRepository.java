@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PartyRepository extends JpaRepository<Party, Long> {
     Page<Party> findByUser_UserId(Long userId, Pageable pageable);
-    Page<Party> findByUser_UserIdAndPartyName(Long userId, String partyName, Pageable pageable);
+    Page<Party> findByUser_UserIdAndPartyNameIgnoreCase(Long userId, String partyName, Pageable pageable);
 }

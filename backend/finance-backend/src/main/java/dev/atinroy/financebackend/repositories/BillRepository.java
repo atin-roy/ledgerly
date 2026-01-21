@@ -5,10 +5,8 @@ import dev.atinroy.financebackend.entity.BillStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -21,13 +19,13 @@ public interface BillRepository extends JpaRepository<Bill, Long> {
 
     Page<Bill> findByUser_UserId(Long userId, Pageable pageable);
 
-    Page<BillSuggestion> findByUser_UserIdAndBillNameContainingIgnoreCase(
+    Page<Bill> findByUser_UserIdAndBillNameContainingIgnoreCase(
         Long userId,
         String query,
         Pageable pageable
     );
 
-    Page<Bill> findByUser_IdAndBillAmountBetween(
+    Page<Bill> findByUser_UserIdAndBillAmountBetween(
         Long userId,
         BigDecimal minAmount,
         BigDecimal maxAmount,

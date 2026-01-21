@@ -11,8 +11,10 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @Entity
+@Table(indexes = {
+        @Index(name = "idx_budget_budget_name", columnList = "budget_name")
+})
 public class Budget {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,10 +31,6 @@ public class Budget {
 
     @Transient
     public BigDecimal getBudgetRemaining() {
-        if (budgetAmount == null || budgetSpent == null) {
-            return BigDecimal.ZERO;
-        }
-
         return budgetAmount.subtract(budgetSpent);
     }
 

@@ -11,8 +11,10 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @Entity
+@Table(indexes = {
+        @Index(name = "idx_bill_bill_date", columnList = "bill_date")
+})
 public class Bill {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,6 +22,9 @@ public class Bill {
 
     @Column(nullable = false, length = 100)
     private String billName;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
 
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal billAmount;

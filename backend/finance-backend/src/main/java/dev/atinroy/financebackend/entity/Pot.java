@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @Entity
 public class Pot {
     @Id
@@ -26,6 +25,9 @@ public class Pot {
 
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal potSaved;
+
+    @Column()
+    private LocalDateTime targetDate;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

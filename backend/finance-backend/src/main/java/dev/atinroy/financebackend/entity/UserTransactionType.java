@@ -10,19 +10,15 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"transactionTypeName", "user_id"}))
-public class TransactionType {
+public class UserTransactionType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long transactionTypeId;
 
     @Column(nullable = false, length = 50)
     private String transactionTypeName;
-
-    @Column(nullable = false)
-    private Boolean isSystemCategory = false; // true for INCOME, EXPENSE, etc.
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = true) // null = system-wide category
@@ -35,4 +31,12 @@ public class TransactionType {
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    @PreUpdate
+    private void normalizeName() {
+        if (this.transactionTypeName != null) {
+            this.transactionTypeName = this.transactionTypeName.toLowerCase().trim();
+        }
+    }
 }

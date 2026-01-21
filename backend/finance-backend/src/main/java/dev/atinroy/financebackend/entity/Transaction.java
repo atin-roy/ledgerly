@@ -11,7 +11,10 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@Entity
+@Table(indexes = {
+        @Index(name = "idx_transaction_transaction_date", columnList = "transaction_date")
+})
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,16 +26,19 @@ public class Transaction {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal transactionAmount;
 
+    @Column()
+    private String description;
+
     @ManyToOne
     @JoinColumn(name = "transaction_type_id")
-    private TransactionType transactionType;
+    private UserTransactionType userTransactionType;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "party_id", nullable = true) // nullable because not all transactions involve a party
+    @JoinColumn(name = "party_id") // nullable because not all transactions involve a party
     private Party party;
 
     @CreationTimestamp

@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"partyName", "user_id"}))
 public class Party {
@@ -32,4 +31,12 @@ public class Party {
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    @PreUpdate
+    private void normalizeName() {
+        if (this.partyName != null) {
+            this.partyName = this.partyName.toLowerCase().trim();
+        }
+    }
 }
