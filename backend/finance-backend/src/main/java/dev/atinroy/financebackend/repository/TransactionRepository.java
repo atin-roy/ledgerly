@@ -1,8 +1,6 @@
-package dev.atinroy.financebackend.repositories;
+package dev.atinroy.financebackend.repository;
 
-import dev.atinroy.financebackend.entity.Party;
 import dev.atinroy.financebackend.entity.Transaction;
-import dev.atinroy.financebackend.entity.UserTransactionType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

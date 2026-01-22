@@ -30,7 +30,7 @@ public class Bill {
     private BigDecimal billAmount;
 
     @Column(nullable = false)
-    private LocalDateTime billDate;
+    private LocalDateTime billDueDate;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

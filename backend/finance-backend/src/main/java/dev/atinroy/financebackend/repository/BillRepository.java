@@ -1,4 +1,4 @@
-package dev.atinroy.financebackend.repositories;
+package dev.atinroy.financebackend.repository;
 
 import dev.atinroy.financebackend.entity.Bill;
 import dev.atinroy.financebackend.entity.BillStatus;
