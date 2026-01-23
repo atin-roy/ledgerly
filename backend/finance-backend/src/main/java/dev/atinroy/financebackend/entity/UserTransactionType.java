@@ -20,7 +20,7 @@ public class UserTransactionType {
     @Column(nullable = false, length = 50)
     private String transactionTypeName;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = true) // null = system-wide category
     private User user;
 

@@ -29,7 +29,7 @@ public class Pot {
     @Column()
     private LocalDateTime targetDate;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 

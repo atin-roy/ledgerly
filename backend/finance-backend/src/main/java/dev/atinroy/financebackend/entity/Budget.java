@@ -34,7 +34,7 @@ public class Budget {
         return budgetAmount.subtract(budgetSpent);
     }
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 

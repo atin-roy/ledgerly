@@ -36,7 +36,7 @@ public class Bill {
     @Column(nullable = false, length = 20)
     private BillStatus billStatus;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
