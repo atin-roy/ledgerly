@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class UserCreateResponse {
-    private String id;
+    private Long id;
     private String email;
     private LocalDateTime createdAt;
 }
