@@ -13,5 +13,5 @@ public interface BillMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "user", ignore = true)
     Bill toEntity(BillCreateRequest billCreateRequest);
-    BillCreateResponse toDto(Bill bill);
+    BillCreateResponse toResponse(Bill bill);
 }

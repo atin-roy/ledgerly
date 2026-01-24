@@ -14,5 +14,5 @@ public interface UserMapper {
     @Mapping(target = "updatedAt", ignore = true)
     User toEntity(UserCreateRequest request);
 
-    UserCreateResponse toDto(User user);
+    UserCreateResponse toResponse(User user);
 }
