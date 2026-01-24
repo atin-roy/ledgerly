@@ -30,7 +30,11 @@ public class Transaction {
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "transaction_type_id")
+    @JoinColumn(name = "system_transaction_type_id")
+    private SystemTransactionType systemTransactionType;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_transaction_type_id")
     private UserTransactionType userTransactionType;
 
     @ManyToOne(fetch = FetchType.LAZY)

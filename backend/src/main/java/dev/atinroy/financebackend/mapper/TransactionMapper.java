@@ -10,10 +10,15 @@ public interface TransactionMapper {
     @Mapping(target = "transactionId", ignore = true)
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "budget", ignore = true)
+    @Mapping(target = "systemTransactionType", ignore = true)
+    @Mapping(target = "userTransactionType", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     Transaction toEntity(TransactionCreateRequest transactionCreateRequest);
 
     @Mapping(source = "budget.budgetId", target = "budgetId")
+    @Mapping(source = "systemTransactionType.systemTransactionName", target = "transactionTypeName")
+    @Mapping(source = "userTransactionType.transactionTypeName", target = "transactionTypeName")
+    @Mapping(target = "isSystemType", expression = "java(transaction.getSystemTransactionType() != null)")
     TransactionCreatedResponse toResponse(Transaction transaction);
 }

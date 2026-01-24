@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
     Page<Transaction> findByUser_UserId(Long userId, Pageable pageable);
     Page<Transaction> findByUser_UserIdAndUserTransactionType_TransactionTypeId(Long userId, Long transactionTypeId, Pageable pageable);
+    Page<Transaction> findByUser_UserIdAndSystemTransactionType_SystemTransactionId(Long userId, Long systemTransactionTypeId, Pageable pageable);
     Page<Transaction> findByUser_UserIdAndTransactionDateBetween(Long userId, LocalDateTime from, LocalDateTime to, Pageable pageable);
     Page<Transaction> findByUser_UserIdAndTransactionAmountBetween(Long userId, BigDecimal from, BigDecimal to, Pageable pageable);
     Page<Transaction> findByUser_UserIdAndParty_PartyId(Long userId, Long partyId, Pageable pageable);

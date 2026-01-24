@@ -6,18 +6,26 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
 
 @Getter
 @Setter
 @NoArgsConstructor
+@ToString(exclude = "user")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Entity
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"partyName", "user_id"}))
+@Table(
+        name = "party",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"party_name", "user_id"}),
+        indexes = @Index(name = "idx_party_user_name", columnList = "user_id, party_name")
+)
 public class Party {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long partyId;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "party_name", nullable = false, length = 100)
     private String partyName;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -36,7 +44,10 @@ public class Party {
     @PreUpdate
     private void normalizeName() {
         if (this.partyName != null) {
-            this.partyName = this.partyName.toLowerCase().trim();
+            this.partyName = this.partyName
+                    .toLowerCase(Locale.ROOT)
+                    .trim();
         }
     }
+
 }

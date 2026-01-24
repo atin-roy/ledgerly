@@ -13,11 +13,14 @@ import java.time.LocalDateTime;
 public class TransactionCreateRequest {
     @NotBlank
     private String partyName;
-    @NotNull
     private String description;
     @NotNull
     private BigDecimal transactionAmount;
     @NotNull
     private LocalDateTime transactionDate;
     private Long budgetId; // optional
+    @NotNull
+    private Long transactionTypeId;
+    @NotNull
+    private Boolean isSystemType; // true for SystemTransactionType, false for UserTransactionType
 }

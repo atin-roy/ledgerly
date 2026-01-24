@@ -13,4 +13,6 @@ public class TransactionCreatedResponse {
     private BigDecimal transactionAmount;
     private LocalDateTime createdAt;
     private Long budgetId;
+    private String transactionTypeName;
+    private Boolean isSystemType;
 }
