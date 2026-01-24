@@ -14,7 +14,7 @@ public class BillCreateRequest {
     @NotBlank
     private String billName;
     @NotNull
-    private String billDescription;
+    private String description;
     @NotNull
     private BigDecimal billAmount;
     @NotNull
