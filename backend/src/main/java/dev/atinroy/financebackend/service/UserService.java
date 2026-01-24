@@ -1,33 +1,25 @@
 package dev.atinroy.financebackend.service;
 
-import dev.atinroy.financebackend.repository.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import dev.atinroy.financebackend.entity.User;
+import dev.atinroy.financebackend.exception.UserNotFoundException;
+import dev.atinroy.financebackend.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
+@RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
-    private final TransactionRepository transactionRepository;
-    private final PotRepository potRepository;
-    private final PartyRepository partyRepository;
-    private final BudgetRepository budgetRepository;
-    private final BillRepository billRepository;
 
-    @Autowired
-    public UserService(
-        UserRepository userRepository,
-        TransactionRepository transactionRepository,
-        PotRepository potRepository,
-        PartyRepository partyRepository,
-        BudgetRepository budgetRepository,
-        BillRepository billRepository
-        ) {
-        this.userRepository = userRepository;
-        this.transactionRepository = transactionRepository;
-        this.potRepository = potRepository;
-        this.partyRepository = partyRepository;
-        this.budgetRepository = budgetRepository;
-        this.billRepository = billRepository;
+    public User getByEmail(String email) {
+        return userRepository
+                .findByEmail(normalizeEmail(email))
+                .orElseThrow(() -> new UserNotFoundException(email));
     }
 
+    private String normalizeEmail(String email) {
+        return email.trim().toLowerCase();
+    }
 }
