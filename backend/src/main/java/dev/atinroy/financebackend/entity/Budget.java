@@ -12,9 +12,11 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(indexes = {
-        @Index(name = "idx_budget_budget_name", columnList = "budget_name")
-})
+@Table(
+        name = "budget",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "budget_name"}),
+        indexes = @Index(name = "idx_budget_user_name", columnList = "user_id, budget_name")
+)
 public class Budget {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,11 +33,13 @@ public class Budget {
 
     @Transient
     public BigDecimal getBudgetRemaining() {
-        return budgetAmount.subtract(budgetSpent);
+        return budgetAmount.subtract(
+                budgetSpent != null ? budgetSpent : BigDecimal.ZERO
+        );
     }
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @CreationTimestamp

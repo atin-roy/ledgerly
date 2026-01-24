@@ -12,9 +12,13 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(indexes = {
-        @Index(name = "idx_bill_bill_date", columnList = "bill_date")
-})
+@Table(
+        name = "bill",
+        indexes = @Index(
+                name = "idx_bill_bill_due_date",
+                columnList = "bill_due_date"
+        )
+)
 public class Bill {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

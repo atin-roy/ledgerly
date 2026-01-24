@@ -17,7 +17,7 @@ import java.util.Locale;
 @Table(
         name = "party",
         uniqueConstraints = @UniqueConstraint(columnNames = {"party_name", "user_id"}),
-        indexes = @Index(name = "idx_party_user_name", columnList = "user_id, party_name")
+        indexes = @Index(name = "idx_party_party_user_name", columnList = "user_id, party_name")
 )
 public class Party {
     @Id
