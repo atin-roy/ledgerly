@@ -12,9 +12,13 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(indexes = {
-        @Index(name = "idx_transaction_transaction_date", columnList = "transaction_date")
-})
+@Table(
+        name = "transactions",
+        indexes = {
+                @Index(name = "idx_transaction_date", columnList = "transaction_date"),
+                @Index(name = "idx_transaction_user_date", columnList = "user_id, transaction_date")
+        }
+)
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,7 +30,7 @@ public class Transaction {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal transactionAmount;
 
-    @Column()
+    @Column(length = 255)
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -37,8 +41,8 @@ public class Transaction {
     @JoinColumn(name = "user_transaction_type_id")
     private UserTransactionType userTransactionType;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -56,4 +60,12 @@ public class Transaction {
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    void prePersist() {
+        if (transactionAmount == null) {
+            transactionAmount = BigDecimal.ZERO;
+        }
+    }
+
 }

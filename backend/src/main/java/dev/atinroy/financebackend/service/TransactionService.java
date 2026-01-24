@@ -27,14 +27,19 @@ public class TransactionService {
         User user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
-        String partyName = request.getPartyName().trim().toLowerCase(Locale.ROOT);
+        Party party = null;
+        if (request.getPartyName() != null && !request.getPartyName().isBlank()) {
+            String partyName = request.getPartyName().trim().toLowerCase(Locale.ROOT);
 
-        Party party = partyRepository.findByUser_UserIdAndPartyNameIgnoreCase(userId, partyName).orElseGet(() -> {
-            Party newParty = new Party();
-            newParty.setPartyName(partyName);
-            newParty.setUser(user);
-            return partyRepository.save(newParty);
-        });
+            party = partyRepository
+                    .findByUser_UserIdAndPartyNameIgnoreCase(userId, partyName)
+                    .orElseGet(() -> {
+                        Party newParty = new Party();
+                        newParty.setPartyName(partyName);
+                        newParty.setUser(user);
+                        return partyRepository.save(newParty);
+                    });
+        }
 
         Budget budget = budgetRepository.findByUser_UserIdAndBudgetId(userId, budgetId).orElseThrow(() -> new BudgetNotFoundException(budgetId));
 
@@ -48,7 +53,18 @@ public class TransactionService {
         transaction.setParty(party);
         transaction.setUser(user);
 
+
         // Set the appropriate transaction type
+        if (request.getTransactionTypeId() == null) {
+            throw new IllegalArgumentException("Transaction type is required");
+        }
+        if (transaction.getSystemTransactionType() != null &&
+                transaction.getUserTransactionType() != null) {
+            throw new IllegalStateException(
+                    "Transaction cannot have both system and user transaction types"
+            );
+        }
+
         if (Boolean.TRUE.equals(request.getIsSystemType())) {
             SystemTransactionType systemType = systemTransactionTypeRepository.findById(request.getTransactionTypeId())
                     .orElseThrow(() -> new TransactionTypeNotFound("System transaction type not found with id: " + request.getTransactionTypeId()));

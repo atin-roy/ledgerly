@@ -12,6 +12,11 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @Entity
+@Table(
+        name = "pot",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"pot_name", "user_id"}),
+        indexes = @Index(name = "idx_pot_pot_user_name", columnList = "user_id, pot_name")
+)
 public class Pot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,8 +34,8 @@ public class Pot {
     @Column()
     private LocalDateTime targetDate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @CreationTimestamp

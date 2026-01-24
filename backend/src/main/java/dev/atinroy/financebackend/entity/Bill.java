@@ -14,10 +14,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(
         name = "bill",
-        indexes = @Index(
-                name = "idx_bill_bill_due_date",
-                columnList = "bill_due_date"
-        )
+        indexes = @Index(name = "idx_bill_bill_due_date", columnList = "bill_due_date")
 )
 public class Bill {
     @Id
@@ -40,7 +37,7 @@ public class Bill {
     @Column(nullable = false, length = 20)
     private BillStatus billStatus;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id")
     private User user;
 
