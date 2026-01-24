@@ -41,6 +41,10 @@ public class Transaction {
     @JoinColumn(name = "party_id") // nullable because not all transactions involve a party
     private Party party;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "budget_id") // nullable because not all transactions are associated with a budget
+    private Budget budget;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

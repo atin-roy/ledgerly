@@ -19,4 +19,5 @@ public class TransactionCreateRequest {
     private BigDecimal transactionAmount;
     @NotNull
     private LocalDateTime transactionDate;
+    private Long budgetId; // optional
 }

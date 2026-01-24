@@ -12,4 +12,5 @@ public class TransactionCreatedResponse {
     private String transactionId;
     private BigDecimal transactionAmount;
     private LocalDateTime createdAt;
+    private Long budgetId;
 }
