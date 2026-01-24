@@ -11,8 +11,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class TransactionCreateRequest {
-    @NotBlank
-    private String partyName;
+    private String partyName; // needs to be named to create a new party on the fly
     private String description;
     @NotNull
     private BigDecimal transactionAmount;
@@ -21,6 +20,4 @@ public class TransactionCreateRequest {
     private Long budgetId; // optional
     @NotNull
     private Long transactionTypeId;
-    @NotNull
-    private Boolean isSystemType; // true for SystemTransactionType, false for UserTransactionType
 }

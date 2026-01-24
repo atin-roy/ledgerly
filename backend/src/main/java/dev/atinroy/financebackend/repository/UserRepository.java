@@ -10,7 +10,6 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUserId(Long userId);
-    Optional<User> findByUsername(String username);
     Optional<User> findByEmail(String email);
     Page<User> findByCreatedAtBetween(LocalDateTime from, LocalDateTime to, Pageable pageable);
 }

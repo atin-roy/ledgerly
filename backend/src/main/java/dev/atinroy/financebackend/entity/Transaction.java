@@ -34,12 +34,8 @@ public class Transaction {
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "system_transaction_type_id")
-    private SystemTransactionType systemTransactionType;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_transaction_type_id")
-    private UserTransactionType userTransactionType;
+    @JoinColumn(name = "transaction_type_id", nullable = false)
+    private TransactionType transactionType;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)

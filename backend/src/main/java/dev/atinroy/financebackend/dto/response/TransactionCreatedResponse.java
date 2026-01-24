@@ -9,10 +9,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class TransactionCreatedResponse {
-    private String transactionId;
+    private Long transactionId;
     private BigDecimal transactionAmount;
     private LocalDateTime createdAt;
-    private Long budgetId;
     private String transactionTypeName;
-    private Boolean isSystemType;
 }

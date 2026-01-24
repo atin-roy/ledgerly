@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Entity
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"transactionTypeName", "user_id"}))
-public class UserTransactionType {
+public class TransactionType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long transactionTypeId;
@@ -21,7 +21,7 @@ public class UserTransactionType {
     private String transactionTypeName;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = true) // null = system-wide category
+    @JoinColumn(name = "user_id")
     private User user;
 
     @CreationTimestamp
