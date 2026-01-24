@@ -16,7 +16,7 @@ public class TransactionCreateRequest {
     @NotNull
     private String description;
     @NotNull
-    private BigDecimal amount;
+    private BigDecimal transactionAmount;
     @NotNull
-    private LocalDateTime date;
+    private LocalDateTime transactionDate;
 }

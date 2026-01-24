@@ -6,6 +6,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class PartyCreateResponse {
-    private String id;
+    private String partyId;
     private String partyName;
 }

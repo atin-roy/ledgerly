@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class TransactionCreatedResponse {
-    private String id;
-    private BigDecimal amount;
+    private String transactionId;
+    private BigDecimal transactionAmount;
     private LocalDateTime createdAt;
 }

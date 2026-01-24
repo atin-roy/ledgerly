@@ -8,9 +8,8 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 public class BudgetCreateResponse {
-    private String id;
+    private String budgetId;
     private String budgetName;
-    private String budgetStatus;
     private BigDecimal budgetAmount;
     private BigDecimal budgetSpent;
 }

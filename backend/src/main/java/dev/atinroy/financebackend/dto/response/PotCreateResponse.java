@@ -9,9 +9,9 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class PotCreateResponse {
-    private String id;
+    private String potId;
     private String potName;
-    private BigDecimal amount;
-    private BigDecimal saved;
-    private LocalDateTime createdDate;
+    private BigDecimal potTarget;
+    private BigDecimal potSaved;
+    private LocalDateTime createdAt;
 }

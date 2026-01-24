@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class BillCreateResponse {
-    private String id;
+    private String billId;
     private String billName;
     private String billStatus;
     private LocalDateTime billDueDate;
