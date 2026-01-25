@@ -186,3 +186,4 @@ application-dev.properties
 application-dev.yml
 application-prod.properties
 application-prod.yml
+.aider*
