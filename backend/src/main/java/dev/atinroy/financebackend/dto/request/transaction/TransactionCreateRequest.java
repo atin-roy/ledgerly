@@ -1,6 +1,5 @@
-package dev.atinroy.financebackend.dto.request;
+package dev.atinroy.financebackend.dto.request.transaction;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;

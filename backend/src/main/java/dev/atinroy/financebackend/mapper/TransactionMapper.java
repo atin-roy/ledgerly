@@ -1,6 +1,6 @@
 package dev.atinroy.financebackend.mapper;
 
-import dev.atinroy.financebackend.dto.request.TransactionCreateRequest;
+import dev.atinroy.financebackend.dto.request.transaction.TransactionCreateRequest;
 import dev.atinroy.financebackend.dto.response.TransactionCreatedResponse;
 import dev.atinroy.financebackend.entity.Transaction;
 import org.mapstruct.Mapper;
