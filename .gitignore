@@ -41,6 +41,7 @@ nb-configuration.xml
 
 # Visual Studio Code
 .vscode/
+.cursor/
 
 # OS
 .DS_Store
