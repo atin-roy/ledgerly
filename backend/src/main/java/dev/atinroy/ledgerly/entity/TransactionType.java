@@ -7,8 +7,10 @@ import lombok.*;
 @Getter
 @Setter
 @NoArgsConstructor
+@ToString(exclude = "user")
+@EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"transactionTypeName", "user_id"}))
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"name", "user_id"}))
 public class TransactionType extends BaseEntity {
     @Column(nullable = false, length = 50)
     private String name;
@@ -16,12 +18,4 @@ public class TransactionType extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
-
-    @PrePersist
-    @PreUpdate
-    private void normalizeName() {
-        if (this.name != null) {
-            this.name = this.name.toLowerCase().trim();
-        }
-    }
 }

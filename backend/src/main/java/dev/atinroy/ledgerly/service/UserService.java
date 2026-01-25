@@ -13,7 +13,7 @@ public class UserService {
 
     public User getByEmail(String email) {
         return userRepository
-                .findByEmail(normalizeEmail(email))
+                .findByEmailAndDeletedAtIsNull(normalizeEmail(email))
                 .orElseThrow(() -> new UserNotFoundException(email));
     }
 

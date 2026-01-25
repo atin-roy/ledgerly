@@ -9,11 +9,13 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @NoArgsConstructor
+@ToString(exclude = "user")
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(
         name = "budget",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "budget_name"}),
-        indexes = @Index(name = "idx_budget_user_name", columnList = "user_id, budget_name")
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "name"}),
+        indexes = @Index(name = "idx_budget_user_name", columnList = "user_id, name")
 )
 public class Budget extends BaseEntity {
     @Column(nullable = false, length = 100)

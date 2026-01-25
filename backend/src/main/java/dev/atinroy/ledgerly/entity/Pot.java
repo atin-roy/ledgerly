@@ -10,11 +10,13 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+@ToString(exclude = "user")
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(
         name = "pot",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"pot_name", "user_id"}),
-        indexes = @Index(name = "idx_pot_pot_user_name", columnList = "user_id, pot_name")
+        uniqueConstraints = @UniqueConstraint(columnNames = {"name", "user_id"}),
+        indexes = @Index(name = "idx_pot_user_name", columnList = "user_id, name")
 )
 public class Pot extends BaseEntity {
     @Column(nullable = false, length = 100)

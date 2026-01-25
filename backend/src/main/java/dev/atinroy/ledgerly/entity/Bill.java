@@ -11,10 +11,12 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+@ToString(exclude = "user")
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(
         name = "bill",
-        indexes = @Index(name = "idx_bill_bill_due_date", columnList = "bill_due_date")
+        indexes = @Index(name = "idx_bill_due_date", columnList = "due_date")
 )
 public class Bill extends BaseEntity {
     @Column(nullable = false, length = 100)
@@ -34,6 +36,6 @@ public class Bill extends BaseEntity {
     private BillStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 }
