@@ -5,15 +5,20 @@ import dev.atinroy.ledgerly.dto.request.transaction.TransactionUpdateRequest;
 import dev.atinroy.ledgerly.dto.response.TransactionResponse;
 import dev.atinroy.ledgerly.entity.Transaction;
 import dev.atinroy.ledgerly.entity.User;
-import dev.atinroy.ledgerly.error.*;
+import dev.atinroy.ledgerly.error.CategoryNotFoundException;
+import dev.atinroy.ledgerly.error.ErrorCode;
+import dev.atinroy.ledgerly.error.TransactionNotFoundException;
+import dev.atinroy.ledgerly.error.UserNotFoundException;
+import dev.atinroy.ledgerly.error.ValidationException;
+import dev.atinroy.ledgerly.error.ValidationResult;
 import dev.atinroy.ledgerly.mapper.TransactionMapper;
 import dev.atinroy.ledgerly.repository.*;
 import dev.atinroy.ledgerly.validator.TransactionValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -61,7 +66,8 @@ public class TransactionService {
         }
 
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
-        Transaction transaction = transactionRepository.findByUser_IdAndId(userId, transactionId).orElseThrow(() -> new TransactionNotFoundException(transactionId));
+        Transaction transaction = transactionRepository.findByUser_IdAndId(userId, transactionId)
+                .orElseThrow(() -> new TransactionNotFoundException(transactionId));
 
         if (request.date() != null) {
             transaction.setDate(request.date());
@@ -70,7 +76,8 @@ public class TransactionService {
             transaction.setAmount(request.amount());
         }
         if (request.categoryId() != null) {
-            transaction.setCategory(categoryRepository.findById(request.categoryId()).orElseThrow(() -> new CategoryNotFoundException(request.categoryId())));
+            transaction.setCategory(categoryRepository.findById(request.categoryId())
+                    .orElseThrow(() -> new CategoryNotFoundException(request.categoryId())));
         }
 
         Transaction saved = transactionRepository.save(transaction);
@@ -79,7 +86,7 @@ public class TransactionService {
 
     @Transactional
     public void deleteTransaction(Long userId, Long id) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+        userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
         Transaction transaction = transactionRepository.findByUser_IdAndId(userId, id)
                 .orElseThrow(() -> new TransactionNotFoundException(id));
 
@@ -87,19 +94,16 @@ public class TransactionService {
     }
 
     public TransactionResponse getTransaction(Long userId, Long id) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+        userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
         Transaction transaction = transactionRepository.findByUser_IdAndId(userId, id)
                 .orElseThrow(() -> new TransactionNotFoundException(id));
 
         return transactionMapper.toResponse(transaction);
     }
 
-    public List<TransactionResponse> getTransactions(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
-        List<Transaction> transactions = transactionRepository.findByUser_Id(userId);
-
-        return transactions.stream()
-                .map(transactionMapper::toResponse)
-                .toList();
+    public Page<TransactionResponse> getTransactions(Long userId, Pageable pageable) {
+        userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+        return transactionRepository.findByUser_Id(userId, pageable)
+                .map(transactionMapper::toResponse);
     }
 }

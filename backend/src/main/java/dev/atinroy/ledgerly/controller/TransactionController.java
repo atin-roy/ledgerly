@@ -5,11 +5,11 @@ import dev.atinroy.ledgerly.dto.request.transaction.TransactionUpdateRequest;
 import dev.atinroy.ledgerly.dto.response.TransactionResponse;
 import dev.atinroy.ledgerly.service.TransactionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/users/{userId}/transactions")
@@ -27,8 +27,10 @@ public class TransactionController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TransactionResponse>> getTransactions(@PathVariable Long userId) {
-        List<TransactionResponse> responses = transactionService.getTransactions(userId);
+    public ResponseEntity<Page<TransactionResponse>> getTransactions(
+            @PathVariable Long userId,
+            Pageable pageable) {
+        Page<TransactionResponse> responses = transactionService.getTransactions(userId, pageable);
         return ResponseEntity.ok(responses);
     }
 
