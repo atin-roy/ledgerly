@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @Entity
+@Table(name = "app_user")
 public class User extends BaseEntity {
     @Column(unique = true, nullable = false, length = 50)
     private String username;
