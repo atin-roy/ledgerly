@@ -11,7 +11,9 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface TransactionRepository extends JpaRepository<Transaction, Long>{
+public interface TransactionRepository extends
+        JpaRepository<Transaction, Long>,
+        JpaSpecificationExecutor<Transaction> {
     // full list of transactions of a user
     Page<Transaction> findByUser_Id(
             Long userId,

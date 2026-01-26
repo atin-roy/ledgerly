@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class BillResponse {
-    private Long billId;
+    private Long id;
     private String name;
     private BigDecimal amount;
     private String status;

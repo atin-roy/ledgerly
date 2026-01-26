@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 public class BudgetResponse {
-    private Long budgetId;
+    private Long id;
     private BigDecimal amount;
     private Long categoryId;
 }

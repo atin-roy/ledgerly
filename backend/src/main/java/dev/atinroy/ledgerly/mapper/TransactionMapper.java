@@ -13,8 +13,9 @@ public interface TransactionMapper {
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "type", ignore = true)
     Transaction toEntity(TransactionCreateRequest transactionCreateRequest);
 
+    @Mapping(source = "category.name", target = "categoryName")
+    @Mapping(source = "party.name", target = "partyName")
     TransactionResponse toResponse(Transaction transaction);
 }

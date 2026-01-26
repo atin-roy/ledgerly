@@ -24,7 +24,7 @@ public class Party extends BaseEntity {
     @Column(name = "normalized_name", nullable = false, length = 100)
     private String normalizedName;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 

@@ -1,5 +1,6 @@
 package dev.atinroy.ledgerly.dto.request;
 
+import dev.atinroy.ledgerly.entity.enums.BillStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -18,5 +19,5 @@ public class BillCreateRequest {
     @NotNull
     private LocalDateTime dueDate;
     @NotBlank
-    private String status;
+    private BillStatus status;
 }
