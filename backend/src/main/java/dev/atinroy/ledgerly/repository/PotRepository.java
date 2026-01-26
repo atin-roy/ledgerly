@@ -16,6 +16,9 @@ public interface PotRepository extends JpaRepository<Pot, Long> {
     // Get a specific pot by ID (for updates/deletes)
     Optional<Pot> findByUser_IdAndId(Long userId, Long potId);
 
+    // Check for duplicate pot name for a user
+    boolean existsByUser_IdAndName(Long userId, String name);
+
     @Modifying
     @Query("DELETE FROM Pot p WHERE p.user.id = :userId")
     void deleteByUser_Id(@Param("userId") Long userId);

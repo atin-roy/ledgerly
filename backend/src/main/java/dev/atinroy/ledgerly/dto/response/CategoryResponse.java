@@ -1,11 +1,6 @@
 package dev.atinroy.ledgerly.dto.response;
 
-import lombok.Getter;
-import lombok.Setter;
-
-@Getter
-@Setter
-public class CategoryResponse {
-    private Long id;
-    private String name;
-}
+public record CategoryResponse(
+    Long id,
+    String name
+) {}

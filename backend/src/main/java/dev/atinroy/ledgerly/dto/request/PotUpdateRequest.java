@@ -5,7 +5,9 @@ import jakarta.validation.constraints.PositiveOrZero;
 
 import java.math.BigDecimal;
 
-public record BudgetCreateRequest(
-    @NotNull @PositiveOrZero BigDecimal amount,
-    @NotNull Long categoryId
+public record PotUpdateRequest(
+    @NotNull Long id,
+    String name,
+    @PositiveOrZero BigDecimal target,
+    BigDecimal saved
 ) {}

@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public record TransactionUpdateRequest(
-    @NotBlank Long id,
+    @NotNull Long id,
     BigDecimal amount,
     LocalDateTime date,
     Long categoryId,

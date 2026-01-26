@@ -1,17 +1,12 @@
 package dev.atinroy.ledgerly.dto.response;
 
-import lombok.Getter;
-import lombok.Setter;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
-public class BillResponse {
-    private Long id;
-    private String name;
-    private BigDecimal amount;
-    private String status;
-    private LocalDateTime dueDate;
-}
+public record BillResponse(
+    Long id,
+    String name,
+    BigDecimal amount,
+    String status,
+    LocalDateTime dueDate
+) {}

@@ -15,6 +15,5 @@ public interface CategoryMapper {
     @Mapping(target = "budget", ignore = true)
     Category toEntity(CategoryCreateRequest categoryCreateRequest);
 
-    @Mapping(source = "id", target = "categoryId")
     CategoryResponse toResponse(Category category);
 }

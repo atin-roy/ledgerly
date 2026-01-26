@@ -1,14 +1,9 @@
 package dev.atinroy.ledgerly.dto.response;
-
-import lombok.Getter;
-import lombok.Setter;
-
 import java.math.BigDecimal;
 
-@Getter
-@Setter
-public class BudgetResponse {
-    private Long id;
-    private BigDecimal amount;
-    private Long categoryId;
-}
+
+public record BudgetResponse (
+    Long id,
+    BigDecimal amount,
+    Long categoryId
+) {}

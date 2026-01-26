@@ -10,9 +10,11 @@ import org.mapstruct.Mapping;
 public interface BudgetMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)
+    @Mapping(target = "category", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     Budget toEntity(BudgetCreateRequest budgetCreateRequest);
 
+    @Mapping(target = "categoryId", source = "category.id")
     BudgetResponse toResponse(Budget budget);
 }
