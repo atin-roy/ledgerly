@@ -3,6 +3,7 @@ package dev.atinroy.ledgerly.repository;
 import dev.atinroy.ledgerly.entity.Bill;
 import dev.atinroy.ledgerly.entity.enums.BillStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -30,4 +31,8 @@ public interface BillRepository extends JpaRepository<Bill, Long> {
     // Sum bill amounts by status - for summary statistics
     @Query("SELECT SUM(b.amount) FROM Bill b WHERE b.user.id = :userId AND b.status = :status")
     BigDecimal sumAmountByUserIdAndStatus(@Param("userId") Long userId, @Param("status") BillStatus status);
+
+    @Modifying
+    @Query("DELETE FROM Bill b WHERE b.user.id = :userId")
+    void deleteByUser_Id(@Param("userId") Long userId);
 }

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface TransactionRepository extends
@@ -19,6 +20,10 @@ public interface TransactionRepository extends
             Long userId,
             Pageable pageable
     );
+    
+    // full list of transactions of a user (unbound - for cascade deletes)
+    List<Transaction> findByUser_Id(Long userId);
+    
     // for finding a specific transaction
     Optional<Transaction> findByUser_IdAndId(
             Long userId,
@@ -33,4 +38,8 @@ public interface TransactionRepository extends
             @Param("targetId") Long targetId,
             @Param("generalId") Long generalId
     );
+
+    @Modifying
+    @Query("DELETE FROM Transaction t WHERE t.user.id = :userId")
+    void deleteByUser_Id(@Param("userId") Long userId);
 }

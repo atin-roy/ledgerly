@@ -1,6 +1,7 @@
 package dev.atinroy.ledgerly.validator;
 
 import dev.atinroy.ledgerly.dto.request.transaction.TransactionCreateRequest;
+import dev.atinroy.ledgerly.dto.request.transaction.TransactionUpdateRequest;
 import dev.atinroy.ledgerly.entity.Transaction;
 import dev.atinroy.ledgerly.error.ErrorCode;
 import dev.atinroy.ledgerly.error.ValidationResult;
@@ -18,6 +19,26 @@ public class TransactionValidator {
         validateDate(request.date(), result);
         validateAmount(request.amount(), result);
         validateCategoryId(request.categoryId(), result);
+
+        return result;
+    }
+
+    public ValidationResult validate(TransactionUpdateRequest request) {
+        ValidationResult result = ValidationResult.withErrors();
+
+        if (request.id() == null) {
+            result.addFieldError("id", ErrorCode.INVALID_VALUE, "Transaction ID is required");
+        }
+
+        if (request.date() != null) {
+            validateDate(request.date(), result);
+        }
+        if (request.amount() != null) {
+            validateAmount(request.amount(), result);
+        }
+        if (request.categoryId() != null) {
+            validateCategoryId(request.categoryId(), result);
+        }
 
         return result;
     }

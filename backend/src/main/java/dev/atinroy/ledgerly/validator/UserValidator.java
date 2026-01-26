@@ -1,6 +1,7 @@
 package dev.atinroy.ledgerly.validator;
 
-import dev.atinroy.ledgerly.entity.User;
+import dev.atinroy.ledgerly.dto.request.user.UserCreateRequest;
+import dev.atinroy.ledgerly.dto.request.user.UserUpdateRequest;
 import dev.atinroy.ledgerly.error.ErrorCode;
 import dev.atinroy.ledgerly.error.ValidationResult;
 import org.springframework.stereotype.Component;
@@ -8,20 +9,46 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserValidator {
 
-    public ValidationResult validate(User user) {
+    public ValidationResult validate(UserCreateRequest request) {
         ValidationResult result = ValidationResult.withErrors();
 
-        if (user == null) {
+        if (request == null) {
             result.addGeneralError(
                     ErrorCode.REQUIRED,
-                    "User must not be null"
+                    "User request must not be null"
             );
             return result;
         }
 
-        validateEmail(user.getEmail(), result);
-        validateUsername(user.getUsername(), result);
-        validatePassword(user.getPassword(), result);
+        validateEmail(request.email(), result);
+        validateUsername(request.username(), result);
+        validatePassword(request.password(), result);
+
+        return result;
+    }
+
+    public ValidationResult validate(UserUpdateRequest request) {
+        ValidationResult result = ValidationResult.withErrors();
+
+        if (request == null) {
+            result.addGeneralError(
+                    ErrorCode.REQUIRED,
+                    "User request must not be null"
+            );
+            return result;
+        }
+
+        if (request.email() != null) {
+            validateEmail(request.email(), result);
+        }
+
+        if (request.username() != null) {
+            validateUsername(request.username(), result);
+        }
+
+        if (request.password() != null) {
+            validatePassword(request.password(), result);
+        }
 
         return result;
     }

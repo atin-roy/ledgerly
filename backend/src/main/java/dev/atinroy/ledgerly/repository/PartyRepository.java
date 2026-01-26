@@ -2,6 +2,7 @@ package dev.atinroy.ledgerly.repository;
 
 import dev.atinroy.ledgerly.entity.Party;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -25,4 +26,8 @@ public interface PartyRepository extends JpaRepository<Party, Long> {
         // Find by ID - for security checks
         // This one doesn't care about names at all
         Optional<Party> findByUser_IdAndId(Long userId, Long partyId);
+
+        @Modifying
+        @Query("DELETE FROM Party p WHERE p.user.id = :userId")
+        void deleteByUser_Id(@Param("userId") Long userId);
 }

@@ -9,11 +9,12 @@ import dev.atinroy.ledgerly.error.UserNotFoundException;
 import dev.atinroy.ledgerly.error.ValidationException;
 import dev.atinroy.ledgerly.error.ValidationResult;
 import dev.atinroy.ledgerly.mapper.UserMapper;
-import dev.atinroy.ledgerly.repository.UserRepository;
+import dev.atinroy.ledgerly.repository.*;
 import dev.atinroy.ledgerly.validator.UserValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,12 +23,18 @@ public class UserService {
     private final UserMapper userMapper;
     private final UserValidator userValidator;
     private final PasswordEncoder passwordEncoder;
+    private final TransactionRepository transactionRepository;
+    private final BillRepository billRepository;
+    private final BudgetRepository budgetRepository;
+    private final CategoryRepository categoryRepository;
+    private final PartyRepository partyRepository;
+    private final PotRepository potRepository;
 
+    @Transactional
     public UserResponse createUser(UserCreateRequest userCreateRequest) {
-        User user = userMapper.toEntity(userCreateRequest);
-        ValidationResult result = userValidator.validate(user);
+        ValidationResult result = userValidator.validate(userCreateRequest);
 
-        if (user.getEmail() != null && userRepository.existsByEmail(user.getEmail())) {
+        if (userCreateRequest.email() != null && userRepository.existsByEmail(userCreateRequest.email())) {
             result.addFieldError(
                     "email",
                     ErrorCode.ALREADY_EXISTS,
@@ -35,7 +42,7 @@ public class UserService {
             );
         }
 
-        if (user.getUsername() != null && userRepository.existsByUsername(user.getUsername())) {
+        if (userCreateRequest.username() != null && userRepository.existsByUsername(userCreateRequest.username())) {
             result.addFieldError(
                     "username",
                     ErrorCode.ALREADY_EXISTS,
@@ -47,17 +54,19 @@ public class UserService {
             throw new ValidationException(result);
         }
 
+        User user = userMapper.toEntity(userCreateRequest);
         hashPassword(user);
         User saved = userRepository.save(user);
         return userMapper.toResponse(saved);
     }
 
+    @Transactional
     public UserResponse updateUser(Long userId, UserUpdateRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
         boolean passwordUpdated = false;
-        ValidationResult result = new ValidationResult();
+        ValidationResult result = userValidator.validate(request);
 
         if (request.email() != null &&
                 !request.email().equals(user.getEmail()) &&
@@ -81,6 +90,10 @@ public class UserService {
             );
         }
 
+        if (result.hasErrors()) {
+            throw new ValidationException(result);
+        }
+
         if (request.email() != null) {
             user.setEmail(request.email());
         }
@@ -94,12 +107,6 @@ public class UserService {
             passwordUpdated = true;
         }
 
-        result.merge(userValidator.validate(user));
-
-        if (result.hasErrors()) {
-            throw new ValidationException(result);
-        }
-
         if (passwordUpdated) {
             hashPassword(user);
         }
@@ -108,10 +115,20 @@ public class UserService {
         return userMapper.toResponse(saved);
     }
 
+    @Transactional
     public void deleteUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
+        // Delete all related data in correct order to handle dependencies
+        transactionRepository.deleteByUser_Id(userId);
+        billRepository.deleteByUser_Id(userId);
+        budgetRepository.deleteByUser_Id(userId);
+        categoryRepository.deleteByUser_Id(userId);
+        partyRepository.deleteByUser_Id(userId);
+        potRepository.deleteByUser_Id(userId);
+
+        // Finally, delete the user
         userRepository.delete(user);
     }
 
