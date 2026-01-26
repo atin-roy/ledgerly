@@ -1,8 +1,6 @@
 package dev.atinroy.ledgerly.repository;
 
 import dev.atinroy.ledgerly.entity.Budget;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

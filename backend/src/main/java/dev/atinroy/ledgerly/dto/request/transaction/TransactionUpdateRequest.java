@@ -1,6 +1,5 @@
 package dev.atinroy.ledgerly.dto.request.transaction;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,6 +9,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class TransactionUpdateRequest {
+    private Long id;
     private BigDecimal amount;
     private LocalDateTime date;
     private Long categoryId;

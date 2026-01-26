@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -13,10 +12,7 @@ import java.time.LocalDateTime;
 @ToString(exclude = "user")
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(
-        name = "pot",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "name"})
-)
+@Table(name = "pot", uniqueConstraints = @UniqueConstraint(columnNames = { "user_id", "name" }))
 public class Pot extends BaseEntity {
     @Column(nullable = false, length = 100)
     private String name;
