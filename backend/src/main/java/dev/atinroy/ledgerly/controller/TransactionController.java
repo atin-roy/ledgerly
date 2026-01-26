@@ -4,6 +4,13 @@ import dev.atinroy.ledgerly.dto.request.transaction.TransactionCreateRequest;
 import dev.atinroy.ledgerly.dto.request.transaction.TransactionUpdateRequest;
 import dev.atinroy.ledgerly.dto.response.TransactionResponse;
 import dev.atinroy.ledgerly.service.TransactionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,11 +21,21 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/users/{userId}/transactions")
 @RequiredArgsConstructor
+@Tag(name = "Transactions", description = "Transaction management endpoints")
+@SecurityRequirement(name = "Bearer Authentication")
 public class TransactionController {
 
     private final TransactionService transactionService;
 
     @PostMapping
+    @Operation(summary = "Create a new transaction", description = "Creates a new transaction for the specified user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Transaction created successfully",
+                    content = @Content(schema = @Schema(implementation = TransactionResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid transaction data"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
     public ResponseEntity<TransactionResponse> createTransaction(
             @PathVariable Long userId,
             @RequestBody TransactionCreateRequest request) {
@@ -27,6 +44,12 @@ public class TransactionController {
     }
 
     @GetMapping
+    @Operation(summary = "Get all transactions", description = "Retrieves a paginated list of transactions for the specified user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Transactions retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
     public ResponseEntity<Page<TransactionResponse>> getTransactions(
             @PathVariable Long userId,
             Pageable pageable) {
