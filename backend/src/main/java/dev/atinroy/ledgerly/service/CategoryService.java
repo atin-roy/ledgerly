@@ -121,4 +121,16 @@ public class CategoryService {
                 .map(categoryMapper::toResponse)
                 .toList();
     }
+
+    public Category findOrResolveGeneralCategory(Long userId, Long categoryId) {
+        // If categoryId is 0, resolve to the user's "General" category
+        if (categoryId == 0) {
+            return categoryRepository.findByUser_IdAndName(userId, "General")
+                    .orElseThrow(() -> new CategoryNotFoundException(0L));
+        }
+
+        // Otherwise, find the category normally
+        return categoryRepository.findByUser_IdAndId(userId, categoryId)
+                .orElseThrow(() -> new CategoryNotFoundException(categoryId));
+    }
 }

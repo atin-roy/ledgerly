@@ -2,7 +2,6 @@ package dev.atinroy.ledgerly.validator;
 
 import dev.atinroy.ledgerly.dto.request.transaction.TransactionCreateRequest;
 import dev.atinroy.ledgerly.dto.request.transaction.TransactionUpdateRequest;
-import dev.atinroy.ledgerly.entity.Transaction;
 import dev.atinroy.ledgerly.error.ErrorCode;
 import dev.atinroy.ledgerly.error.ValidationResult;
 import org.springframework.stereotype.Component;
@@ -46,6 +45,8 @@ public class TransactionValidator {
     private void validateCategoryId(Long categoryId, ValidationResult result) {
         if (categoryId == null) {
             result.addFieldError("categoryId", ErrorCode.INVALID_VALUE, "Category ID is required");
+        } else if (categoryId < 0) {
+            result.addFieldError("categoryId", ErrorCode.INVALID_VALUE, "Category ID must be 0 or greater");
         }
     }
 

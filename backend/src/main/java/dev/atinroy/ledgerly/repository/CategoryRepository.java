@@ -19,6 +19,9 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     // For validating unique names when creating new categories
     boolean existsByUser_IdAndName(Long userId, String name);
 
+    // For resolving category ID 0 to General category
+    Optional<Category> findByUser_IdAndName(Long userId, String name);
+
     @Modifying
     @Query("DELETE FROM Category c WHERE c.user.id = :userId")
     void deleteByUser_Id(@Param("userId") Long userId);

@@ -9,7 +9,6 @@ import dev.atinroy.ledgerly.entity.User;
 import dev.atinroy.ledgerly.error.*;
 import dev.atinroy.ledgerly.mapper.BudgetMapper;
 import dev.atinroy.ledgerly.repository.BudgetRepository;
-import dev.atinroy.ledgerly.repository.CategoryRepository;
 import dev.atinroy.ledgerly.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,7 +21,7 @@ import java.util.List;
 public class BudgetService {
     private final BudgetRepository budgetRepository;
     private final UserRepository userRepository;
-    private final CategoryRepository categoryRepository;
+    private final CategoryService categoryService;
     private final BudgetMapper budgetMapper;
 
     @Transactional
@@ -36,11 +35,10 @@ public class BudgetService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
-        Category category = categoryRepository.findByUser_IdAndId(userId, request.categoryId())
-                .orElseThrow(() -> new CategoryNotFoundException(request.categoryId()));
+        Category category = categoryService.findOrResolveGeneralCategory(userId, request.categoryId());
 
         // Check if budget already exists for this category
-        if (budgetRepository.findByUser_IdAndCategory_Id(userId, request.categoryId()).isPresent()) {
+        if (budgetRepository.findByUser_IdAndCategory_Id(userId, category.getId()).isPresent()) {
             ValidationResult result = ValidationResult.withErrors();
             result.addFieldError("categoryId", ErrorCode.ALREADY_EXISTS, "Budget already exists for this category");
             throw new ValidationException(result);
@@ -73,13 +71,12 @@ public class BudgetService {
         }
 
         if (request.categoryId() != null) {
-            // Check if changing to a different category
-            if (!request.categoryId().equals(budget.getCategory().getId())) {
-                Category newCategory = categoryRepository.findByUser_IdAndId(userId, request.categoryId())
-                        .orElseThrow(() -> new CategoryNotFoundException(request.categoryId()));
+            Category newCategory = categoryService.findOrResolveGeneralCategory(userId, request.categoryId());
 
+            // Check if changing to a different category
+            if (!newCategory.getId().equals(budget.getCategory().getId())) {
                 // Check if budget already exists for the new category
-                if (budgetRepository.findByUser_IdAndCategory_Id(userId, request.categoryId()).isPresent()) {
+                if (budgetRepository.findByUser_IdAndCategory_Id(userId, newCategory.getId()).isPresent()) {
                     ValidationResult result = ValidationResult.withErrors();
                     result.addFieldError("categoryId", ErrorCode.ALREADY_EXISTS, "Budget already exists for this category");
                     throw new ValidationException(result);

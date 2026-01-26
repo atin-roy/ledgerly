@@ -3,9 +3,9 @@ package dev.atinroy.ledgerly.service;
 import dev.atinroy.ledgerly.dto.request.transaction.TransactionCreateRequest;
 import dev.atinroy.ledgerly.dto.request.transaction.TransactionUpdateRequest;
 import dev.atinroy.ledgerly.dto.response.TransactionResponse;
+import dev.atinroy.ledgerly.entity.Category;
 import dev.atinroy.ledgerly.entity.Transaction;
 import dev.atinroy.ledgerly.entity.User;
-import dev.atinroy.ledgerly.error.CategoryNotFoundException;
 import dev.atinroy.ledgerly.error.ErrorCode;
 import dev.atinroy.ledgerly.error.TransactionNotFoundException;
 import dev.atinroy.ledgerly.error.UserNotFoundException;
@@ -25,9 +25,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
+    private final CategoryService categoryService;
     private final TransactionMapper transactionMapper;
     private final TransactionValidator transactionValidator;
-    private final CategoryRepository categoryRepository;
 
     @Transactional
     public TransactionResponse createTransaction(Long userId, TransactionCreateRequest request) {
@@ -48,6 +48,10 @@ public class TransactionService {
         Transaction transaction = transactionMapper.toEntity(request);
         transaction.setUser(user);
 
+        // Resolve category ID (0 maps to General category)
+        Category category = categoryService.findOrResolveGeneralCategory(userId, request.categoryId());
+        transaction.setCategory(category);
+
         Transaction saved = transactionRepository.save(transaction);
         return transactionMapper.toResponse(saved);
     }
@@ -65,7 +69,7 @@ public class TransactionService {
             throw new ValidationException(result);
         }
 
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+        userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
         Transaction transaction = transactionRepository.findByUser_IdAndId(userId, transactionId)
                 .orElseThrow(() -> new TransactionNotFoundException(transactionId));
 
@@ -76,8 +80,8 @@ public class TransactionService {
             transaction.setAmount(request.amount());
         }
         if (request.categoryId() != null) {
-            transaction.setCategory(categoryRepository.findById(request.categoryId())
-                    .orElseThrow(() -> new CategoryNotFoundException(request.categoryId())));
+            Category category = categoryService.findOrResolveGeneralCategory(userId, request.categoryId());
+            transaction.setCategory(category);
         }
 
         Transaction saved = transactionRepository.save(transaction);

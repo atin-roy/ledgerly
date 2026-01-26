@@ -4,6 +4,7 @@ import dev.atinroy.ledgerly.dto.request.auth.LoginRequest;
 import dev.atinroy.ledgerly.dto.request.auth.RefreshTokenRequest;
 import dev.atinroy.ledgerly.dto.request.auth.RegisterRequest;
 import dev.atinroy.ledgerly.dto.response.AuthResponse;
+import dev.atinroy.ledgerly.entity.Category;
 import dev.atinroy.ledgerly.entity.User;
 import dev.atinroy.ledgerly.entity.enums.UserRole;
 import dev.atinroy.ledgerly.error.ErrorCode;
@@ -11,6 +12,7 @@ import dev.atinroy.ledgerly.error.InvalidCredentialsException;
 import dev.atinroy.ledgerly.error.InvalidTokenException;
 import dev.atinroy.ledgerly.error.ValidationException;
 import dev.atinroy.ledgerly.error.ValidationResult;
+import dev.atinroy.ledgerly.repository.CategoryRepository;
 import dev.atinroy.ledgerly.repository.UserRepository;
 import dev.atinroy.ledgerly.security.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final CategoryRepository categoryRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -53,6 +56,12 @@ public class AuthService {
         user.setRole(UserRole.USER);
 
         User savedUser = userRepository.save(user);
+
+        // Create default "General" category for new user
+        Category generalCategory = new Category();
+        generalCategory.setName("General");
+        generalCategory.setUser(savedUser);
+        categoryRepository.save(generalCategory);
 
         return buildAuthResponse(savedUser);
     }
