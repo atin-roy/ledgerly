@@ -7,7 +7,7 @@ plugins {
 
 group = "dev.atinroy"
 version = "0.0.1-SNAPSHOT"
-description = "finance-backend"
+description = "ledgerly"
 
 java {
     toolchain {
@@ -68,4 +68,12 @@ tasks.test {
 tasks.asciidoctor {
     inputs.dir(project.extra["snippetsDir"]!!)
     dependsOn(tasks.test)
+}
+
+tasks.named("jar") {
+    enabled = false
+}
+
+tasks.named("bootJar") {
+    archiveFileName = "app.jar"
 }
