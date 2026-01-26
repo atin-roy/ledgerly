@@ -116,7 +116,6 @@ public class UserService {
     }
 
 
-
     private void hashPassword(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
     }
