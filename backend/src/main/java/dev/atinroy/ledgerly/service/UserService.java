@@ -10,14 +10,4 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
-
-    public User getByEmail(String email) {
-        return userRepository
-                .findByEmailAndDeletedAtIsNull(normalizeEmail(email))
-                .orElseThrow(() -> new UserNotFoundException(email));
-    }
-
-    private String normalizeEmail(String email) {
-        return email.trim().toLowerCase();
-    }
 }
