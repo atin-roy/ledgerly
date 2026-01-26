@@ -7,10 +7,6 @@ import java.util.stream.Collectors;
 
 public record ValidationResult(Set<ValidationError> errors) {
 
-    public ValidationResult() {
-        this(Collections.emptySet());
-    }
-
     // -------- factory methods --------
 
     public static ValidationResult success() {

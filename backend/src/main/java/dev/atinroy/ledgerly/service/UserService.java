@@ -115,7 +115,6 @@ public class UserService {
         userRepository.delete(user);
     }
 
-
     private void hashPassword(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
     }
