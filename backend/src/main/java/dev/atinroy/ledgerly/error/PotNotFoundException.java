@@ -1,4 +1,4 @@
-package dev.atinroy.ledgerly.exception;
+package dev.atinroy.ledgerly.error;
 
 public class PotNotFoundException extends LedgerlyException {
     public PotNotFoundException(Long potId) {

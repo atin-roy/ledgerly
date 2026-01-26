@@ -1,4 +1,4 @@
-package dev.atinroy.ledgerly.exception;
+package dev.atinroy.ledgerly.error;
 
 public class TransactionNotFoundException extends LedgerlyException {
     public TransactionNotFoundException() {

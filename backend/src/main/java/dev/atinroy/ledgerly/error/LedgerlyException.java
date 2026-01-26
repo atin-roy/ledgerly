@@ -1,7 +1,7 @@
-package dev.atinroy.ledgerly.exception;
+package dev.atinroy.ledgerly.error;
 
 /**
- * Base exception class for all Ledgerly application exceptions.
+ * Base error class for all Ledgerly application exceptions.
  * All domain-specific exceptions should extend this class for consistent error handling.
  */
 public class LedgerlyException extends RuntimeException {

@@ -1,4 +1,4 @@
-package dev.atinroy.ledgerly.exception;
+package dev.atinroy.ledgerly.error;
 
 public class UserNotFoundException extends LedgerlyException {
     public UserNotFoundException(String email) {

@@ -1,6 +1,6 @@
 package dev.atinroy.ledgerly.mapper;
 
-import dev.atinroy.ledgerly.dto.request.UserCreateRequest;
+import dev.atinroy.ledgerly.dto.request.user.UserCreateRequest;
 import dev.atinroy.ledgerly.dto.response.UserResponse;
 import dev.atinroy.ledgerly.entity.User;
 import org.mapstruct.Mapper;
