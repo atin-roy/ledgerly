@@ -2,7 +2,7 @@
 nixPkgs = ["jdk21"]
 
 [phases.build]
-cmds = ["cd backend && chmod +x gradlew && ./gradlew clean build -x test --no-daemon"]
+cmds = ["chmod +x gradlew", "./gradlew clean build -x test --no-daemon"]
 
 [start]
-cmd = "cd backend && java -Dspring.profiles.active=prod -jar build/libs/app.jar"
+cmd = "java -Dspring.profiles.active=prod -jar build/libs/app.jar"

@@ -1,8 +1,8 @@
 [build]
 builder = "nixpacks"
-buildCommand = "cd backend && ./gradlew clean build -x test"
+buildCommand = "./gradlew clean build -x test"
 
 [deploy]
-startCommand = "cd backend && java -Dspring.profiles.active=prod -jar build/libs/app.jar"
+startCommand = "java -Dspring.profiles.active=prod -jar build/libs/app.jar"
 restartPolicyType = "on-failure"
 restartPolicyMaxRetries = 10
