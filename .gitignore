@@ -75,6 +75,8 @@ application-*.properties
 application-*.yml
 !application-example.properties
 !application-example.yml
+!application-prod.properties
+!application-prod.yml
 
 # Database
 *.db
@@ -180,10 +182,6 @@ Desktop.ini
 *~
 
 # Application specific
-application.properties
-application.yml
 application-dev.properties
 application-dev.yml
-application-prod.properties
-application-prod.yml
 .aider*
