@@ -10,9 +10,8 @@ version = "0.0.1-SNAPSHOT"
 description = "ledgerly"
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 configurations {
@@ -74,6 +73,6 @@ tasks.named("jar") {
     enabled = false
 }
 
-tasks.named("bootJar") {
-    archiveFileName = "app.jar"
+tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
+    archiveFileName.set("app.jar")
 }
