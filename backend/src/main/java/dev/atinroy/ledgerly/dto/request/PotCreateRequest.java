@@ -17,6 +17,4 @@ public class PotCreateRequest {
     private BigDecimal target;
     @NotNull
     private BigDecimal saved;
-    @NotNull
-    private LocalDateTime targetDate;
 }

@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class PartyCreateResponse {
-    private String partyId;
+public class PartyResponse {
+    private Long partyId;
     private String name;
 }

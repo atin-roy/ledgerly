@@ -7,9 +7,9 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class UserCreateResponse {
-    private Long userId;
+public class UserResponse {
+    private Long id;
     private String username;
     private String email;
-    private LocalDateTime createdAt;
+    private String role;
 }

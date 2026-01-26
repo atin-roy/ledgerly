@@ -12,27 +12,14 @@ import java.math.BigDecimal;
 @ToString(exclude = "user")
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(
-        name = "budget",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "name"}),
-        indexes = @Index(name = "idx_budget_user_name", columnList = "user_id, name")
-)
+@Table(name = "budget")
 public class Budget extends BaseEntity {
-    @Column(nullable = false, length = 100)
-    private String name;
-
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 
-    @Column(nullable = false, precision = 19, scale = 2)
-    private BigDecimal spent;
-
-    @Transient
-    public BigDecimal getRemaining() {
-        return amount.subtract(
-                spent != null ? spent : BigDecimal.ZERO
-        );
-    }
+    @OneToOne
+    @JoinColumn(name = "category_id")
+    private Category category;  // Each budget tracks ONE category
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)

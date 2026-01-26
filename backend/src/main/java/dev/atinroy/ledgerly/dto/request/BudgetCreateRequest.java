@@ -10,10 +10,8 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 public class BudgetCreateRequest {
-    @NotBlank
-    private String name;
     @NotNull
     private BigDecimal amount;
     @NotNull
-    private BigDecimal spent;
+    private Long categoryId;
 }

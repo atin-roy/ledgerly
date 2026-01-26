@@ -26,6 +26,4 @@ public abstract class BaseEntity {
     @Column(nullable = false)
     @UpdateTimestamp
     protected LocalDateTime updatedAt;
-
-    protected LocalDateTime deletedAt;
 }

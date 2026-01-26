@@ -10,29 +10,25 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString(exclude = {"user", "type", "party", "budget"})
+@ToString(exclude = {"user", "category", "party"})
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(
         name = "transactions",
         indexes = {
-                @Index(name = "idx_transaction_date", columnList = "date"),
                 @Index(name = "idx_transaction_user_date", columnList = "user_id, date")
         }
 )
 public class Transaction extends BaseEntity {
-    @Column(nullable = false)
-    private LocalDateTime date;
-
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount; // positive = received, negative = spent
 
-    @Column(length = 255)
-    private String description;
+    @Column(nullable = false)
+    private LocalDateTime date;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "transaction_type_id", nullable = false)
-    private TransactionType type;
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
@@ -41,8 +37,4 @@ public class Transaction extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "party_id")
     private Party party;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "budget_id")
-    private Budget budget;
 }

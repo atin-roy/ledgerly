@@ -1,7 +1,7 @@
 package dev.atinroy.ledgerly.service;
 
 import dev.atinroy.ledgerly.dto.request.transaction.TransactionCreateRequest;
-import dev.atinroy.ledgerly.dto.request.transaction.TransactionPatchRequest;
+import dev.atinroy.ledgerly.dto.request.transaction.TransactionUpdateRequest;
 import dev.atinroy.ledgerly.entity.*;
 import dev.atinroy.ledgerly.exception.BudgetNotFoundException;
 import dev.atinroy.ledgerly.exception.TransactionNotFoundException;
@@ -26,7 +26,7 @@ public class TransactionService {
     private final PartyRepository partyRepository;
     private final UserRepository userRepository;
     private final BudgetRepository budgetRepository;
-    private final TransactionTypeRepository transactionTypeRepository;
+    private final CategoryRepository categoryRepository;
     private final TransactionMapper transactionMapper;
 
     @Transactional
@@ -39,7 +39,7 @@ public class TransactionService {
             String partyName = request.getPartyName().trim().toLowerCase(Locale.ROOT);
 
             party = partyRepository
-                    .findByUser_UserIdAndNameIgnoreCase(userId, partyName)
+                    .findByUser_IdAndName(userId, partyName)
                     .orElseGet(() -> {
                         Party newParty = new Party();
                         newParty.setName(partyName);
@@ -48,28 +48,28 @@ public class TransactionService {
                     });
         }
 
-        Budget budget = budgetRepository.findByUser_UserIdAndBudgetId(userId, request.getBudgetId()).orElseThrow(() -> new BudgetNotFoundException(request.getBudgetId()));
+        Budget budget = budgetRepository.findByUser_IdAndId(userId, request.getBudgetId()).orElseThrow(() -> new BudgetNotFoundException(request.getBudgetId()));
 
-        TransactionType transactionType = transactionTypeRepository.findByUser_UserIdAndTransactionTypeId(userId, request.getTypeId())
+        Category category = categoryRepository.findByUser_UserIdAndTransactionTypeId(userId, request.getTypeId())
                 .orElseThrow(() -> new TransactionTypeNotFoundException("Transaction type not found with id: " + request.getTypeId()));
 
         Transaction transaction = transactionMapper.toEntity(request);
         transaction.setUser(user);
         transaction.setParty(party);
         transaction.setBudget(budget);
-        transaction.setType(transactionType);
+        transaction.setCategory(category);
 
         return transactionRepository.save(transaction);
     }
 
     @Transactional
-    public Transaction patchTransaction(TransactionPatchRequest request, Long userId, Long transactionId) {
+    public Transaction patchTransaction(TransactionUpdateRequest request, Long userId, Long transactionId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
         Transaction transaction =
                 transactionRepository
-                        .findByTransactionIdAndUser_UserId(userId, transactionId)
+                        .findByUser_IdAndId(userId, transactionId)
                         .orElseThrow(TransactionNotFoundException::new);
 
         if (request.getAmount() != null) {
@@ -79,15 +79,15 @@ public class TransactionService {
             transaction.setDate(request.getDate());
         }
         if (request.getTypeId() != null) {
-            TransactionType transactionType = transactionTypeRepository.findByUser_UserIdAndTransactionTypeId(userId, request.getTypeId()).orElseThrow(() -> new TransactionTypeNotFoundException("Transaction type not found with id: " + request.getTypeId()));
-            transaction.setType(transactionType);
+            Category category = categoryRepository.findByUser_UserIdAndTransactionTypeId(userId, request.getTypeId()).orElseThrow(() -> new TransactionTypeNotFoundException("Transaction type not found with id: " + request.getTypeId()));
+            transaction.setCategory(category);
         }
         if (request.getDescription() != null) {
             transaction.setDescription(request.getDescription());
         }
         if (request.getPartyName() != null && !request.getPartyName().isBlank()) {
             String partyName = request.getPartyName().trim().toLowerCase(Locale.ROOT);
-            Party party = partyRepository.findByUser_UserIdAndNameIgnoreCase(userId, partyName).orElse(null);
+            Party party = partyRepository.findByUser_IdAndName(userId, partyName).orElse(null);
             if (party != null) {
                 transaction.setParty(party);
             } else {
@@ -102,31 +102,31 @@ public class TransactionService {
 
     @Transactional(readOnly = true)
     public Page<Transaction> getTransactionsForUser(Long userId, Pageable pageable) {
-        return transactionRepository.findByUser_UserId(userId, pageable);
+        return transactionRepository.findByUser_Id(userId, pageable);
     }
 
     @Transactional(readOnly = true)
     public Page<Transaction> getTransactionsForUserForBudget(Long userId, Long budgetId, Pageable pageable) {
-        return transactionRepository.findByUser_UserIdAndBudget_BudgetId(userId, budgetId, pageable);
+        return transactionRepository.findByUser_IdAndBudget_Id(userId, budgetId, pageable);
     }
 
     @Transactional(readOnly = true)
     public Page<Transaction> getTransactionsForUserForTransactionType(Long userId, Long transactionTypeId, Pageable pageable) {
-        return transactionRepository.findByUser_UserIdAndType_TransactionTypeId(userId, transactionTypeId, pageable);
+        return transactionRepository.findByUser_IdAndType_Id(userId, transactionTypeId, pageable);
     }
 
     @Transactional(readOnly = true)
     public Page<Transaction> getTransactionsBetweenDates(Long userId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
-        return transactionRepository.findByUser_UserIdAndDateBetween(userId, startDate, endDate, pageable);
+        return transactionRepository.findByUser_IdAndDateBetween(userId, startDate, endDate, pageable);
     }
 
     @Transactional(readOnly = true)
     public Page<Transaction> getTransactionsBetweenAmounts(Long userId, BigDecimal from, BigDecimal to, Pageable pageable) {
-        return transactionRepository.findByUser_UserIdAndAmountBetween(userId, from, to, pageable);
+        return transactionRepository.findByUser_IdAndAmountBetween(userId, from, to, pageable);
     }
 
     @Transactional(readOnly = true)
     public Page<Transaction> getTransactionsForUserForParty(Long userId, Long partyId, Pageable pageable) {
-        return  transactionRepository.findByUser_UserIdAndParty_PartyId(userId, partyId, pageable);
+        return  transactionRepository.findByUser_IdAndParty_Id(userId, partyId, pageable);
     }
 }

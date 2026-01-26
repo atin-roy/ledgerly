@@ -8,10 +8,10 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class PotCreateResponse {
-    private String potId;
+public class BillResponse {
+    private Long billId;
     private String name;
-    private BigDecimal target;
-    private BigDecimal saved;
-    private LocalDateTime createdAt;
+    private BigDecimal amount;
+    private String status;
+    private LocalDateTime dueDate;
 }

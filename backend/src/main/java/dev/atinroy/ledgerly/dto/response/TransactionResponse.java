@@ -8,9 +8,10 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class TransactionCreatedResponse {
+public class TransactionResponse {
     private Long transactionId;
     private BigDecimal amount;
-    private LocalDateTime createdAt;
-    private String typeName;
+    private LocalDateTime date;
+    private String categoryName;
+    private String partyName;
 }

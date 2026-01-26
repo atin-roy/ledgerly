@@ -15,8 +15,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(
         name = "pot",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"name", "user_id"}),
-        indexes = @Index(name = "idx_pot_user_name", columnList = "user_id, name")
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "name"})
 )
 public class Pot extends BaseEntity {
     @Column(nullable = false, length = 100)
@@ -27,9 +26,6 @@ public class Pot extends BaseEntity {
 
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal saved;
-
-    @Column()
-    private LocalDateTime targetDate;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)

@@ -1,7 +1,7 @@
 package dev.atinroy.ledgerly.mapper;
 
 import dev.atinroy.ledgerly.dto.request.transaction.TransactionCreateRequest;
-import dev.atinroy.ledgerly.dto.response.TransactionCreatedResponse;
+import dev.atinroy.ledgerly.dto.response.TransactionResponse;
 import dev.atinroy.ledgerly.entity.Transaction;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -16,5 +16,5 @@ public interface TransactionMapper {
     @Mapping(target = "type", ignore = true)
     Transaction toEntity(TransactionCreateRequest transactionCreateRequest);
 
-    TransactionCreatedResponse toResponse(Transaction transaction);
+    TransactionResponse toResponse(Transaction transaction);
 }

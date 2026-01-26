@@ -4,12 +4,13 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class BudgetCreateResponse {
-    private String budgetId;
+public class PotResponse {
+    private Long potId;
     private String name;
-    private BigDecimal amount;
-    private BigDecimal spent;
+    private BigDecimal target;
+    private BigDecimal saved;
 }

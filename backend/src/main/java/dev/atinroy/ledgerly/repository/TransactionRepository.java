@@ -1,24 +1,34 @@
 package dev.atinroy.ledgerly.repository;
 
 import dev.atinroy.ledgerly.entity.Transaction;
-import dev.atinroy.ledgerly.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
-public interface TransactionRepository extends JpaRepository<Transaction, Long> {
-    Optional<Transaction> findByTransactionIdAndUser_UserId(Long userId, Long transactionId);
-    Page<Transaction> findByUser_UserId(Long userId, Pageable pageable);
-    Page<Transaction> findByUser_UserIdAndType_TransactionTypeId(Long userId, Long transactionTypeId, Pageable pageable);
-    Page<Transaction> findByUser_UserIdAndDateBetween(Long userId, LocalDateTime from, LocalDateTime to, Pageable pageable);
-    Page<Transaction> findByUser_UserIdAndAmountBetween(Long userId, BigDecimal from, BigDecimal to, Pageable pageable);
-    Page<Transaction> findByUser_UserIdAndParty_PartyId(Long userId, Long partyId, Pageable pageable);
-    Page<Transaction> findByUser_UserIdAndBudget_BudgetId(Long userId, Long budgetId, Pageable pageable);
+public interface TransactionRepository extends JpaRepository<Transaction, Long>{
+    // full list of transactions of a user
+    Page<Transaction> findByUser_Id(
+            Long userId,
+            Pageable pageable
+    );
+    // for finding a specific transaction
+    Optional<Transaction> findByUser_IdAndId(
+            Long userId,
+            Long transactionId
+    );
 
-    List<Transaction> user(User user);
+    @Modifying
+    @Query("UPDATE Transaction t SET t.category.id = :generalId " +
+            "WHERE t.user.id = :userId AND t.category.id = :targetId")
+    void reassignCategory(
+            @Param("userId") Long userId,
+            @Param("targetId") Long targetId,
+            @Param("generalId") Long generalId
+    );
 }

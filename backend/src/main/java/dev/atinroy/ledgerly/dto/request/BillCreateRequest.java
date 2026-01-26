@@ -14,8 +14,6 @@ public class BillCreateRequest {
     @NotBlank
     private String name;
     @NotNull
-    private String description;
-    @NotNull
     private BigDecimal amount;
     @NotNull
     private LocalDateTime dueDate;

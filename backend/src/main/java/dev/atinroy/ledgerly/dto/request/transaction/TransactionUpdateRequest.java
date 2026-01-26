@@ -1,5 +1,6 @@
 package dev.atinroy.ledgerly.dto.request.transaction;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,11 +9,9 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class TransactionPatchRequest {
+public class TransactionUpdateRequest {
     private BigDecimal amount;
     private LocalDateTime date;
-    private Long typeId;
-    private String description;
-    private String partyName;
-    private Long budgetId;
+    private Long categoryId;
+    private String partyName; // optional - create or link an existing party
 }

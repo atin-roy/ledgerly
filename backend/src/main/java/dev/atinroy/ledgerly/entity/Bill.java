@@ -22,9 +22,6 @@ public class Bill extends BaseEntity {
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
-
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 
