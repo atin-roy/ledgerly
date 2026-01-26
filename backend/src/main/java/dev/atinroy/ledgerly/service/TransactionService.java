@@ -26,6 +26,7 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
     private final CategoryService categoryService;
+    private final PartyService partyService;
     private final TransactionMapper transactionMapper;
     private final TransactionValidator transactionValidator;
 
@@ -51,6 +52,12 @@ public class TransactionService {
         // Resolve category ID (0 maps to General category)
         Category category = categoryService.findOrResolveGeneralCategory(userId, request.categoryId());
         transaction.setCategory(category);
+
+        // Handle party name - find existing or create new party
+        if (request.partyName() != null && !request.partyName().trim().isEmpty()) {
+            var party = partyService.findOrCreateParty(userId, request.partyName());
+            transaction.setParty(party);
+        }
 
         Transaction saved = transactionRepository.save(transaction);
         return transactionMapper.toResponse(saved);
@@ -82,6 +89,16 @@ public class TransactionService {
         if (request.categoryId() != null) {
             Category category = categoryService.findOrResolveGeneralCategory(userId, request.categoryId());
             transaction.setCategory(category);
+        }
+        if (request.partyName() != null) {
+            if (request.partyName().trim().isEmpty()) {
+                // Empty string means remove the party
+                transaction.setParty(null);
+            } else {
+                // Find or create party
+                var party = partyService.findOrCreateParty(userId, request.partyName());
+                transaction.setParty(party);
+            }
         }
 
         Transaction saved = transactionRepository.save(transaction);

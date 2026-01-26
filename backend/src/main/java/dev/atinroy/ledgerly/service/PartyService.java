@@ -120,4 +120,35 @@ public class PartyService {
                 .map(partyMapper::toResponse)
                 .toList();
     }
+
+    /**
+     * Finds an existing party by name or creates a new one if it doesn't exist.
+     * Used when creating/updating transactions with a party name.
+     *
+     * @param userId the user ID
+     * @param partyName the party name (will be normalized for lookup)
+     * @return the found or newly created party entity
+     */
+    @Transactional
+    public Party findOrCreateParty(Long userId, String partyName) {
+        if (partyName == null || partyName.trim().isEmpty()) {
+            return null;
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+
+        String normalizedName = Party.normalize(partyName);
+
+        // Try to find existing party
+        return partyRepository.findByUser_IdAndNormalizedName(userId, normalizedName)
+                .orElseGet(() -> {
+                    // Create new party if it doesn't exist
+                    Party newParty = new Party();
+                    newParty.setName(partyName.trim());
+                    newParty.setNormalizedName(normalizedName);
+                    newParty.setUser(user);
+                    return partyRepository.save(newParty);
+                });
+    }
 }
