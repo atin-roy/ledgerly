@@ -8,8 +8,10 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 @Configuration
+@Profile("!prod")  // Disable Swagger/OpenAPI in production
 public class OpenApiConfig {
 
     private static final String SECURITY_SCHEME_NAME = "Bearer Authentication";

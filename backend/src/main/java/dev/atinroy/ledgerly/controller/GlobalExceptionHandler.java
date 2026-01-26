@@ -2,6 +2,8 @@ package dev.atinroy.ledgerly.controller;
 
 import dev.atinroy.ledgerly.error.ValidationException;
 import dev.atinroy.ledgerly.error.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -10,8 +12,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    @Value("${spring.profiles.active:dev}")
+    private String activeProfile;
 
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<Map<String, Object>> handleValidationException(ValidationException ex) {
@@ -103,9 +109,20 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGenericException(Exception ex) {
+        // Log the full exception for debugging
+        log.error("Unhandled exception occurred", ex);
+        
         Map<String, String> response = new HashMap<>();
         response.put("error", "Internal server error");
-        response.put("message", ex.getMessage());
+        
+        // Only expose detailed error messages in non-production environments
+        if ("prod".equalsIgnoreCase(activeProfile)) {
+            response.put("message", "An unexpected error occurred. Please contact support if the problem persists.");
+        } else {
+            response.put("message", ex.getMessage());
+            response.put("type", ex.getClass().getSimpleName());
+        }
+        
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 }
