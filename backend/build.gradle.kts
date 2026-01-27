@@ -51,6 +51,11 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
 
+    // Test dependencies - H2 in-memory database for testing
+    testImplementation("com.h2database:h2")
+    testCompileOnly("org.projectlombok:lombok")
+    testAnnotationProcessor("org.projectlombok:lombok")
+
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
 }
 

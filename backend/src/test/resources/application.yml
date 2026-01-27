@@ -1,0 +1,36 @@
+# Test configuration for running tests with H2 in-memory database
+spring:
+  # Explicitly set default profile for tests
+  profiles:
+    default: test
+
+  datasource:
+    # H2 in-memory database with a unique name per test to avoid conflicts
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      # Create tables automatically for tests
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+    # Disable open-in-view for tests
+    open-in-view: false
+
+# JWT configuration for tests
+jwt:
+  # Test secret key (at least 256 bits / 32 bytes for HS256)
+  secret: test-secret-key-for-jwt-testing-must-be-at-least-32-bytes-long
+  access-token-expiration: 3600000    # 1 hour
+  refresh-token-expiration: 86400000  # 24 hours
+
+# Disable security for some tests
+logging:
+  level:
+    org.springframework.security: DEBUG
