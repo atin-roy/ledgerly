@@ -1,0 +1,15 @@
+meta {
+  name: Get all transactions
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{BASE}}/api/users/{{userId}}/transactions
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

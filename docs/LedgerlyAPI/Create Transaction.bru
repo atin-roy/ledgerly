@@ -1,0 +1,25 @@
+meta {
+  name: Create Transaction
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{BASE}}api/users/{{userId}}/transactions
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "amount": 100.00,
+    "date": "2026-01-26T10:00:00",
+    "categoryId": 1,
+    "partyName": "Amazon"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

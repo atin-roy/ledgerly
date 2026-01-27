@@ -114,6 +114,7 @@ public class TransactionService {
         transactionRepository.delete(transaction);
     }
 
+    @Transactional(readOnly = true)
     public TransactionResponse getTransaction(Long userId, Long id) {
         userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
         Transaction transaction = transactionRepository.findByUser_IdAndId(userId, id)
@@ -122,6 +123,7 @@ public class TransactionService {
         return transactionMapper.toResponse(transaction);
     }
 
+    @Transactional(readOnly = true)
     public Page<TransactionResponse> getTransactions(Long userId, Pageable pageable) {
         userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
         return transactionRepository.findByUser_Id(userId, pageable)
