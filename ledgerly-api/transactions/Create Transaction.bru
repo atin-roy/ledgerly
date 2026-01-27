@@ -1,0 +1,26 @@
+meta {
+  name: Create Transaction
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/users/{userId}/transactions
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "amount": 1250.75,
+    "date": "2026-01-27T12:30:00",
+    "categoryName": "Groceries",
+    "partyName": "Reliance Smart"
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

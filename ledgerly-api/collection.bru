@@ -1,0 +1,19 @@
+auth {
+  mode: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+vars:pre-request {
+  baseUrl: https://ledgerly-production-4b76.up.railway.app
+  email: atinroy1357@gmail.com
+  password: 123456789
+  username: HunkyWarrior
+}
+
+vars:post-response {
+  accessToken: res.body.accessToken
+  refreshToken: res.body.refreshToken
+}
