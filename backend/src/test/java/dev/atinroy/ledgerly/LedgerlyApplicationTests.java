@@ -29,7 +29,7 @@ import org.springframework.test.context.TestPropertySource;
     "jwt.refresh-token-expiration=86400000"
 })
 @DisplayName("Application Context Integration Tests")
-class FinanceBackendApplicationTests {
+class LedgerlyApplicationTests {
 
     /**
      * Verifies that the Spring application context loads successfully.
