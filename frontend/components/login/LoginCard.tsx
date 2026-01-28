@@ -32,7 +32,7 @@ export default function LoginCard() {
         />
         <button
           type="submit"
-          className="mt-2 rounded-full bg-[var(--color-green)] px-6 py-3 text-white transition hover:bg-[var(--color-green)]/90"
+          className="mt-2 rounded-full bg-[#277c78] px-6 py-3 text-white transition hover:bg-[#277c78]/90 hover:text-white"
         >
           Login
         </button>
