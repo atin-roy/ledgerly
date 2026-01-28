@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 type CustomSelectProps = {
   value: string;
@@ -11,7 +11,6 @@ type CustomSelectProps = {
   className?: string;
   isMobile?: boolean;
   trailingIcon?: ReactNode;
-  dropdownWidth?: number;
 };
 
 export default function CustomSelect({
@@ -23,7 +22,6 @@ export default function CustomSelect({
   className,
   isMobile = false,
   trailingIcon,
-  dropdownWidth,
 }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -64,18 +62,9 @@ export default function CustomSelect({
     };
   }, [isOpen]);
 
-  const dropdownStyle =
-    dropdownWidth !== undefined
-      ? ({
-          width: `${dropdownWidth}px`,
-          ...(isMobile
-            ? {
-                left: "50%",
-                transform: "translateX(-50%)",
-              }
-            : undefined),
-        } as CSSProperties)
-      : undefined;
+  const dropdownPositionClasses = isMobile
+    ? "absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2 w-full"
+    : "absolute top-full left-0 right-0 z-50 mt-1 w-full";
 
   return (
     <div ref={dropdownRef} className={`relative ${className ?? ""}`}>
@@ -101,10 +90,7 @@ export default function CustomSelect({
 
       {isOpen && (
         <div
-          className={`${
-            isMobile ? "absolute top-full z-50 mt-2" : "absolute top-full left-0 z-50 mt-1"
-          } rounded-2xl border border-grey-300 bg-white shadow-lg overflow-hidden`}
-          style={dropdownStyle}
+          className={`${dropdownPositionClasses} rounded-2xl border border-grey-300 bg-white shadow-lg overflow-hidden`}
         >
           <ul role="listbox">
             {options.map((option, index) => {

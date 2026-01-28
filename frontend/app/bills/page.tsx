@@ -4,7 +4,6 @@ import { ArrowUpDown, ChevronDown } from "lucide-react";
 import {
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ChangeEvent,
 } from "react";
@@ -27,8 +26,6 @@ export default function BillsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<BillSortOption>("latest");
   const [page, setPage] = useState(1);
-  const [billRowWidth, setBillRowWidth] = useState(0);
-  const billListRef = useRef<HTMLDivElement>(null);
 
   const { data: visibleBills, currentPage, totalItems, totalPages } = useMemo(
     () =>
@@ -48,30 +45,6 @@ export default function BillsPage() {
       setPage(currentPage);
     }
   }, [currentPage, page]);
-
-  useEffect(() => {
-    const node = billListRef.current;
-    if (!node || typeof ResizeObserver === "undefined") {
-      return undefined;
-    }
-
-    const updateWidth = () => {
-      const { width } = node.getBoundingClientRect();
-      setBillRowWidth(Math.round(width));
-    };
-
-    updateWidth();
-
-    const observer = new ResizeObserver(() => {
-      updateWidth();
-    });
-
-    observer.observe(node);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
 
   const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
@@ -143,7 +116,7 @@ export default function BillsPage() {
 
           <div className="rounded-[32px] bg-white p-6 shadow-xl">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="relative flex-1 min-w-[220px] max-w-sm">
+              <div className="relative flex-1 min-w-[220px] max-w-[300px]">
                 <input
                   type="search"
                   placeholder="Search bills"
@@ -176,11 +149,10 @@ export default function BillsPage() {
                   icon={<ArrowUpDown className="h-4 w-4" />}
                   ariaLabel="Sort by"
                   isMobile
-                  dropdownWidth={billRowWidth || undefined}
                 />
               </div>
 
-              <div className="hidden flex-1 items-center gap-3 md:flex">
+              <div className="hidden items-center gap-3 md:flex md:justify-end">
                 <span className="text-xs uppercase tracking-[0.5em] text-slate-400">
                   Sort by
                 </span>
@@ -191,12 +163,12 @@ export default function BillsPage() {
                   icon={<ChevronDown className="h-4 w-4" />}
                   trailingIcon={<ChevronDown className="h-4 w-4" />}
                   ariaLabel="Sort by"
-                  dropdownWidth={billRowWidth || undefined}
+                  className="w-[180px]"
                 />
               </div>
             </div>
 
-            <div className="mt-6 space-y-4" ref={billListRef}>
+            <div className="mt-6 space-y-4">
               {visibleBills.map((bill) => (
                 <BillCard key={bill.id} bill={bill} />
               ))}
