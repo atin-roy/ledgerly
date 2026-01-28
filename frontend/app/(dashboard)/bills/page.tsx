@@ -100,12 +100,12 @@ export default function BillsPage() {
     setFormValues((prev) => ({ ...prev, [target.name]: target.value }));
   };
 
-  const handleCategoryChange = (category: BillCategory) => {
-    setFormValues((prev) => ({ ...prev, category }));
+  const handleCategoryChange = (value: string) => {
+    setFormValues((prev) => ({ ...prev, category: value as BillCategory }));
   };
 
-  const handleFrequencyChange = (frequency: BillFrequency) => {
-    setFormValues((prev) => ({ ...prev, frequency }));
+  const handleFrequencyChange = (value: string) => {
+    setFormValues((prev) => ({ ...prev, frequency: value as BillFrequency }));
   };
 
   const handleFormSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
@@ -259,7 +259,7 @@ export default function BillsPage() {
               <div className="absolute inset-0 z-40 flex items-center justify-center rounded-[32px] bg-black/40 px-4 py-8">
                 <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
                   <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-[var(--color-grey-900)]">
+                    <h3 className="text-lg font-semibold text-(--color-grey-900)">
                       New bill
                     </h3>
                     <button
@@ -339,7 +339,7 @@ export default function BillsPage() {
                     <div className="flex justify-center gap-3 pt-1">
                       <Button
                         variant="ghost"
-                        className="rounded-2xl px-6 py-3 text-sm font-semibold bg-rose-600 text-white shadow-lg focus-visible:ring-rose-500 active:translate-y-[1px] active:scale-95 hover:bg-rose-600 hover:text-white hover:shadow-none"
+                        className="rounded-2xl px-6 py-3 text-sm font-semibold bg-rose-600 text-white shadow-lg focus-visible:ring-rose-500 active:translate-y-px active:scale-95 hover:bg-rose-600 hover:text-white hover:shadow-none"
                         onClick={() => setIsModalOpen(false)}
                         type="button"
                       >
@@ -348,7 +348,7 @@ export default function BillsPage() {
                       <Button
                         variant="ghost"
                         type="submit"
-                        className="rounded-2xl px-6 py-3 text-sm font-semibold bg-emerald-600 text-white shadow-lg focus-visible:ring-emerald-500 active:translate-y-[1px] active:scale-95 hover:bg-emerald-600 hover:text-white hover:shadow-none"
+                        className="rounded-2xl px-6 py-3 text-sm font-semibold bg-emerald-600 text-white shadow-lg focus-visible:ring-emerald-500 active:translate-y-px active:scale-95 hover:bg-emerald-600 hover:text-white hover:shadow-none"
                       >
                         Save
                       </Button>
