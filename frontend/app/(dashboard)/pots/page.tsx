@@ -127,8 +127,9 @@ export default function PotsPage() {
           </section>
 
           {isModalOpen && (
-            <div className="absolute inset-0 z-40 flex items-center justify-center rounded-3xl bg-black/40 px-4 py-8">
-              <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="absolute inset-0 z-40 bg-black/40 px-4">
+              <div className="flex justify-center pt-40">
+                <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-[var(--color-grey-900)]">
                     New pot
@@ -213,6 +214,7 @@ export default function PotsPage() {
                   </div>
                 </form>
               </div>
+            </div>
             </div>
           )}
         </div>

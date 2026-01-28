@@ -82,79 +82,81 @@ export default function BudgetsPage() {
           </section>
 
           {isModalOpen && (
-            <div className="absolute inset-0 z-40 flex items-center justify-center rounded-3xl bg-black/40 px-4 py-8">
-              <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-[var(--color-grey-900)]">
-                    New budget
-                  </h3>
-                  <button
-                    type="button"
-                    className="text-sm font-semibold text-slate-500 hover:text-slate-700"
-                    onClick={() => setIsModalOpen(false)}
-                  >
-                    Close
-                  </button>
-                </div>
-                <form className="mt-2 space-y-4" onSubmit={handleFormSubmit}>
-                  <label className="flex flex-col gap-2 text-sm text-slate-600">
-                    <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
-                      Category
-                    </span>
-                    <CustomSelect
-                      value={formValues.category}
-                      options={budgetCategories}
-                      onChange={handleCategoryChange}
-                      icon={<ChevronDown className="h-4 w-4" />}
-                      trailingIcon={<ChevronDown className="h-4 w-4" />}
-                      ariaLabel="Budget category"
-                    />
-                  </label>
-                  <label className="flex flex-col gap-2 text-sm text-slate-600">
-                    <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
-                      Limit
-                    </span>
-                    <input
-                      name="limit"
-                      value={formValues.limit}
-                      onChange={handleFormChange}
-                      placeholder="0.00"
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                    />
-                  </label>
-                  <label className="flex flex-col gap-2 text-sm text-slate-600">
-                    <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
-                      Description
-                    </span>
-                    <input
-                      name="description"
-                      value={formValues.description}
-                      onChange={handleFormChange}
-                      placeholder="Add notes about this goal"
-                      className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                    />
-                  </label>
-                  <div className="flex justify-center gap-3 pt-1">
-                    <Button
-                      variant="ghost"
-                      className="rounded-2xl px-6 py-3 text-sm font-semibold bg-rose-600 text-white shadow-lg focus-visible:ring-rose-500 active:translate-y-[1px] active:scale-95 hover:bg-rose-600 hover:text-white hover:shadow-none"
-                      onClick={() => setIsModalOpen(false)}
+            <div className="absolute inset-0 z-40 bg-black/40 px-4">
+              <div className="flex justify-center pt-40">
+                <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-[var(--color-grey-900)]">
+                      New budget
+                    </h3>
+                    <button
                       type="button"
+                      className="text-sm font-semibold text-slate-500 hover:text-slate-700"
+                      onClick={() => setIsModalOpen(false)}
                     >
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      type="submit"
-                      className="rounded-2xl px-6 py-3 text-sm font-semibold bg-emerald-600 text-white shadow-lg focus-visible:ring-emerald-500 active:translate-y-[1px] active:scale-95 hover:bg-emerald-600 hover:text-white hover:shadow-none"
-                    >
-                      Save
-                    </Button>
+                      Close
+                    </button>
                   </div>
-                </form>
+                  <form className="mt-2 space-y-4" onSubmit={handleFormSubmit}>
+                    <label className="flex flex-col gap-2 text-sm text-slate-600">
+                      <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
+                        Category
+                      </span>
+                      <CustomSelect
+                        value={formValues.category}
+                        options={budgetCategories}
+                        onChange={handleCategoryChange}
+                        icon={<ChevronDown className="h-4 w-4" />}
+                        trailingIcon={<ChevronDown className="h-4 w-4" />}
+                        ariaLabel="Budget category"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-2 text-sm text-slate-600">
+                      <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
+                        Limit
+                      </span>
+                      <input
+                        name="limit"
+                        value={formValues.limit}
+                        onChange={handleFormChange}
+                        placeholder="0.00"
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-2 text-sm text-slate-600">
+                      <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
+                        Description
+                      </span>
+                      <input
+                        name="description"
+                        value={formValues.description}
+                        onChange={handleFormChange}
+                        placeholder="Add notes about this goal"
+                        className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                      />
+                    </label>
+                    <div className="flex justify-center gap-3 pt-1">
+                      <Button
+                        variant="ghost"
+                        className="rounded-2xl px-6 py-3 text-sm font-semibold bg-rose-600 text-white shadow-lg focus-visible:ring-rose-500 active:translate-y-[1px] active:scale-95 hover:bg-rose-600 hover:text-white hover:shadow-none"
+                        onClick={() => setIsModalOpen(false)}
+                        type="button"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        type="submit"
+                        className="rounded-2xl px-6 py-3 text-sm font-semibold bg-emerald-600 text-white shadow-lg focus-visible:ring-emerald-500 active:translate-y-[1px] active:scale-95 hover:bg-emerald-600 hover:text-white hover:shadow-none"
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  </form>
+                </div>
               </div>
             </div>
           )}
