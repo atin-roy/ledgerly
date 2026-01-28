@@ -15,7 +15,7 @@ const LONG_PRESS_DURATION = 600;
 function MobileNav() {
   const pathname = usePathname() ?? "/";
   const router = useRouter();
-  const timerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const longPressTriggered = useRef(false);
   const [showSignOutPrompt, setShowSignOutPrompt] = useState(false);
 
@@ -143,10 +143,10 @@ export default function DashboardLayout({
   children: ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[var(--beige-100)]">
+    <div className="min-h-screen bg-beige-100">
       <div className="flex min-h-screen">
         <Sidebar />
-        <main className="flex-1 overflow-hidden bg-[var(--beige-100)] px-4 py-10 sm:px-6 lg:px-8 lg:pb-0 pb-[96px]">
+        <main className="flex-1 overflow-hidden bg-beige-100 px-4 py-10 sm:px-6 lg:px-8 lg:pb-0 pb-[96px]">
           {children}
         </main>
       </div>
