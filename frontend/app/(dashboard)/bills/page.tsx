@@ -24,15 +24,23 @@ import {
   getBillSummary,
   type BillSortOption,
 } from "@/app/bills/data";
-import { transactionCategoryOptions } from "@/app/transactions/data";
+import { baseCategories, type TransactionCategory } from "@/app/transactions/data";
 
-const billCategories = transactionCategoryOptions.filter(
-  (category) => category !== "All Transactions",
-);
+const billCategories = baseCategories;
+const billFrequencyOptions = ["Weekly", "Bi-Weekly", "Monthly", "Quarterly", "Annual"] as const;
 
-const billFrequencyOptions = ["Weekly", "Bi-Weekly", "Monthly", "Quarterly", "Annual"];
+type BillCategory = TransactionCategory;
+type BillFrequency = (typeof billFrequencyOptions)[number];
 
-const billModalFields = {
+type BillFormValues = {
+  title: string;
+  amount: string;
+  category: BillCategory;
+  frequency: BillFrequency;
+  description: string;
+};
+
+const billModalFields: BillFormValues = {
   title: "",
   amount: "",
   category: billCategories[0],
@@ -45,7 +53,7 @@ export default function BillsPage() {
   const [sortBy, setSortBy] = useState<BillSortOption>("latest");
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formValues, setFormValues] = useState(billModalFields);
+  const [formValues, setFormValues] = useState<BillFormValues>(billModalFields);
 
   const { data: visibleBills, currentPage, totalItems, totalPages } = useMemo(
     () =>
@@ -92,11 +100,11 @@ export default function BillsPage() {
     setFormValues((prev) => ({ ...prev, [target.name]: target.value }));
   };
 
-  const handleCategoryChange = (category: string) => {
+  const handleCategoryChange = (category: BillCategory) => {
     setFormValues((prev) => ({ ...prev, category }));
   };
 
-  const handleFrequencyChange = (frequency: string) => {
+  const handleFrequencyChange = (frequency: BillFrequency) => {
     setFormValues((prev) => ({ ...prev, frequency }));
   };
 
