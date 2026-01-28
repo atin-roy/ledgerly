@@ -32,7 +32,10 @@ export default function BudgetsPage() {
   };
 
   const handleCategoryChange = (category: string) => {
-    setFormValues((prev) => ({ ...prev, category }));
+    setFormValues((prev) => ({
+      ...prev,
+      category: category as (typeof budgetCategories)[number],
+    }));
   };
 
   const handleFormSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
@@ -86,7 +89,7 @@ export default function BudgetsPage() {
               <div className="flex justify-center pt-40">
                 <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
                   <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-[var(--color-grey-900)]">
+                    <h3 className="text-lg font-semibold text-(--color-grey-900)">
                       New budget
                     </h3>
                     <button
@@ -141,7 +144,7 @@ export default function BudgetsPage() {
                     <div className="flex justify-center gap-3 pt-1">
                       <Button
                         variant="ghost"
-                        className="rounded-2xl px-6 py-3 text-sm font-semibold bg-rose-600 text-white shadow-lg focus-visible:ring-rose-500 active:translate-y-[1px] active:scale-95 hover:bg-rose-600 hover:text-white hover:shadow-none"
+                        className="rounded-2xl px-6 py-3 text-sm font-semibold bg-rose-600 text-white shadow-lg focus-visible:ring-rose-500 active:translate-y-px active:scale-95 hover:bg-rose-600 hover:text-white hover:shadow-none"
                         onClick={() => setIsModalOpen(false)}
                         type="button"
                       >
@@ -150,7 +153,7 @@ export default function BudgetsPage() {
                       <Button
                         variant="ghost"
                         type="submit"
-                        className="rounded-2xl px-6 py-3 text-sm font-semibold bg-emerald-600 text-white shadow-lg focus-visible:ring-emerald-500 active:translate-y-[1px] active:scale-95 hover:bg-emerald-600 hover:text-white hover:shadow-none"
+                        className="rounded-2xl px-6 py-3 text-sm font-semibold bg-emerald-600 text-white shadow-lg focus-visible:ring-emerald-500 active:translate-y-px active:scale-95 hover:bg-emerald-600 hover:text-white hover:shadow-none"
                       >
                         Save
                       </Button>
