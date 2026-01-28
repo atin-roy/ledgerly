@@ -35,7 +35,7 @@ export default function OverviewPage() {
 
   const recentTransactions = [...transactionRecords]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5);
+    .slice(0, 3);
 
   const upcomingBills = [...billRecords]
     .sort((a, b) => new Date(a.nextDue).getTime() - new Date(b.nextDue).getTime())
@@ -121,7 +121,7 @@ export default function OverviewPage() {
                       <p className="text-xs text-[var(--color-grey-600)]">{transaction.description}</p>
                     )}
                   </div>
-                  <p className="text-xs text-[var(--color-grey-600)] md:text-right">{transaction.category}</p>
+                  <p className="text-xs text-[var(--color-grey-600)] text-left">{transaction.category}</p>
                   <p className="text-xs text-[var(--color-grey-600)] md:text-right">
                     {formatTransactionDate(transaction.date)}
                   </p>
