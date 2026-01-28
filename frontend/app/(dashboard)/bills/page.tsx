@@ -35,7 +35,7 @@ export default function BillsPage() {
         page,
         pageSize: BILL_PAGE_SIZE,
       }),
-    [searchTerm, sortBy, page],
+    [searchTerm, sortBy, page]
   );
 
   const summary = useMemo(() => getBillSummary(billRecords), []);
@@ -64,8 +64,7 @@ export default function BillsPage() {
   };
 
   const currentSortLabel =
-    billSortOptions.find((option) => option.value === sortBy)?.label ??
-    sortBy;
+    billSortOptions.find((option) => option.value === sortBy)?.label ?? sortBy;
   const placeholderCount = Math.max(0, BILL_PAGE_SIZE - visibleBills.length);
 
   return (

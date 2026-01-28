@@ -30,7 +30,7 @@ export default function TransactionsPage() {
         page,
         pageSize: PAGE_SIZE,
       }),
-    [searchTerm, category, sortBy, page],
+    [searchTerm, category, sortBy, page]
   );
 
   useEffect(() => {

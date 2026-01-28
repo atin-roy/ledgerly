@@ -42,8 +42,7 @@ export default function PotsPage() {
                   {formatCurrency(totalSaved)}
                 </p>
                 <p className="mt-1 text-sm text-(--color-grey-600)">
-                  {pots.length} active pots • Target{" "}
-                  {formatCurrency(totalTarget)}
+                  {pots.length} active pots • Target {formatCurrency(totalTarget)}
                 </p>
               </div>
               <div className="text-right">
