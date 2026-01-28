@@ -1,16 +1,267 @@
-import MoneyCard from "@/components/MoneyCard";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  formatCurrency as formatBillCurrency,
+  formatBillDueDate,
+  billRecords,
+  BillStatus,
+} from "@/app/bills/data";
+import {
+  formatCurrency as formatTransactionCurrency,
+  formatTransactionDate,
+  transactionRecords,
+} from "@/app/transactions/data";
+import { budgets, formatBudgetCurrency } from "@/app/budgets/data";
+import { formatCurrency as formatPotCurrency, formatPercentage, pots } from "@/app/pots/data";
+
+const statusStyles: Record<BillStatus, string> = {
+  pending: "bg-amber-50 text-amber-600",
+  paid: "bg-emerald-50 text-emerald-600",
+  overdue: "bg-red-50 text-red-600",
+  cancelled: "bg-slate-100 text-slate-500",
+};
 
 export default function OverviewPage() {
-  const balance = "69,4267.00";
+  const incomeTotal = transactionRecords
+    .filter((transaction) => transaction.type === "income")
+    .reduce((total, transaction) => total + transaction.amount, 0);
+
+  const expenseTotal = transactionRecords
+    .filter((transaction) => transaction.type === "expense")
+    .reduce((total, transaction) => total + transaction.amount, 0);
+
+  const currentBalance = incomeTotal - expenseTotal;
+
+  const recentTransactions = [...transactionRecords]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5);
+
+  const upcomingBills = [...billRecords]
+    .sort((a, b) => new Date(a.nextDue).getTime() - new Date(b.nextDue).getTime())
+    .slice(0, 3);
+
+  const budgetsPreview = budgets.slice(0, 3);
+  const potsPreview = pots.slice(0, 3);
 
   return (
-    <main className="min-h-screen p-8 bg-[var(--beige-100)]">
-      <h1 className="mb-8 text-3xl font-semibold tracking-tight text-black md:text-4xl]">
-        Overview
-      </h1>
-      <MoneyCard title={"Current Balance"} number={balance} colorscheme={"dark"} />
-      <MoneyCard title={"Income"} number={"1000"} colorscheme={"light"} />
-      <MoneyCard title={"Expenses"} number={"1000"} colorscheme={"light"} />
+    <main className="space-y-10 text-[var(--color-grey-900)]">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-xs uppercase tracking-[0.5em] text-[var(--color-grey-600)]">
+            Personal snapshot
+          </p>
+          <h1 className="text-3xl font-semibold text-[var(--color-grey-900)]">Dashboard</h1>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" asChild>
+            <Link href="/transactions">New transaction</Link>
+          </Button>
+          <Button size="sm" variant="outline" asChild>
+            <Link href="/bills">New bill</Link>
+          </Button>
+        </div>
+      </header>
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-2xl border border-[#eee7de] bg-white p-6 shadow-sm">
+          <p className="text-sm uppercase tracking-[0.4em] text-[var(--color-grey-600)]">
+            Current Balance
+          </p>
+          <p className="mt-2 text-3xl font-semibold text-[var(--color-grey-900)]">
+            {formatTransactionCurrency(currentBalance)}
+          </p>
+          <p className="mt-3 text-sm text-[var(--color-grey-600)]">
+            Balance reflects the last 30 transactions.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-[#eee7de] bg-white p-6 shadow-sm">
+          <p className="text-sm uppercase tracking-[0.4em] text-[var(--color-grey-600)]">Income</p>
+          <p className="mt-2 text-3xl font-semibold text-[var(--color-green)]">
+            {formatTransactionCurrency(incomeTotal)}
+          </p>
+          <p className="mt-3 text-sm text-[var(--color-grey-600)]">
+            Total credited amounts over the full history.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-[#eee7de] bg-white p-6 shadow-sm">
+          <p className="text-sm uppercase tracking-[0.4em] text-[var(--color-grey-600)]">
+            Expenses
+          </p>
+          <p className="mt-2 text-3xl font-semibold text-[var(--color-red)]">
+            {formatTransactionCurrency(expenseTotal)}
+          </p>
+          <p className="mt-3 text-sm text-[var(--color-grey-600)]">
+            Sum of every documented payment.
+          </p>
+        </div>
+      </section>
+
+      <section className="space-y-4 rounded-2xl border border-[#eee7de] bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.4em] text-[var(--color-grey-600)]">
+              Transactions
+            </p>
+            <h2 className="text-xl font-semibold text-[var(--color-grey-900)]">Last 5</h2>
+          </div>
+          <Button size="sm" variant="outline" asChild>
+            <Link href="/transactions">Create transaction</Link>
+          </Button>
+        </div>
+        <div className="divide-y border-t border-[#f0e8df]">
+          {recentTransactions.map((transaction) => {
+            const isIncome = transaction.type === "income";
+            const amountClass = isIncome ? "text-[var(--color-green)]" : "text-[var(--color-red)]";
+            return (
+              <div
+                key={transaction.id}
+                className="flex flex-col gap-2 py-4 md:flex-row md:items-center md:justify-between"
+              >
+                <div>
+                  <p className="text-sm font-semibold text-[var(--color-grey-900)]">
+                    {transaction.recipient}
+                  </p>
+                  {transaction.description && (
+                    <p className="text-xs text-[var(--color-grey-600)]">{transaction.description}</p>
+                  )}
+                </div>
+                <p className="text-xs text-[var(--color-grey-600)]">{transaction.category}</p>
+                <p className="text-xs text-[var(--color-grey-600)]">
+                  {formatTransactionDate(transaction.date)}
+                </p>
+                <p className={`text-sm font-semibold ${amountClass} md:text-base`}>
+                  {isIncome ? "+" : "-"}
+                  {formatTransactionCurrency(transaction.amount)}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-4 rounded-2xl border border-[#eee7de] bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.4em] text-[var(--color-grey-600)]">
+                Upcoming bills
+              </p>
+              <h2 className="text-xl font-semibold text-[var(--color-grey-900)]">Next 3</h2>
+            </div>
+            <Button size="sm" variant="outline" asChild>
+              <Link href="/bills">Create bill</Link>
+            </Button>
+          </div>
+          <div className="space-y-3 rounded-2xl border border-[#f5efe7] bg-[var(--beige-100)] p-4">
+            {upcomingBills.map((bill) => (
+              <div key={bill.id} className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-2xl text-sm font-semibold"
+                    style={{ backgroundColor: bill.iconColor, color: "white" }}
+                  >
+                    {bill.iconLabel}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--color-grey-900)]">{bill.title}</p>
+                    <p className="text-xs text-[var(--color-grey-600)]">{bill.dueLabel}</p>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end">
+                  <p className="text-sm font-semibold text-[var(--color-grey-900)]">
+                    {formatBillCurrency(bill.amount)}
+                  </p>
+                  <p className="text-xs text-[var(--color-grey-600)]">
+                    {formatBillDueDate(bill.nextDue)}
+                  </p>
+                  <span className={`mt-1 rounded-full px-2 py-1 text-[0.6rem] font-semibold ${statusStyles[bill.status]}`}>
+                    {bill.status}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="space-y-4 rounded-2xl border border-[#eee7de] bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.4em] text-[var(--color-grey-600)]">
+                  Budgets
+                </p>
+                <h2 className="text-xl font-semibold text-[var(--color-grey-900)]">Compact view</h2>
+              </div>
+              <Button size="sm" variant="outline" asChild>
+                <Link href="/budgets">New budget</Link>
+              </Button>
+            </div>
+            <div className="space-y-4">
+              {budgetsPreview.map((budget) => {
+                const progress = budget.limit ? (budget.spent / budget.limit) * 100 : 0;
+                return (
+                  <div key={budget.id} className="space-y-1">
+                    <div className="flex items-center justify-between text-sm font-semibold text-[var(--color-grey-900)]">
+                      <p>{budget.name}</p>
+                      <p>
+                        {formatBudgetCurrency(budget.spent)} / {formatBudgetCurrency(budget.limit)}
+                      </p>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-[#ede8e1]">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${Math.min(progress, 100)}%`,
+                          backgroundColor: budget.color,
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-4 rounded-2xl border border-[#eee7de] bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.4em] text-[var(--color-grey-600)]">Pots</p>
+                <h2 className="text-xl font-semibold text-[var(--color-grey-900)]">Aligned goals</h2>
+              </div>
+              <Button size="sm" variant="outline" asChild>
+                <Link href="/pots">New pot</Link>
+              </Button>
+            </div>
+            <div className="space-y-4">
+              {potsPreview.map((pot) => {
+                const progress = pot.target ? (pot.saved / pot.target) * 100 : 0;
+                return (
+                  <div key={pot.id} className="space-y-1">
+                    <div className="flex items-center justify-between text-sm font-semibold text-[var(--color-grey-900)]">
+                      <p>{pot.name}</p>
+                      <p>{formatPotCurrency(pot.saved)}</p>
+                    </div>
+                    <p className="text-xs uppercase tracking-[0.3em] text-[var(--color-grey-600)]">
+                      Saved of {formatPotCurrency(pot.target)} · {formatPercentage(progress)}%
+                    </p>
+                    <div className="h-1.5 rounded-full bg-[#ede8e1]">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${Math.min(progress, 100)}%`,
+                          backgroundColor: pot.accentColor,
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
