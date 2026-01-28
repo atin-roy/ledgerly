@@ -13,6 +13,8 @@ export type TransactionCategory = (typeof baseCategories)[number];
 
 export const transactionCategoryOptions = [
   "All Transactions",
+  "Income",
+  "Expense",
   ...baseCategories,
 ] as const;
 
@@ -251,7 +253,13 @@ export function getTransactionPage(
 
   const filtered = records
     .filter((tx) => {
-      if (category !== "All Transactions" && tx.category !== category) {
+      if (category === "Income" && tx.type !== "income") {
+        return false;
+      }
+      if (category === "Expense" && tx.type !== "expense") {
+        return false;
+      }
+      if (category !== "All Transactions" && category !== "Income" && category !== "Expense" && tx.category !== category) {
         return false;
       }
 

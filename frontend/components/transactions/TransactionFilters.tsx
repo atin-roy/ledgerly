@@ -17,9 +17,18 @@ interface CustomSelectProps {
   icon: React.ReactNode;
   ariaLabel: string;
   className?: string;
+  isMobile?: boolean;
 }
 
-function CustomSelect({ value, options, onChange, icon, ariaLabel, className }: CustomSelectProps) {
+function CustomSelect({
+  value,
+  options,
+  onChange,
+  icon,
+  ariaLabel,
+  className,
+  isMobile = false,
+}: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -43,7 +52,10 @@ function CustomSelect({ value, options, onChange, icon, ariaLabel, className }: 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -76,14 +88,17 @@ function CustomSelect({ value, options, onChange, icon, ariaLabel, className }: 
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-1 rounded-2xl border border-grey-300 bg-white shadow-lg md:w-full overflow-hidden">
+        <div
+          className={`${isMobile ? "fixed left-10 right-10 top-60 z-50" : "absolute top-full left-0 right-0 z-50 mt-1"} rounded-2xl border border-grey-300 bg-white shadow-lg overflow-hidden`}
+        >
           <ul className="" role="listbox">
             {options.map((option, index) => {
               const isFirst = index === 0;
               const isLast = index === options.length - 1;
               const isSelected = option === value;
 
-              let buttonClasses = "w-full text-left text-sm focus:bg-(--color-grey-100) focus:outline-none ";
+              let buttonClasses =
+                "w-full text-left text-sm focus:bg-(--color-grey-100) focus:outline-none ";
 
               // Add hover effect only for unselected items
               if (!isSelected) {
@@ -128,7 +143,9 @@ function CustomSelect({ value, options, onChange, icon, ariaLabel, className }: 
                     role="option"
                     aria-selected={isSelected}
                   >
-                    <span className={isSelected ? "px-4 block" : ""}>{option}</span>
+                    <span className={isSelected ? "px-4 block" : ""}>
+                      {option}
+                    </span>
                   </button>
                 </li>
               );
@@ -160,38 +177,51 @@ export default function TransactionFilters({
   return (
     <>
       {/* Mobile layout */}
-      <div className="flex items-center gap-2 md:hidden">
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--color-grey-500)" />
-          <input
-            type="search"
-            value={search}
-            onChange={(event: ChangeEvent<HTMLInputElement>) =>
-              onSearchChange(event.target.value)
-            }
-            placeholder="Search transaction"
-            className="w-full rounded-2xl border border-grey-300 bg-white py-3 pl-10 pr-4 text-sm font-medium text-(--color-grey-900) placeholder:text-(--color-grey-500) focus:border-(--color-green) focus:outline-none"
-          />
+      <div className="relative md:hidden">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--color-grey-600)" />
+            <input
+              type="search"
+              value={search}
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                onSearchChange(event.target.value)
+              }
+              placeholder="Search"
+              className="w-full rounded-2xl border border-grey-300 bg-white py-3 pl-10 pr-4 text-sm font-medium text-(--color-grey-900) placeholder:text-(--color-grey-500) focus:border-(--color-green) focus:outline-none"
+            />
+          </div>
+
+          <div className="relative flex-1 max-w-12">
+            <CustomSelect
+              value={
+                transactionSortOptions.find((opt) => opt.value === sortBy)
+                  ?.label || sortBy
+              }
+              options={transactionSortOptions.map((opt) => opt.label)}
+              onChange={(label) => {
+                const option = transactionSortOptions.find(
+                  (opt) => opt.label === label,
+                );
+                if (option) onSortChange(option.value);
+              }}
+              icon={<ArrowUpDown className="h-4 w-4" />}
+              ariaLabel="Sort by"
+              isMobile={true}
+            />
+          </div>
+
+          <div className="relative flex-1 max-w-12">
+            <CustomSelect
+              value={category}
+              options={transactionCategoryOptions}
+              onChange={onCategoryChange}
+              icon={<Tag className="h-4 w-4" />}
+              ariaLabel="Filter By"
+              isMobile={true}
+            />
+          </div>
         </div>
-
-        <CustomSelect
-          value={transactionSortOptions.find(opt => opt.value === sortBy)?.label || sortBy}
-          options={transactionSortOptions.map(opt => opt.label)}
-          onChange={(label) => {
-            const option = transactionSortOptions.find(opt => opt.label === label);
-            if (option) onSortChange(option.value);
-          }}
-          icon={<ArrowUpDown className="h-4 w-4" />}
-          ariaLabel="Sort by"
-        />
-
-        <CustomSelect
-          value={category}
-          options={transactionCategoryOptions}
-          onChange={onCategoryChange}
-          icon={<Tag className="h-4 w-4" />}
-          ariaLabel="Category"
-        />
       </div>
 
       {/* Desktop layout */}
@@ -219,10 +249,15 @@ export default function TransactionFilters({
             Sort by
           </span>
           <CustomSelect
-            value={transactionSortOptions.find(opt => opt.value === sortBy)?.label || sortBy}
-            options={transactionSortOptions.map(opt => opt.label)}
+            value={
+              transactionSortOptions.find((opt) => opt.value === sortBy)
+                ?.label || sortBy
+            }
+            options={transactionSortOptions.map((opt) => opt.label)}
             onChange={(label) => {
-              const option = transactionSortOptions.find(opt => opt.label === label);
+              const option = transactionSortOptions.find(
+                (opt) => opt.label === label,
+              );
               if (option) onSortChange(option.value);
             }}
             icon={<ChevronDown className="h-4 w-4" />}
@@ -232,14 +267,14 @@ export default function TransactionFilters({
 
         <label className="flex flex-col gap-2 text-(--color-grey-600)">
           <span className="text-xs font-semibold uppercase tracking-wide">
-            Category
+            Filter By
           </span>
           <CustomSelect
             value={category}
             options={transactionCategoryOptions}
             onChange={onCategoryChange}
             icon={<ChevronDown className="h-4 w-4" />}
-            ariaLabel="Category"
+            ariaLabel="Filter By"
           />
         </label>
       </div>
