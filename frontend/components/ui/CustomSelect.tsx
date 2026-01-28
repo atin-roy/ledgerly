@@ -63,8 +63,16 @@ export default function CustomSelect({
   }, [isOpen]);
 
   const dropdownPositionClasses = isMobile
-    ? "absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2 w-full"
+    ? "absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2 w-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)]"
     : "absolute top-full left-0 right-0 z-50 mt-1 w-full";
+
+  const buttonClassNames = [
+    "flex h-12 items-center rounded-2xl border border-grey-300 bg-white text-(--color-grey-600) hover:border-(--color-green) focus:border-(--color-green) focus:outline-none",
+    isMobile ? "w-12 justify-center px-3" : "w-full justify-between px-4",
+    "md:h-auto md:justify-between md:px-4 md:py-3",
+  ]
+    .join(" ")
+    .trim();
 
   return (
     <div ref={dropdownRef} className={`relative ${className ?? ""}`}>
@@ -72,12 +80,12 @@ export default function CustomSelect({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         onKeyDown={handleKeyDown}
-        className="flex h-12 w-full items-center justify-center rounded-2xl border border-grey-300 bg-white px-4 text-(--color-grey-600) hover:border-(--color-green) focus:border-(--color-green) focus:outline-none md:h-auto md:justify-between md:px-4 md:py-3"
+        className={buttonClassNames}
         aria-label={ariaLabel}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
       >
-        <span className="md:hidden">{icon}</span>
+        <span className="md:hidden inline-flex items-center justify-center">{icon}</span>
         <span className="hidden text-sm font-medium text-(--color-grey-900) md:block">
           {value}
         </span>
