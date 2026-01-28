@@ -63,7 +63,7 @@ export default function CustomSelect({
   }, [isOpen]);
 
   const dropdownPositionClasses = isMobile
-    ? "absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2 w-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)]"
+    ? "absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2 w-[calc(100vw-2rem)] sm:w-auto"
     : "absolute top-full left-0 right-0 z-50 mt-1 w-full";
 
   const buttonClassNames = [
@@ -75,7 +75,10 @@ export default function CustomSelect({
     .trim();
 
   return (
-    <div ref={dropdownRef} className={`relative ${className ?? ""}`}>
+    <div
+      ref={dropdownRef}
+      className={`relative overflow-visible ${className ?? ""}`}
+    >
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -85,7 +88,9 @@ export default function CustomSelect({
         aria-expanded={isOpen}
         aria-haspopup="listbox"
       >
-        <span className="md:hidden inline-flex items-center justify-center">{icon}</span>
+        <span className="md:hidden inline-flex items-center justify-center">
+          {icon}
+        </span>
         <span className="hidden text-sm font-medium text-(--color-grey-900) md:block">
           {value}
         </span>
