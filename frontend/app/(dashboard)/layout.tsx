@@ -21,14 +21,14 @@ function MobileNav() {
               key={label}
               href={href}
               className={classNames(
-                "flex flex-col items-center gap-1 rounded-2xl px-3 py-2 text-xs font-semibold uppercase tracking-[0.25em] transition",
+                "flex flex-col items-center gap-1 rounded-2xl px-3 py-2 transition",
                 isActive
                   ? "text-white"
                   : "text-slate-400 hover:text-white/90"
               )}
             >
               <Icon className="h-5 w-5" />
-              <span className="leading-none text-[0.55rem]">{label}</span>
+              <span className="sr-only">{label}</span>
             </Link>
           );
         })}
