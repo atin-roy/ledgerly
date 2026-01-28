@@ -13,11 +13,11 @@ import {
   type TransactionSortOption,
 } from "@/app/transactions/data";
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 10;
 
 export default function TransactionsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [category, setCategory] = useState(transactionCategoryOptions[0]);
+  const [category, setCategory] = useState<string>(transactionCategoryOptions[0]);
   const [sortBy, setSortBy] = useState<TransactionSortOption>("latest");
   const [page, setPage] = useState(1);
 
@@ -30,7 +30,7 @@ export default function TransactionsPage() {
         page,
         pageSize: PAGE_SIZE,
       }),
-    [searchTerm, category, sortBy, page]
+    [searchTerm, category, sortBy, page],
   );
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function TransactionsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-grey-100 py-12">
+    <div className="min-h-screen bg-beige-100 py-12">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
         <div>
           <PageTitle title="Transactions" />

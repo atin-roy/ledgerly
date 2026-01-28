@@ -21,7 +21,7 @@ export default function TransactionList({
 
   return (
     <div className="overflow-hidden rounded-2xl border border-(--grey-200) bg-white shadow-sm">
-      <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-3 border-b border-grey-100 px-4 py-3 text-xs font-semibold uppercase tracking-widest text-(--color-grey-600)">
+      <div className="hidden md:grid md:grid-cols-[2fr_1fr_1fr_1fr] gap-3 border-b border-grey-100 px-4 py-3 text-xs font-semibold uppercase tracking-widest text-(--color-grey-600)">
         <span>Recipient / Sender</span>
         <span className="text-left">Category</span>
         <span className="text-left">Transaction Date</span>

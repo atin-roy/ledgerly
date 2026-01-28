@@ -22,17 +22,20 @@ export type TransactionSortOption =
   | "amount-high-to-low"
   | "amount-low-to-high";
 
-export const transactionSortOptions: { value: TransactionSortOption; label: string }[] =
-  [
-    { value: "latest", label: "Latest" },
-    { value: "oldest", label: "Oldest" },
-    { value: "amount-high-to-low", label: "Amount (High to Low)" },
-    { value: "amount-low-to-high", label: "Amount (Low to High)" },
-  ];
+export const transactionSortOptions: {
+  value: TransactionSortOption;
+  label: string;
+}[] = [
+  { value: "latest", label: "Latest" },
+  { value: "oldest", label: "Oldest" },
+  { value: "amount-high-to-low", label: "Amount (High to Low)" },
+  { value: "amount-low-to-high", label: "Amount (Low to High)" },
+];
 
 export interface Transaction {
   id: string;
   recipient: string;
+  description?: string;
   category: TransactionCategory;
   date: string; // ISO date
   amount: number;
@@ -44,6 +47,7 @@ export const transactionRecords: Transaction[] = [
   {
     id: "txn-1",
     recipient: "Emma Richardson",
+    description: "Freelance design project payment",
     category: "General",
     date: "2024-08-19",
     amount: 75.5,
@@ -53,6 +57,7 @@ export const transactionRecords: Transaction[] = [
   {
     id: "txn-2",
     recipient: "Savory Bites Bistro",
+    description: "Dinner with colleagues after work",
     category: "Dining Out",
     date: "2024-08-19",
     amount: 55.5,
@@ -71,6 +76,7 @@ export const transactionRecords: Transaction[] = [
   {
     id: "txn-4",
     recipient: "Sun Park",
+    description: "Monthly allowance from parents",
     category: "General",
     date: "2024-08-17",
     amount: 120,
@@ -89,6 +95,8 @@ export const transactionRecords: Transaction[] = [
   {
     id: "txn-6",
     recipient: "Liam Hughes",
+    description:
+      "Refund for returned electronics item that was defective upon arrival",
     category: "Groceries",
     date: "2024-08-15",
     amount: 65.75,
@@ -116,6 +124,7 @@ export const transactionRecords: Transaction[] = [
   {
     id: "txn-9",
     recipient: "James Thompson",
+    description: "Movie ticket for evening show",
     category: "Entertainment",
     date: "2024-08-11",
     amount: 5,
@@ -152,6 +161,7 @@ export const transactionRecords: Transaction[] = [
   {
     id: "txn-13",
     recipient: "Solstice Co-Op",
+    description: "Monthly electricity bill payment",
     category: "Utilities",
     date: "2024-08-05",
     amount: 90.25,
@@ -208,7 +218,9 @@ function applySort(transactions: Transaction[], sortBy: TransactionSortOption) {
 
   switch (sortBy) {
     case "oldest":
-      sorted.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      sorted.sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+      );
       break;
     case "amount-high-to-low":
       sorted.sort((a, b) => b.amount - a.amount);
@@ -217,7 +229,9 @@ function applySort(transactions: Transaction[], sortBy: TransactionSortOption) {
       sorted.sort((a, b) => a.amount - b.amount);
       break;
     default:
-      sorted.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      sorted.sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      );
   }
 
   return sorted;
@@ -231,7 +245,7 @@ export function getTransactionPage(
     sortBy = "latest",
     page = 1,
     pageSize = 6,
-  }: TransactionQuery = {}
+  }: TransactionQuery = {},
 ): TransactionPage {
   const normalizedSearch = searchTerm.trim().toLowerCase();
 
