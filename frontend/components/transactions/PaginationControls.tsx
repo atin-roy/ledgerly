@@ -42,7 +42,7 @@ export default function PaginationControls({
       <div className="flex items-center gap-2">
         <button
           type="button"
-          className="rounded-full border border-(--grey-200) px-4 py-2 text-xs font-semibold uppercase tracking-wide text-(--color-grey-600) transition hover:border-(--color-grey-500) hover:text-(--color-grey-800) disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-lg border border-(--grey-200) px-4 py-2 text-xs font-semibold uppercase tracking-wide text-(--color-grey-600) transition hover:bg-(--color-purple) hover:text-white hover:border-(--color-purple) active:bg-(--color-purple) active:text-white active:border-(--color-purple) disabled:cursor-not-allowed disabled:opacity-40"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1}
         >
@@ -53,10 +53,10 @@ export default function PaginationControls({
           <button
             key={page}
             type="button"
-          className={`rounded-full px-4 py-2 text-xs font-semibold tracking-wide transition ${
+          className={`rounded-lg px-4 py-2 text-xs font-semibold tracking-wide transition ${
             page === currentPage
               ? "border-(--color-green) bg-green/10 text-(--color-green)"
-              : "border border-(--grey-200) text-(--color-grey-600) hover:border-(--grey-400)"
+              : "border border-(--grey-200) text-(--color-grey-600) hover:bg-(--color-purple) hover:text-white hover:border-(--color-purple) active:bg-(--color-purple) active:text-white active:border-(--color-purple)"
           }`}
             onClick={() => onPageChange(page)}
           >
@@ -66,7 +66,7 @@ export default function PaginationControls({
 
         <button
           type="button"
-          className="rounded-full border border-(--grey-200) px-4 py-2 text-xs font-semibold uppercase tracking-wide text-(--color-grey-600) transition hover:border-(--color-grey-500) hover:text-(--color-grey-800) disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-lg border border-(--grey-200) px-4 py-2 text-xs font-semibold uppercase tracking-wide text-(--color-grey-600) transition hover:bg-(--color-purple) hover:text-white hover:border-(--color-purple) active:bg-(--color-purple) active:text-white active:border-(--color-purple) disabled:cursor-not-allowed disabled:opacity-40"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
         >
