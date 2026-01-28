@@ -82,7 +82,7 @@ export default function BudgetsPage() {
           </section>
 
           {isModalOpen && (
-            <div className="absolute inset-0 z-40 rounded-3xl bg-black/40 px-4">
+            <div className="absolute inset-x-0 top-0 bottom-12 z-40 rounded-3xl bg-black/40 px-4">
               <div className="flex justify-center pt-40">
                 <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
                   <div className="mb-4 flex items-center justify-between">
