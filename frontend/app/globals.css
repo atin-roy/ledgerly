@@ -1,11 +1,107 @@
 @import "tailwindcss";
 
 :root {
+  /* =========================
+     Beige
+     ========================= */
+  --beige-500: #9C948B;
+  --beige-100: #F6F1EB;
+
+  /* =========================
+     Grey Scale
+     ========================= */
+  --grey-900: #2D2F34;
+  --grey-600: #6B6B6B;
+  --grey-300: #B3B3B3;
+  --grey-100: #F2F2F2;
+
+  /* =========================
+     Secondary Colors
+     ========================= */
+  --green:  #277C78;
+  --yellow: #F3D1AC;
+  --cyan:   #8CD2DD;
+
+  --navy:   #626070;
+  --red:    #C94736;
+  --purple: #826CB0;
+
+  /* =========================
+     Other Colors
+     ========================= */
+  --purple-soft:   #AF81BA;
+  --turquoise:    #597C7C;
+  --brown:        #9B6A4E;
+
+  --magenta:      #8F3F6F;
+  --blue:         #3F82B8;
+  --navy-grey:    #97A0AC;
+
+  --army-green:   #7B8F61;
+  --gold:         #C4AB61;
+  --orange:       #B86C49;
+
+  /* =========================
+     White
+     ========================= */
+  --white: #FFFFFF;
+
+  /* =========================
+     Existing variables
+     ========================= */
   --background: #ffffff;
   --foreground: #171717;
 }
 
 @theme inline {
+  /* =========================
+     Beige Colors
+     ========================= */
+  --color-beige-500: var(--beige-500);
+  --color-beige-100: var(--beige-100);
+
+  /* =========================
+     Grey Scale Colors
+     ========================= */
+  --color-grey-900: var(--grey-900);
+  --color-grey-600: var(--grey-600);
+  --color-grey-300: var(--grey-300);
+  --color-grey-100: var(--grey-100);
+
+  /* =========================
+     Secondary Colors
+     ========================= */
+  --color-green: var(--green);
+  --color-yellow: var(--yellow);
+  --color-cyan: var(--cyan);
+
+  --color-navy: var(--navy);
+  --color-red: var(--red);
+  --color-purple: var(--purple);
+
+  /* =========================
+     Other Colors
+     ========================= */
+  --color-purple-soft: var(--purple-soft);
+  --color-turquoise: var(--turquoise);
+  --color-brown: var(--brown);
+
+  --color-magenta: var(--magenta);
+  --color-blue: var(--blue);
+  --color-navy-grey: var(--navy-grey);
+
+  --color-army-green: var(--army-green);
+  --color-gold: var(--gold);
+  --color-orange: var(--orange);
+
+  /* =========================
+     White
+     ========================= */
+  --color-white: var(--white);
+
+  /* =========================
+     Existing variables
+     ========================= */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
