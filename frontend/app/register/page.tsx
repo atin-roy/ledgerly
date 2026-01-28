@@ -1,10 +1,12 @@
 import Image from "next/image";
 import illustration from "@/public/images/register-illustration.svg";
 import SignUpCard from "@/components/register/SignUpCard";
+import RedirectIfAuthenticated from "@/components/auth/RedirectIfAuthenticated";
 
 export default function RegisterPage() {
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-amber-50 px-4 py-12">
+      <RedirectIfAuthenticated />
       <div className="register-book flex w-full max-w-6xl flex-col overflow-hidden rounded-3xl md:flex-row">
         <div className="register-side register-image relative flex-1 overflow-hidden">
           <div className="relative h-full w-full overflow-hidden bg-slate-900">

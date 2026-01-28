@@ -18,10 +18,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import RedirectIfAuthenticated from "@/components/auth/RedirectIfAuthenticated";
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-amber-50">
+      <RedirectIfAuthenticated />
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-amber-50 py-20 sm:py-32">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

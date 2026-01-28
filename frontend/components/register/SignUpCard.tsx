@@ -1,5 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+
+import { persistAuthTokens, AuthResponse } from "@/lib/auth";
 
 interface FormData {
   name: string;
@@ -29,6 +32,7 @@ export default function SignUpCard({
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -61,7 +65,7 @@ export default function SignUpCard({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -77,7 +81,7 @@ export default function SignUpCard({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -108,14 +112,12 @@ export default function SignUpCard({
         );
       }
 
-      const result = await response.json();
+      const result = (await response.json()) as AuthResponse;
 
-      // Handle successful signup
-      console.log("Signup successful:", result);
-      // You can add redirect logic or success message here
-
+      persistAuthTokens(result);
       // Reset form on success
       setFormData({ name: "", email: "", password: "" });
+      router.replace("/overview");
     } catch (error) {
       console.error("Signup error:", error);
       setErrors({
