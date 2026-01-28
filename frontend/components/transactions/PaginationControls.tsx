@@ -40,7 +40,7 @@ export default function PaginationControls({
     totalItems === 0 ? 0 : rangeStart + itemsOnPage - 1;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+    <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
       <div className="flex items-center gap-2">
         <button
           type="button"
@@ -76,9 +76,6 @@ export default function PaginationControls({
         </button>
       </div>
 
-      <p className="text-xs text-slate-600">
-        Showing {rangeStart} - {rangeEnd} of {totalItems} {itemLabel}
-      </p>
     </div>
   );
 }
