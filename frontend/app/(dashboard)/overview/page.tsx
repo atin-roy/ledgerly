@@ -192,17 +192,9 @@ export default function OverviewPage() {
           <div className="space-y-3 rounded-2xl border border-[#f5efe7] bg-[var(--beige-100)] p-4">
             {upcomingBills.map((bill) => (
               <div key={bill.id} className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="flex h-10 w-10 items-center justify-center rounded-2xl text-sm font-semibold"
-                    style={{ backgroundColor: bill.iconColor, color: "white" }}
-                  >
-                    {bill.iconLabel}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-[var(--color-grey-900)]">{bill.title}</p>
-                    <p className="text-xs text-[var(--color-grey-600)]">{bill.dueLabel}</p>
-                  </div>
+                <div>
+                  <p className="text-sm font-semibold text-[var(--color-grey-900)]">{bill.title}</p>
+                  <p className="text-xs text-[var(--color-grey-600)]">{bill.dueLabel}</p>
                 </div>
                 <div className="flex flex-col items-end">
                   <p className="text-sm font-semibold text-[var(--color-grey-900)]">
@@ -211,7 +203,9 @@ export default function OverviewPage() {
                   <p className="text-xs text-[var(--color-grey-600)]">
                     {formatBillDueDate(bill.nextDue)}
                   </p>
-                  <span className={`mt-1 rounded-full px-2 py-1 text-[0.6rem] font-semibold ${statusStyles[bill.status]}`}>
+                  <span
+                    className={`mt-1 rounded-full px-2 py-1 text-[0.6rem] font-semibold ${statusStyles[bill.status]}`}
+                  >
                     {bill.status}
                   </span>
                 </div>
