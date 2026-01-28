@@ -15,7 +15,7 @@ const LONG_PRESS_DURATION = 600;
 function MobileNav() {
   const pathname = usePathname() ?? "/";
   const router = useRouter();
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<number | null>(null);
   const longPressTriggered = useRef(false);
   const [showSignOutPrompt, setShowSignOutPrompt] = useState(false);
 
