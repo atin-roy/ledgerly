@@ -2,14 +2,22 @@
 
 import Link from "next/link";
 import Sidebar, { navItems } from "@/components/Sidebar";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { type MouseEvent, useRef } from "react";
+import { clearAuthTokens } from "@/lib/auth";
 import type { ReactNode } from "react";
 
 const classNames = (...classes: Array<string | undefined>) =>
   classes.filter(Boolean).join(" ");
 
+const LONG_PRESS_DURATION = 600;
+
 function MobileNav() {
   const pathname = usePathname() ?? "/";
+  const router = useRouter();
+  const timerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const longPressTriggered = useRef(false);
+
   const dashboardItem = navItems.find((item) => item.label === "Dashboard");
   const otherItems = navItems.filter((item) => item.label !== "Dashboard");
   const splitPoint = Math.ceil(otherItems.length / 2);
@@ -18,6 +26,41 @@ function MobileNav() {
   const mobileNavItems = dashboardItem
     ? [...leftItems, dashboardItem, ...rightItems]
     : navItems;
+
+  const clearTimer = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  const handleSignOut = () => {
+    clearAuthTokens();
+    router.replace("/login");
+  };
+
+  const onLongPress = () => {
+    longPressTriggered.current = true;
+    clearTimer();
+    handleSignOut();
+  };
+
+  const startLongPress = () => {
+    clearTimer();
+    longPressTriggered.current = false;
+    timerRef.current = window.setTimeout(onLongPress, LONG_PRESS_DURATION);
+  };
+
+  const cancelLongPress = () => {
+    clearTimer();
+  };
+
+  const handleDashboardClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (longPressTriggered.current) {
+      event.preventDefault();
+      longPressTriggered.current = false;
+    }
+  };
 
   return (
     <nav className="fixed inset-x-0 bottom-0 border-t border-slate-800 bg-[#1f2126] text-white shadow-lg lg:hidden">
@@ -30,14 +73,20 @@ function MobileNav() {
         >
           {mobileNavItems.map(({ label, href, Icon }) => {
             const isActive = pathname === href || pathname.startsWith(href + "/");
+            const isDashboard = label === "Dashboard";
             return (
               <Link
                 key={label}
                 href={href}
                 className={classNames(
                   "flex flex-col items-center gap-1 rounded-2xl px-3 py-2 transition",
-                  isActive ? "text-white" : "text-slate-400 hover:text-white/90"
+                  isActive ? "text-white" : "text-slate-400 hover:text-white/90",
                 )}
+                onPointerDown={isDashboard ? startLongPress : undefined}
+                onPointerUp={isDashboard ? cancelLongPress : undefined}
+                onPointerLeave={isDashboard ? cancelLongPress : undefined}
+                onPointerCancel={isDashboard ? cancelLongPress : undefined}
+                onClick={isDashboard ? handleDashboardClick : undefined}
               >
                 <Icon className="h-5 w-5" />
                 <span className="sr-only">{label}</span>
