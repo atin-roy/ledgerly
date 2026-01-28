@@ -1,56 +1,237 @@
+@import url("https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&display=swap");
 @import "tailwindcss";
 
 :root {
   /* =========================
      Beige
      ========================= */
-  --beige-500: #9C948B;
-  --beige-100: #F6F1EB;
+  --beige-500: #9c948b;
+  --beige-100: #f6f1eb;
 
   /* =========================
      Grey Scale
      ========================= */
-  --grey-900: #2D2F34;
-  --grey-600: #6B6B6B;
-  --grey-300: #B3B3B3;
-  --grey-100: #F2F2F2;
+  --grey-900: #2d2f34;
+  --grey-600: #6b6b6b;
+  --grey-300: #b3b3b3;
+  --grey-100: #f2f2f2;
 
   /* =========================
      Secondary Colors
      ========================= */
-  --green:  #277C78;
-  --yellow: #F3D1AC;
-  --cyan:   #8CD2DD;
+  --green: #277c78;
+  --yellow: #f3d1ac;
+  --cyan: #8cd2dd;
 
-  --navy:   #626070;
-  --red:    #C94736;
-  --purple: #826CB0;
+  --navy: #626070;
+  --red: #c94736;
+  --purple: #826cb0;
 
   /* =========================
      Other Colors
      ========================= */
-  --purple-soft:   #AF81BA;
-  --turquoise:    #597C7C;
-  --brown:        #9B6A4E;
+  --purple-soft: #af81ba;
+  --turquoise: #597c7c;
+  --brown: #9b6a4e;
 
-  --magenta:      #8F3F6F;
-  --blue:         #3F82B8;
-  --navy-grey:    #97A0AC;
+  --magenta: #8f3f6f;
+  --blue: #3f82b8;
+  --navy-grey: #97a0ac;
 
-  --army-green:   #7B8F61;
-  --gold:         #C4AB61;
-  --orange:       #B86C49;
+  --army-green: #7b8f61;
+  --gold: #c4ab61;
+  --orange: #b86c49;
 
   /* =========================
      White
      ========================= */
-  --white: #FFFFFF;
+  --white: #ffffff;
 
   /* =========================
      Existing variables
      ========================= */
   --background: #ffffff;
   --foreground: #171717;
+
+  /* =========================
+     Font Family
+     ========================= */
+  --font-sans:
+    "Public Sans", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* =========================
+        Typography Scale
+        ========================= */
+
+  /* Text Preset 1 */
+  --text-1-size: 32px;
+  --text-1-line: 1.2;
+  --text-1-weight: 700;
+
+  /* Text Preset 2 */
+  --text-2-size: 20px;
+  --text-2-line: 1.2;
+  --text-2-weight: 700;
+
+  /* Text Preset 3 */
+  --text-3-size: 16px;
+  --text-3-line: 1.5;
+  --text-3-weight: 700;
+
+  /* Text Preset 4 */
+  --text-4-size: 14px;
+  --text-4-line: 1.5;
+  --text-4-weight: 400;
+
+  /* Text Preset 4 Bold */
+  --text-4b-size: 14px;
+  --text-4b-line: 1.5;
+  --text-4b-weight: 700;
+
+  /* Text Preset 5 */
+  --text-5-size: 12px;
+  --text-5-line: 1.5;
+  --text-5-weight: 400;
+
+  /* Text Preset 5 Bold */
+  --text-5b-size: 12px;
+  --text-5b-line: 1.5;
+  --text-5b-weight: 700;
+
+  /* =========================
+        Spacing Scale
+        ========================= */
+  --space-500: 40px;
+  --space-400: 32px;
+  --space-300: 24px;
+  --space-250: 20px;
+  --space-200: 16px;
+  --space-150: 12px;
+  --space-100: 8px;
+  --space-50: 4px;
+}
+
+/* =========================
+   Typography Utility Classes
+   ========================= */
+
+.text-1 {
+  font-family: var(--font-sans);
+  font-size: var(--text-1-size);
+  line-height: var(--text-1-line);
+  font-weight: var(--text-1-weight);
+}
+
+.text-2 {
+  font-family: var(--font-sans);
+  font-size: var(--text-2-size);
+  line-height: var(--text-2-line);
+  font-weight: var(--text-2-weight);
+}
+
+.text-3 {
+  font-family: var(--font-sans);
+  font-size: var(--text-3-size);
+  line-height: var(--text-3-line);
+  font-weight: var(--text-3-weight);
+}
+
+.text-4 {
+  font-family: var(--font-sans);
+  font-size: var(--text-4-size);
+  line-height: var(--text-4-line);
+  font-weight: var(--text-4-weight);
+}
+
+.text-4-bold {
+  font-family: var(--font-sans);
+  font-size: var(--text-4b-size);
+  line-height: var(--text-4b-line);
+  font-weight: var(--text-4b-weight);
+}
+
+.text-5 {
+  font-family: var(--font-sans);
+  font-size: var(--text-5-size);
+  line-height: var(--text-5-line);
+  font-weight: var(--text-5-weight);
+}
+
+.text-5-bold {
+  font-family: var(--font-sans);
+  font-size: var(--text-5b-size);
+  line-height: var(--text-5b-line);
+  font-weight: var(--text-5b-weight);
+}
+
+/* =========================
+       Spacing Utilities
+       ========================= */
+
+.mt-500 {
+  margin-top: var(--space-500);
+}
+.mt-400 {
+  margin-top: var(--space-400);
+}
+.mt-300 {
+  margin-top: var(--space-300);
+}
+.mt-250 {
+  margin-top: var(--space-250);
+}
+.mt-200 {
+  margin-top: var(--space-200);
+}
+.mt-150 {
+  margin-top: var(--space-150);
+}
+.mt-100 {
+  margin-top: var(--space-100);
+}
+.mt-50 {
+  margin-top: var(--space-50);
+}
+
+.mb-500 {
+  margin-bottom: var(--space-500);
+}
+.mb-400 {
+  margin-bottom: var(--space-400);
+}
+.mb-300 {
+  margin-bottom: var(--space-300);
+}
+.mb-250 {
+  margin-bottom: var(--space-250);
+}
+.mb-200 {
+  margin-bottom: var(--space-200);
+}
+.mb-150 {
+  margin-bottom: var(--space-150);
+}
+.mb-100 {
+  margin-bottom: var(--space-100);
+}
+.mb-50 {
+  margin-bottom: var(--space-50);
+}
+
+.register-book {
+  width: min(90vw, 1100px);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
+  background: white;
+}
+
+.register-image {
+  min-height: 420px;
+}
+
+@media (min-width: 1080px) {
+  .register-book {
+    width: min(75vw, 1200px);
+  }
 }
 
 @theme inline {
