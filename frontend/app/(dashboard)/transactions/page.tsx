@@ -9,6 +9,7 @@ import TransactionFilters from "@/components/transactions/TransactionFilters";
 import TransactionList from "@/components/transactions/TransactionList";
 import CustomSelect from "@/components/ui/CustomSelect";
 import { Button } from "@/components/ui/button";
+import primaryActionButtonClass from "@/components/ui/primaryActionButtonClass";
 import {
   getTransactionPage,
   transactionCategoryOptions,
@@ -98,8 +99,7 @@ export default function TransactionsPage() {
     }
   };
 
-  const transactionButtonClass =
-    "rounded-2xl border border-slate-200 bg-[var(--color-grey-900)] px-8 py-5 text-base font-semibold text-white shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 transition-colors hover:bg-[var(--color-purple)] hover:border-[var(--color-purple)] hover:text-white";
+  const transactionButtonClass = primaryActionButtonClass;
 
   return (
     <div className="min-h-screen bg-beige-100 py-12">

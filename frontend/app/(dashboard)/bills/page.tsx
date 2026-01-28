@@ -6,12 +6,15 @@ import {
   useMemo,
   useState,
   type ChangeEvent,
+  type SyntheticEvent,
 } from "react";
 
 import CustomSelect from "@/components/ui/CustomSelect";
 import PageTitle from "@/components/PageTitle";
 import BillCard from "@/components/bills/BillCard";
 import PaginationControls from "@/components/transactions/PaginationControls";
+import { Button } from "@/components/ui/button";
+import primaryActionButtonClass from "@/components/ui/primaryActionButtonClass";
 import {
   BILL_PAGE_SIZE,
   billRecords,
@@ -21,11 +24,28 @@ import {
   getBillSummary,
   type BillSortOption,
 } from "@/app/bills/data";
+import { transactionCategoryOptions } from "@/app/transactions/data";
+
+const billCategories = transactionCategoryOptions.filter(
+  (category) => category !== "All Transactions",
+);
+
+const billFrequencyOptions = ["Weekly", "Bi-Weekly", "Monthly", "Quarterly", "Annual"];
+
+const billModalFields = {
+  title: "",
+  amount: "",
+  category: billCategories[0],
+  frequency: billFrequencyOptions[2],
+  description: "",
+};
 
 export default function BillsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<BillSortOption>("latest");
   const [page, setPage] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formValues, setFormValues] = useState(billModalFields);
 
   const { data: visibleBills, currentPage, totalItems, totalPages } = useMemo(
     () =>
@@ -66,6 +86,25 @@ export default function BillsPage() {
   const currentSortLabel =
     billSortOptions.find((option) => option.value === sortBy)?.label ?? sortBy;
   const placeholderCount = Math.max(0, BILL_PAGE_SIZE - visibleBills.length);
+
+  const handleFormChange = (event: SyntheticEvent<HTMLInputElement>) => {
+    const target = event.target as HTMLInputElement;
+    setFormValues((prev) => ({ ...prev, [target.name]: target.value }));
+  };
+
+  const handleCategoryChange = (category: string) => {
+    setFormValues((prev) => ({ ...prev, category }));
+  };
+
+  const handleFrequencyChange = (frequency: string) => {
+    setFormValues((prev) => ({ ...prev, frequency }));
+  };
+
+  const handleFormSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsModalOpen(false);
+    setFormValues(billModalFields);
+  };
 
   return (
     <div className="min-h-screen bg-beige-100 py-10 sm:py-12">
@@ -113,89 +152,203 @@ export default function BillsPage() {
             </div>
           </div>
 
-          <div className="rounded-[32px] bg-white p-6 shadow-xl">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="relative flex-1 min-w-[220px] max-w-[300px]">
-                <input
-                  type="search"
-                  placeholder="Search bills"
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-sm text-slate-600 placeholder:text-slate-400 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                />
-                <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-400">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-4 w-4"
-                  >
-                    <circle cx="11" cy="11" r="7" />
-                    <line x1="17.5" y1="17.5" x2="22" y2="22" />
-                  </svg>
+          <div className="relative">
+            <div className="rounded-[32px] bg-white p-6 shadow-xl">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="relative flex-1 min-w-[220px] max-w-[300px]">
+                  <input
+                    type="search"
+                    placeholder="Search bills"
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-sm text-slate-600 placeholder:text-slate-400 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                  />
+                  <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-400">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-4 w-4"
+                    >
+                      <circle cx="11" cy="11" r="7" />
+                      <line x1="17.5" y1="17.5" x2="22" y2="22" />
+                    </svg>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 md:hidden">
+                  <CustomSelect
+                    value={currentSortLabel}
+                    options={billSortOptions.map((option) => option.label)}
+                    onChange={handleSortSelection}
+                    icon={<ArrowUpDown className="h-4 w-4" />}
+                    ariaLabel="Sort by"
+                    isMobile
+                  />
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={primaryActionButtonClass}
+                  onClick={() => setIsModalOpen(true)}
+                >
+                  New bill
+                </Button>
+
+                <div className="hidden items-center gap-3 md:flex md:justify-end">
+                  <span className="text-xs uppercase tracking-[0.5em] text-slate-400">
+                    Sort by
+                  </span>
+                  <CustomSelect
+                    value={currentSortLabel}
+                    options={billSortOptions.map((option) => option.label)}
+                    onChange={handleSortSelection}
+                    icon={<ChevronDown className="h-4 w-4" />}
+                    trailingIcon={<ChevronDown className="h-4 w-4" />}
+                    ariaLabel="Sort by"
+                    className="w-[180px]"
+                  />
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 md:hidden">
-                <CustomSelect
-                  value={currentSortLabel}
-                  options={billSortOptions.map((option) => option.label)}
-                  onChange={handleSortSelection}
-                  icon={<ArrowUpDown className="h-4 w-4" />}
-                  ariaLabel="Sort by"
-                  isMobile
-                />
+              <div className="mt-6 space-y-4">
+                {visibleBills.map((bill) => (
+                  <BillCard key={bill.id} bill={bill} />
+                ))}
+                {visibleBills.length === 0 && (
+                  <p className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
+                    No bills match your search.
+                  </p>
+                )}
+                {Array.from({ length: placeholderCount }).map((_, index) => (
+                  <div
+                    key={`placeholder-${index}`}
+                    className="h-[104px] rounded-3xl border border-dashed border-slate-200 bg-slate-50/80"
+                    aria-hidden="true"
+                  />
+                ))}
               </div>
 
-              <div className="hidden items-center gap-3 md:flex md:justify-end">
-                <span className="text-xs uppercase tracking-[0.5em] text-slate-400">
-                  Sort by
-                </span>
-                <CustomSelect
-                  value={currentSortLabel}
-                  options={billSortOptions.map((option) => option.label)}
-                  onChange={handleSortSelection}
-                  icon={<ChevronDown className="h-4 w-4" />}
-                  trailingIcon={<ChevronDown className="h-4 w-4" />}
-                  ariaLabel="Sort by"
-                  className="w-[180px]"
+              <div className="mt-6">
+                <PaginationControls
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  itemsOnPage={visibleBills.length}
+                  pageSize={BILL_PAGE_SIZE}
+                  totalItems={totalItems}
+                  onPageChange={setPage}
+                  itemLabel="bills"
                 />
               </div>
             </div>
 
-            <div className="mt-6 space-y-4">
-              {visibleBills.map((bill) => (
-                <BillCard key={bill.id} bill={bill} />
-              ))}
-              {visibleBills.length === 0 && (
-                <p className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
-                  No bills match your search.
-                </p>
-              )}
-              {Array.from({ length: placeholderCount }).map((_, index) => (
-                <div
-                  key={`placeholder-${index}`}
-                  className="h-[104px] rounded-3xl border border-dashed border-slate-200 bg-slate-50/80"
-                  aria-hidden="true"
-                />
-              ))}
-            </div>
-
-            <div className="mt-6">
-              <PaginationControls
-                currentPage={currentPage}
-                totalPages={totalPages}
-                itemsOnPage={visibleBills.length}
-                pageSize={BILL_PAGE_SIZE}
-                totalItems={totalItems}
-                onPageChange={setPage}
-                itemLabel="bills"
-              />
-            </div>
+            {isModalOpen && (
+              <div className="absolute inset-0 z-40 flex items-center justify-center rounded-[32px] bg-black/40 px-4 py-8">
+                <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-[var(--color-grey-900)]">
+                      New bill
+                    </h3>
+                    <button
+                      type="button"
+                      className="text-sm font-semibold text-slate-500 hover:text-slate-700"
+                      onClick={() => setIsModalOpen(false)}
+                    >
+                      Close
+                    </button>
+                  </div>
+                  <form className="mt-2 space-y-4" onSubmit={handleFormSubmit}>
+                    <label className="flex flex-col gap-2 text-sm text-slate-600">
+                      <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
+                        Title
+                      </span>
+                      <input
+                        name="title"
+                        value={formValues.title}
+                        onChange={handleFormChange}
+                        placeholder="Electricity subscription"
+                        className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-2 text-sm text-slate-600">
+                      <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
+                        Category
+                      </span>
+                      <CustomSelect
+                        value={formValues.category}
+                        options={billCategories}
+                        onChange={handleCategoryChange}
+                        icon={<ChevronDown className="h-4 w-4" />}
+                        trailingIcon={<ChevronDown className="h-4 w-4" />}
+                        ariaLabel="Bill category"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-2 text-sm text-slate-600">
+                      <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
+                        Frequency
+                      </span>
+                      <CustomSelect
+                        value={formValues.frequency}
+                        options={billFrequencyOptions}
+                        onChange={handleFrequencyChange}
+                        icon={<ChevronDown className="h-4 w-4" />}
+                        trailingIcon={<ChevronDown className="h-4 w-4" />}
+                        ariaLabel="Billing frequency"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-2 text-sm text-slate-600">
+                      <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
+                        Amount
+                      </span>
+                      <input
+                        name="amount"
+                        value={formValues.amount}
+                        onChange={handleFormChange}
+                        placeholder="0.00"
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-2 text-sm text-slate-600">
+                      <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
+                        Description
+                      </span>
+                      <input
+                        name="description"
+                        value={formValues.description}
+                        onChange={handleFormChange}
+                        placeholder="What the bill covers"
+                        className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                      />
+                    </label>
+                    <div className="flex justify-center gap-3 pt-1">
+                      <Button
+                        variant="ghost"
+                        className="rounded-2xl px-6 py-3 text-sm font-semibold bg-rose-600 text-white shadow-lg focus-visible:ring-rose-500 active:translate-y-[1px] active:scale-95 hover:bg-rose-600 hover:text-white hover:shadow-none"
+                        onClick={() => setIsModalOpen(false)}
+                        type="button"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        type="submit"
+                        className="rounded-2xl px-6 py-3 text-sm font-semibold bg-emerald-600 text-white shadow-lg focus-visible:ring-emerald-500 active:translate-y-[1px] active:scale-95 hover:bg-emerald-600 hover:text-white hover:shadow-none"
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
