@@ -73,7 +73,7 @@ export default function Sidebar() {
             })}
           </nav>
         </div>
-        <div className="mt-6 mb-12">
+        <div className="mt-6 mb-16">
           <button
             type="button"
             onClick={handleSignOut}
