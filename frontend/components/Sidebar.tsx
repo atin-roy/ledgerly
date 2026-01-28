@@ -3,16 +3,21 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  ArrowLeft,
+  type LucideIcon,
   CreditCard,
   Home,
-  ListChecks,
   PieChart,
   PiggyBank,
   Repeat,
 } from "lucide-react";
 
-const navItems = [
+export type NavItem = {
+  label: string;
+  href: string;
+  Icon: LucideIcon;
+};
+
+export const navItems: NavItem[] = [
   { label: "Dashboard", href: "/overview", Icon: Home },
   { label: "Transactions", href: "/transactions", Icon: Repeat },
   { label: "Budgets", href: "/budgets", Icon: PieChart },
@@ -27,7 +32,7 @@ export default function Sidebar() {
   const pathname = usePathname() ?? "/";
 
   return (
-    <aside className="flex h-full min-h-screen w-72 flex-col justify-between bg-[#1f2126] px-6 py-8 text-sm text-white shadow-xl">
+    <aside className="hidden min-h-screen w-80 flex-col justify-between bg-[#1f2126] px-6 py-8 text-sm text-white shadow-xl lg:flex">
       <div className="space-y-10">
         <div>
           <p className="text-2xl font-semibold uppercase tracking-[0.6em] text-white">
@@ -58,14 +63,6 @@ export default function Sidebar() {
           })}
         </nav>
       </div>
-
-      <button
-        type="button"
-        className="mt-6 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-semibold uppercase tracking-[0.4em] text-white transition hover:border-white/30 hover:bg-white/10"
-      >
-        <span>Minimize Menu</span>
-        <ArrowLeft className="h-3.5 w-3.5" />
-      </button>
     </aside>
   );
 }
