@@ -20,7 +20,7 @@ export default function TransactionRow({ transaction }: TransactionRowProps) {
 
   return (
     <div
-      className="flex items-center justify-between gap-4 px-4 py-4 md:grid md:grid-cols-[2fr_1fr_1fr_1fr] md:items-center md:gap-3 md:py-0 text-sm text-(--color-grey-900)"
+      className="flex items-center justify-between gap-4 px-4 py-4 md:grid md:grid-cols-[2fr_1fr_1fr_1fr] md:items-center md:gap-3 md:py-0 text-sm text-(--color-grey-900) hover:bg-orange-100 active:bg-orange-200 transition-colors cursor-pointer"
       style={{ minHeight: `${TRANSACTION_ROW_HEIGHT}px` }}
     >
       {/* Mobile layout: recipient and category stacked */}
