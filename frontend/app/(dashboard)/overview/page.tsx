@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import actionButtonClass from "@/components/ui/actionButtonClass";
 import {
   formatCurrency as formatBillCurrency,
   formatBillDueDate,
@@ -42,9 +43,6 @@ export default function OverviewPage() {
 
   const budgetsPreview = budgets.slice(0, 3);
   const potsPreview = pots.slice(0, 3);
-
-  const actionButtonClass =
-    "flex items-center justify-center rounded-full border border-[#e8e1d7] bg-[var(--beige-100)] pl-4 pr-3 py-1.5 text-[0.6rem] uppercase tracking-[0.35em] text-black leading-none shadow-sm transition hover:bg-[var(--color-grey-900)] hover:text-white dark:text-black dark:hover:text-white";
 
   return (
     <main className="space-y-10 text-[var(--color-grey-900)]">
