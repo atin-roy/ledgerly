@@ -7,6 +7,7 @@ type PaginationControlsProps = {
   pageSize: number;
   totalItems: number;
   onPageChange: (page: number) => void;
+  itemLabel?: string;
 };
 
 const buildPageRange = (currentPage: number, totalPages: number) => {
@@ -31,6 +32,7 @@ export default function PaginationControls({
   pageSize,
   totalItems,
   onPageChange,
+  itemLabel = "transactions",
 }: PaginationControlsProps) {
   const pages = buildPageRange(currentPage, totalPages);
   const rangeStart = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
@@ -55,7 +57,7 @@ export default function PaginationControls({
             type="button"
           className={`rounded-lg px-4 py-2 text-xs font-semibold tracking-wide transition ${
             page === currentPage
-              ? "border-(--color-green) bg-green/10 text-(--color-green)"
+              ? "bg-black text-white border-black"
               : "border border-(--grey-200) text-(--color-grey-600) hover:bg-(--color-purple) hover:text-white hover:border-(--color-purple) active:bg-(--color-purple) active:text-white active:border-(--color-purple)"
           }`}
             onClick={() => onPageChange(page)}
@@ -74,8 +76,8 @@ export default function PaginationControls({
         </button>
       </div>
 
-      <p className="text-xs text-(--grey-600)">
-        Showing {rangeStart} - {rangeEnd} of {totalItems} transactions
+      <p className="text-xs text-slate-600">
+        Showing {rangeStart} - {rangeEnd} of {totalItems} {itemLabel}
       </p>
     </div>
   );

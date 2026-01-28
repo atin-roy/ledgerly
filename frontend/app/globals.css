@@ -6,6 +6,9 @@
      Beige
      ========================= */
   --beige-500: #9c948b;
+  --beige-400: #b4ada3;
+  --beige-300: #ccc5bb;
+  --beige-200: #e3ddd3;
   --beige-100: #f6f1eb;
 
   /* =========================
@@ -239,6 +242,9 @@
      Beige Colors
      ========================= */
   --color-beige-500: var(--beige-500);
+  --color-beige-400: var(--beige-400);
+  --color-beige-300: var(--beige-300);
+  --color-beige-200: var(--beige-200);
   --color-beige-100: var(--beige-100);
 
   /* =========================
