@@ -29,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body style={{ backgroundColor: "var(--beige-100)"}}>
         <div className="flex flex-col min-h-screen md:h-svh">{children}</div>
       </body>
     </html>

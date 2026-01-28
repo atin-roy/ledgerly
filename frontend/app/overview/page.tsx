@@ -1,12 +1,15 @@
-import CurrentBalance from "@/components/CurrentBalance";
+import MoneyCard from "@/components/MoneyCard";
 
 export default function OverviewPage() {
+    const balance = "69,4267.00";
   return (
-    <div className="min-h-screen bg-zinc-50 p-8 dark:bg-black">
-      <h1 className="mb-8 text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
+    <main className="min-h-screen p-8 bg-[var(--beige-100)]">
+      <h1 className="mb-8 text-3xl font-semibold tracking-tight text-black md:text-4xl]">
         Overview
       </h1>
-      <CurrentBalance />
-    </div>
+      <MoneyCard title={"Current Balance"} number ={balance} colorscheme={"dark"}/>
+      <MoneyCard title={"Income"} number={"1000"} colorscheme={"light"}/>
+      <MoneyCard title={"Expenses"} number={"1000"} colorscheme={"light"}/>
+    </main>
   );
 }

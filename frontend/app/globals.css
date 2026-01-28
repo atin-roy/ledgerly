@@ -50,8 +50,8 @@
   /* =========================
      Existing variables
      ========================= */
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-white: #ffffff;
+  --color-black: #171717;
 
   /* =========================
      Font Family

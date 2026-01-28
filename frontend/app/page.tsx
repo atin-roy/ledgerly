@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import illustration from "@/public/register-illustration.svg";
+import illustration from "@/public/images/hero-illustration.svg";
 import {
   Database,
   ShieldCheck,

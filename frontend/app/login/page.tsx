@@ -1,5 +1,5 @@
 import Image from "next/image";
-import illustration from "@/public/register-illustration.svg";
+import illustration from "@/public/images/register-illustration.svg";
 import LoginCard from "@/components/login/LoginCard";
 
 export default function LoginPage() {

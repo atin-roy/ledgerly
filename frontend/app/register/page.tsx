@@ -1,5 +1,5 @@
 import Image from "next/image";
-import illustration from "@/public/register-illustration.svg";
+import illustration from "@/public/images/register-illustration.svg";
 import SignUpCard from "@/components/register/SignUpCard";
 
 export default function RegisterPage() {
