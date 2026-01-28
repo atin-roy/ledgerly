@@ -43,6 +43,9 @@ export default function OverviewPage() {
   const budgetsPreview = budgets.slice(0, 3);
   const potsPreview = pots.slice(0, 3);
 
+  const actionButtonClass =
+    "rounded-full border border-[#e8e1d7] bg-[var(--beige-100)] px-3 py-1.5 text-[0.6rem] uppercase tracking-[0.35em] text-black shadow-sm transition hover:bg-[var(--color-grey-900)] hover:text-white dark:text-black dark:hover:text-white";
+
   return (
     <main className="space-y-10 text-[var(--color-grey-900)]">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -51,14 +54,6 @@ export default function OverviewPage() {
             Personal snapshot
           </p>
           <h1 className="text-3xl font-semibold text-[var(--color-grey-900)]">Dashboard</h1>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" asChild>
-            <Link href="/transactions">New transaction</Link>
-          </Button>
-          <Button size="sm" variant="outline" asChild>
-            <Link href="/bills">New bill</Link>
-          </Button>
         </div>
       </header>
 
@@ -98,46 +93,86 @@ export default function OverviewPage() {
         </div>
       </section>
 
-      <section className="space-y-4 rounded-2xl border border-[#eee7de] bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-[var(--color-grey-600)]">
-              Transactions
-            </p>
-            <h2 className="text-xl font-semibold text-[var(--color-grey-900)]">Last 5</h2>
+      <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+        <div className="space-y-4 rounded-2xl border border-[#eee7de] bg-white p-6 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.4em] text-[var(--color-grey-600)]">
+                Transactions
+              </p>
+              <h2 className="text-xl font-semibold text-[var(--color-grey-900)]">Recent transactions</h2>
+            </div>
+            <Button variant="ghost" size="sm" className={actionButtonClass} asChild>
+              <Link href="/transactions">New transaction</Link>
+            </Button>
           </div>
-          <Button size="sm" variant="outline" asChild>
-            <Link href="/transactions">Create transaction</Link>
-          </Button>
-        </div>
-        <div className="divide-y border-t border-[#f0e8df]">
-          {recentTransactions.map((transaction) => {
-            const isIncome = transaction.type === "income";
-            const amountClass = isIncome ? "text-[var(--color-green)]" : "text-[var(--color-red)]";
-            return (
-              <div
-                key={transaction.id}
-                className="flex flex-col gap-2 py-4 md:flex-row md:items-center md:justify-between"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-[var(--color-grey-900)]">
-                    {transaction.recipient}
+          <div className="divide-y border-t border-[#f0e8df]">
+            {recentTransactions.map((transaction) => {
+              const isIncome = transaction.type === "income";
+              const amountClass = isIncome ? "text-[var(--color-green)]" : "text-[var(--color-red)]";
+              return (
+                <div
+                  key={transaction.id}
+                  className="grid gap-2 py-4 md:grid-cols-[2fr_1fr_1fr_1fr] md:items-center"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--color-grey-900)]">
+                      {transaction.recipient}
+                    </p>
+                    {transaction.description && (
+                      <p className="text-xs text-[var(--color-grey-600)]">{transaction.description}</p>
+                    )}
+                  </div>
+                  <p className="text-xs text-[var(--color-grey-600)] md:text-right">{transaction.category}</p>
+                  <p className="text-xs text-[var(--color-grey-600)] md:text-right">
+                    {formatTransactionDate(transaction.date)}
                   </p>
-                  {transaction.description && (
-                    <p className="text-xs text-[var(--color-grey-600)]">{transaction.description}</p>
-                  )}
+                  <p className={`text-sm font-semibold ${amountClass} md:text-base md:text-right`}>
+                    {isIncome ? "+" : "-"}
+                    {formatTransactionCurrency(transaction.amount)}
+                  </p>
                 </div>
-                <p className="text-xs text-[var(--color-grey-600)]">{transaction.category}</p>
-                <p className="text-xs text-[var(--color-grey-600)]">
-                  {formatTransactionDate(transaction.date)}
-                </p>
-                <p className={`text-sm font-semibold ${amountClass} md:text-base`}>
-                  {isIncome ? "+" : "-"}
-                  {formatTransactionCurrency(transaction.amount)}
-                </p>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="space-y-4 rounded-2xl border border-[#eee7de] bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.4em] text-[var(--color-grey-600)]">
+                Budgets
+              </p>
+              <h2 className="text-xl font-semibold text-[var(--color-grey-900)]">Compact view</h2>
+            </div>
+            <Button variant="ghost" size="sm" className={actionButtonClass} asChild>
+              <Link href="/budgets">New budget</Link>
+            </Button>
+          </div>
+          <div className="space-y-4">
+            {budgetsPreview.map((budget) => {
+              const progress = budget.limit ? (budget.spent / budget.limit) * 100 : 0;
+              return (
+                <div key={budget.id} className="space-y-1">
+                  <div className="flex items-center justify-between text-sm font-semibold text-[var(--color-grey-900)]">
+                    <p>{budget.name}</p>
+                    <p>
+                      {formatBudgetCurrency(budget.spent)} / {formatBudgetCurrency(budget.limit)}
+                    </p>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-[#ede8e1]">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${Math.min(progress, 100)}%`,
+                        backgroundColor: budget.color,
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </section>
 
@@ -150,8 +185,8 @@ export default function OverviewPage() {
               </p>
               <h2 className="text-xl font-semibold text-[var(--color-grey-900)]">Next 3</h2>
             </div>
-            <Button size="sm" variant="outline" asChild>
-              <Link href="/bills">Create bill</Link>
+            <Button variant="ghost" size="sm" className={actionButtonClass} asChild>
+              <Link href="/bills">New bill</Link>
             </Button>
           </div>
           <div className="space-y-3 rounded-2xl border border-[#f5efe7] bg-[var(--beige-100)] p-4">
@@ -185,80 +220,40 @@ export default function OverviewPage() {
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="space-y-4 rounded-2xl border border-[#eee7de] bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.4em] text-[var(--color-grey-600)]">
-                  Budgets
-                </p>
-                <h2 className="text-xl font-semibold text-[var(--color-grey-900)]">Compact view</h2>
-              </div>
-              <Button size="sm" variant="outline" asChild>
-                <Link href="/budgets">New budget</Link>
-              </Button>
+        <div className="space-y-4 rounded-2xl border border-[#eee7de] bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.4em] text-[var(--color-grey-600)]">Pots</p>
+              <h2 className="text-xl font-semibold text-[var(--color-grey-900)]">Aligned goals</h2>
             </div>
-            <div className="space-y-4">
-              {budgetsPreview.map((budget) => {
-                const progress = budget.limit ? (budget.spent / budget.limit) * 100 : 0;
-                return (
-                  <div key={budget.id} className="space-y-1">
-                    <div className="flex items-center justify-between text-sm font-semibold text-[var(--color-grey-900)]">
-                      <p>{budget.name}</p>
-                      <p>
-                        {formatBudgetCurrency(budget.spent)} / {formatBudgetCurrency(budget.limit)}
-                      </p>
-                    </div>
-                    <div className="h-1.5 rounded-full bg-[#ede8e1]">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${Math.min(progress, 100)}%`,
-                          backgroundColor: budget.color,
-                        }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <Button variant="ghost" size="sm" className={actionButtonClass} asChild>
+              <Link href="/pots">New pot</Link>
+            </Button>
           </div>
-
-          <div className="space-y-4 rounded-2xl border border-[#eee7de] bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.4em] text-[var(--color-grey-600)]">Pots</p>
-                <h2 className="text-xl font-semibold text-[var(--color-grey-900)]">Aligned goals</h2>
-              </div>
-              <Button size="sm" variant="outline" asChild>
-                <Link href="/pots">New pot</Link>
-              </Button>
-            </div>
-            <div className="space-y-4">
-              {potsPreview.map((pot) => {
-                const progress = pot.target ? (pot.saved / pot.target) * 100 : 0;
-                return (
-                  <div key={pot.id} className="space-y-1">
-                    <div className="flex items-center justify-between text-sm font-semibold text-[var(--color-grey-900)]">
-                      <p>{pot.name}</p>
-                      <p>{formatPotCurrency(pot.saved)}</p>
-                    </div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-[var(--color-grey-600)]">
-                      Saved of {formatPotCurrency(pot.target)} · {formatPercentage(progress)}%
-                    </p>
-                    <div className="h-1.5 rounded-full bg-[#ede8e1]">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${Math.min(progress, 100)}%`,
-                          backgroundColor: pot.accentColor,
-                        }}
-                      />
-                    </div>
+          <div className="space-y-4">
+            {potsPreview.map((pot) => {
+              const progress = pot.target ? (pot.saved / pot.target) * 100 : 0;
+              return (
+                <div key={pot.id} className="space-y-1">
+                  <div className="flex items-center justify-between text-sm font-semibold text-[var(--color-grey-900)]">
+                    <p>{pot.name}</p>
+                    <p>{formatPotCurrency(pot.saved)}</p>
                   </div>
-                );
-              })}
-            </div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-[var(--color-grey-600)]">
+                    Saved of {formatPotCurrency(pot.target)} · {formatPercentage(progress)}%
+                  </p>
+                  <div className="h-1.5 rounded-full bg-[#ede8e1]">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${Math.min(progress, 100)}%`,
+                        backgroundColor: pot.accentColor,
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
