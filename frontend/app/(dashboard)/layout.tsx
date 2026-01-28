@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Sidebar, { navItems } from "@/components/Sidebar";
 import { usePathname, useRouter } from "next/navigation";
-import { type MouseEvent, useRef } from "react";
+import { type MouseEvent, useRef, useState } from "react";
 import { clearAuthTokens } from "@/lib/auth";
 import type { ReactNode } from "react";
 
@@ -17,6 +17,7 @@ function MobileNav() {
   const router = useRouter();
   const timerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
   const longPressTriggered = useRef(false);
+  const [showSignOutPrompt, setShowSignOutPrompt] = useState(false);
 
   const dashboardItem = navItems.find((item) => item.label === "Dashboard");
   const otherItems = navItems.filter((item) => item.label !== "Dashboard");
@@ -42,7 +43,7 @@ function MobileNav() {
   const onLongPress = () => {
     longPressTriggered.current = true;
     clearTimer();
-    handleSignOut();
+    setShowSignOutPrompt(true);
   };
 
   const startLongPress = () => {
@@ -60,6 +61,10 @@ function MobileNav() {
       event.preventDefault();
       longPressTriggered.current = false;
     }
+  };
+
+  const closePrompt = () => {
+    setShowSignOutPrompt(false);
   };
 
   return (
@@ -95,6 +100,39 @@ function MobileNav() {
           })}
         </div>
       </div>
+      {showSignOutPrompt && (
+        <div className="fixed inset-0 z-20 flex items-end justify-center bg-black/30 lg:hidden">
+          <div className="mb-24 w-full px-6">
+            <div className="rounded-2xl bg-[#1f2126] px-5 py-4 text-center text-white shadow-lg">
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                Hold detected
+              </p>
+              <p className="mt-1 text-xs text-slate-400">
+                Release to reveal sign out.
+              </p>
+              <div className="mt-3 flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleSignOut();
+                    closePrompt();
+                  }}
+                  className="rounded-xl bg-[#f87171] px-4 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-white transition hover:bg-[#f87171]/90"
+                >
+                  Sign Out
+                </button>
+                <button
+                  type="button"
+                  onClick={closePrompt}
+                  className="rounded-xl border border-white/30 px-4 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-white transition hover:border-white/60"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
