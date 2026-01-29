@@ -23,6 +23,11 @@ export async function apiRequest<T>(
   endpoint: string,
   options: RequestOptions = {}
 ): Promise<T> {
+  // Only run on client side
+  if (typeof window === "undefined") {
+    throw new ApiError(0, "API calls can only be made from the browser");
+  }
+
   const { requiresAuth = true, headers = {}, ...fetchOptions } = options;
 
   const requestHeaders: Record<string, string> = {
@@ -39,6 +44,8 @@ export async function apiRequest<T>(
   }
 
   const url = `${API_BASE_URL}${endpoint}`;
+  
+  console.log(`API Request: ${fetchOptions.method || 'GET'} ${url}`);
 
   try {
     const response = await fetch(url, {
@@ -58,6 +65,7 @@ export async function apiRequest<T>(
     // Handle other error responses
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error(`API Error: ${response.status}`, errorData);
       throw new ApiError(
         response.status,
         errorData.message || `HTTP error ${response.status}`,
@@ -70,8 +78,11 @@ export async function apiRequest<T>(
       return null as T;
     }
 
-    return await response.json();
+    const data = await response.json();
+    console.log(`API Response:`, data);
+    return data;
   } catch (error) {
+    console.error("API Request Failed:", error);
     if (error instanceof ApiError) {
       throw error;
     }

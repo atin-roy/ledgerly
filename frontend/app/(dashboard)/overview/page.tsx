@@ -44,6 +44,16 @@ export default function OverviewPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Debug auth status
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("ledgerly_access_token");
+      const user = localStorage.getItem("ledgerly_user");
+      console.log("🔐 Auth Check:", {
+        hasToken: !!token,
+        hasUser: !!user,
+        user: user ? JSON.parse(user) : null
+      });
+    }
     loadData();
   }, []);
 
@@ -51,13 +61,18 @@ export default function OverviewPage() {
     try {
       setIsLoading(true);
       setError(null);
+      
+      console.log("📡 Starting data fetch...");
+      
       const [transactionsData, budgetsData, potsData, billsData, categoriesData] = await Promise.all([
-        getTransactions(),
-        getBudgets(),
-        getPots(),
-        getBills(),
-        getCategories(),
+        getTransactions().catch(err => { console.error("Transactions error:", err); throw err; }),
+        getBudgets().catch(err => { console.error("Budgets error:", err); throw err; }),
+        getPots().catch(err => { console.error("Pots error:", err); throw err; }),
+        getBills().catch(err => { console.error("Bills error:", err); throw err; }),
+        getCategories().catch(err => { console.error("Categories error:", err); throw err; }),
       ]);
+      
+      console.log("✅ Data fetched successfully");
       
       // Convert transactions
       const convertedTransactions: Transaction[] = transactionsData.map((t) => ({

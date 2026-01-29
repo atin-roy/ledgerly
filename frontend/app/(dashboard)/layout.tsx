@@ -3,8 +3,8 @@
 import Link from "next/link";
 import Sidebar, { navItems } from "@/components/Sidebar";
 import { usePathname, useRouter } from "next/navigation";
-import { type MouseEvent, useRef, useState } from "react";
-import { clearAuthTokens } from "@/lib/auth";
+import { type MouseEvent, useRef, useState, useEffect } from "react";
+import { clearAuthTokens, isAuthenticated } from "@/lib/auth";
 import type { ReactNode } from "react";
 
 const classNames = (...classes: Array<string | undefined>) =>
@@ -142,6 +142,35 @@ export default function DashboardLayout({
 }: {
   children: ReactNode;
 }) {
+  const router = useRouter();
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    // Check authentication on mount
+    if (typeof window !== "undefined") {
+      const authenticated = isAuthenticated();
+      console.log("🔒 Dashboard Auth Check:", authenticated);
+      
+      if (!authenticated) {
+        console.log("❌ Not authenticated, redirecting to login...");
+        router.replace("/login");
+      } else {
+        console.log("✅ Authenticated, loading dashboard");
+        setIsChecking(false);
+      }
+    }
+  }, [router]);
+
+  if (isChecking) {
+    return (
+      <div className="min-h-screen bg-beige-100 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-beige-100">
       <div className="flex min-h-screen">
