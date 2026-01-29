@@ -6,14 +6,14 @@ FROM eclipse-temurin:21-jdk-alpine as builder
 WORKDIR /build
 
 # Copy gradle wrapper
-COPY backend/gradlew .
-COPY backend/gradle ./gradle
-COPY backend/.gradle ./.gradle
+COPY gradlew .
+COPY gradle ./gradle
+COPY .gradle ./.gradle
 
 # Copy source code
-COPY backend/src ./src
-COPY backend/build.gradle.kts .
-COPY backend/settings.gradle.kts .
+COPY src ./src
+COPY build.gradle.kts .
+COPY settings.gradle.kts .
 
 # Build the application
 RUN ./gradlew clean build -x test --no-daemon
