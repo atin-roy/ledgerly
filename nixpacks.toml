@@ -1,8 +1,0 @@
-[phases.setup]
-nixPkgs = ["jdk21"]
-
-[phases.build]
-cmds = ["chmod +x gradlew", "./gradlew clean build -x test --no-daemon"]
-
-[start]
-cmd = "java -Dspring.profiles.active=prod -jar build/libs/app.jar"
