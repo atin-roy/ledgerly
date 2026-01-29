@@ -13,9 +13,10 @@ import primaryActionButtonClass from "@/components/ui/primaryActionButtonClass";
 import {
   getTransactionPage,
   transactionCategoryOptions,
-  transactionRecords,
   type TransactionSortOption,
+  type Transaction,
 } from "@/app/transactions/data";
+import { getTransactions, getCategories, type TransactionResponse, type CategoryResponse } from "@/lib/services";
 
 const PAGE_SIZE = 10;
 
@@ -41,17 +42,56 @@ export default function TransactionsPage() {
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formValues, setFormValues] = useState(modalFields);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const [transactionsData, categoriesData] = await Promise.all([
+        getTransactions(),
+        getCategories(),
+      ]);
+      
+      // Convert backend format to frontend format
+      const convertedTransactions: Transaction[] = transactionsData.map((t) => ({
+        id: t.id.toString(),
+        recipient: t.partyName || "Unknown",
+        description: "",
+        category: t.categoryName as any,
+        date: t.date.split("T")[0], // Convert ISO to date only
+        amount: t.amount,
+        type: t.amount >= 0 ? "income" : "expense",
+        badgeColor: "var(--color-green)",
+      }));
+      
+      setTransactions(convertedTransactions);
+      setCategories(categoriesData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load transactions");
+      console.error("Error loading data:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const { data, totalItems, totalPages, currentPage } = useMemo(
     () =>
-      getTransactionPage(transactionRecords, {
+      getTransactionPage(transactions, {
         searchTerm,
         category,
         sortBy,
         page,
         pageSize: PAGE_SIZE,
       }),
-    [searchTerm, category, sortBy, page],
+    [transactions, searchTerm, category, sortBy, page],
   );
 
   useEffect(() => {
@@ -100,6 +140,35 @@ export default function TransactionsPage() {
   };
 
   const transactionButtonClass = primaryActionButtonClass;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-beige-100 py-12">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
+          <PageTitle title="Transactions" />
+          <div className="rounded-3xl bg-white p-12 shadow-xl text-center">
+            <p className="text-gray-600">Loading transactions...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-beige-100 py-12">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
+          <PageTitle title="Transactions" />
+          <div className="rounded-3xl bg-white p-12 shadow-xl text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button onClick={loadData} className={primaryActionButtonClass}>
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-beige-100 py-12">

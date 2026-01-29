@@ -1,22 +1,26 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import actionButtonClass from "@/components/ui/actionButtonClass";
 import {
   formatCurrency as formatBillCurrency,
   formatBillDueDate,
-  billRecords,
   BillStatus,
+  type Bill,
 } from "@/app/bills/data";
 import {
   baseCategories,
   formatCurrency as formatTransactionCurrency,
   formatTransactionDate,
-  transactionRecords,
   TransactionCategory,
   TransactionType,
+  type Transaction,
 } from "@/app/transactions/data";
-import { budgets, formatBudgetCurrency } from "@/app/budgets/data";
-import { formatCurrency as formatPotCurrency, formatPercentage, pots } from "@/app/pots/data";
+import { formatBudgetCurrency } from "@/app/budgets/data";
+import { formatCurrency as formatPotCurrency, formatPercentage } from "@/app/pots/data";
+import { getTransactions, getBudgets, getPots, getBills, getCategories, type TransactionResponse, type BudgetResponse, type PotResponse, type BillResponse, type CategoryResponse } from "@/lib/services";
 
 const statusStyles: Record<BillStatus, string> = {
   pending: "bg-amber-50 text-amber-600",
@@ -26,60 +30,133 @@ const statusStyles: Record<BillStatus, string> = {
 };
 
 type CategorySlice = {
-  label: TransactionCategory;
+  label: string;
   value: number;
 };
 
-function buildCategoryTotals(type: TransactionType): CategorySlice[] {
-  const totals: Record<TransactionCategory, number> = Object.fromEntries(
-    baseCategories.map((category) => [category, 0]),
-  ) as Record<TransactionCategory, number>;
-
-  transactionRecords.forEach((transaction) => {
-    if (transaction.type !== type) {
-      return;
-    }
-    totals[transaction.category] += transaction.amount;
-  });
-
-  return baseCategories
-    .map((category) => ({ label: category, value: totals[category] }))
-    .filter((entry) => entry.value > 0)
-    .sort((a, b) => b.value - a.value);
-}
-
 export default function OverviewPage() {
-  const incomeTotal = transactionRecords
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [budgets, setBudgets] = useState<BudgetResponse[]>([]);
+  const [pots, setPots] = useState<PotResponse[]>([]);
+  const [bills, setBills] = useState<Bill[]>([]);
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const [transactionsData, budgetsData, potsData, billsData, categoriesData] = await Promise.all([
+        getTransactions(),
+        getBudgets(),
+        getPots(),
+        getBills(),
+        getCategories(),
+      ]);
+      
+      // Convert transactions
+      const convertedTransactions: Transaction[] = transactionsData.map((t) => ({
+        id: t.id.toString(),
+        recipient: t.partyName || "Unknown",
+        description: "",
+        category: t.categoryName as any,
+        date: t.date.split("T")[0],
+        amount: Math.abs(t.amount),
+        type: t.amount >= 0 ? "income" : "expense",
+        badgeColor: "var(--color-green)",
+      }));
+      
+      // Convert bills
+      const convertedBills: Bill[] = billsData.map((b) => ({
+        id: b.id.toString(),
+        title: b.name,
+        dueLabel: "Monthly",
+        nextDue: b.dueDate.split("T")[0],
+        amount: b.amount,
+        status: b.status.toLowerCase() as any,
+        iconLabel: b.name.substring(0, 2).toUpperCase(),
+        iconColor: "var(--color-green)",
+      }));
+      
+      setTransactions(convertedTransactions);
+      setBudgets(budgetsData);
+      setPots(potsData);
+      setBills(convertedBills);
+      setCategories(categoriesData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load data");
+      console.error("Error loading data:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <main className="space-y-10 text-(--color-grey-900) pb-12">
+        <header className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.5em] text-(--color-grey-600)">
+              Personal snapshot
+            </p>
+            <h1 className="text-3xl font-semibold text-(--color-grey-900)">Dashboard</h1>
+          </div>
+        </header>
+        <div className="rounded-2xl border border-[#eee7de] bg-white p-12 shadow-sm text-center">
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="space-y-10 text-(--color-grey-900) pb-12">
+        <header className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.5em] text-(--color-grey-600)">
+              Personal snapshot
+            </p>
+            <h1 className="text-3xl font-semibold text-(--color-grey-900)">Dashboard</h1>
+          </div>
+        </header>
+        <div className="rounded-2xl border border-[#eee7de] bg-white p-12 shadow-sm text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={loadData}>Try Again</Button>
+        </div>
+      </main>
+    );
+  }
+
+  const incomeTotal = transactions
     .filter((transaction) => transaction.type === "income")
     .reduce((total, transaction) => total + transaction.amount, 0);
 
-  const expenseTotal = transactionRecords
+  const expenseTotal = transactions
     .filter((transaction) => transaction.type === "expense")
     .reduce((total, transaction) => total + transaction.amount, 0);
 
   const currentBalance = incomeTotal - expenseTotal;
 
-  const recentTransactions = [...transactionRecords]
+  const recentTransactions = [...transactions]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 3);
 
-  const upcomingBills = [...billRecords]
+  const upcomingBills = [...bills]
     .sort((a, b) => new Date(a.nextDue).getTime() - new Date(b.nextDue).getTime())
     .slice(0, 3);
 
   const budgetsPreview = budgets.slice(0, 3);
   const potsPreview = pots.slice(0, 3);
 
-  const expenseCategoryBreakdown = buildCategoryTotals("expense").map((slice, idx) => ({
-    ...slice,
-    color: "var(--color-red)",
-  }));
-
-  const incomeCategoryBreakdown = buildCategoryTotals("income").map((slice, idx) => ({
-    ...slice,
-    color: "var(--color-green)",
-  }));
-
+  const expenseCategoryBreakdown: CategorySlice[] = [];
+  const incomeCategoryBreakdown: CategorySlice[] = [];
+  
   const incomeSourcesTotal = incomeCategoryBreakdown.reduce(
     (total, slice) => total + slice.value,
     0,
@@ -192,29 +269,34 @@ export default function OverviewPage() {
               <Link href="/budgets">New budget</Link>
             </Button>
           </div>
-          <div className="space-y-4">
-            {budgetsPreview.map((budget) => {
-              const progress = budget.limit ? (budget.spent / budget.limit) * 100 : 0;
-              return (
-                <div key={budget.id} className="space-y-1">
-                  <div className="flex items-center justify-between text-sm font-semibold text-(--color-grey-900)">
-                    <p>{budget.name}</p>
-                    <p>
-                      {formatBudgetCurrency(budget.spent)} / {formatBudgetCurrency(budget.limit)}
-                    </p>
+            <div className="space-y-4">
+            {budgetsPreview.length === 0 ? (
+              <p className="text-sm text-slate-500 text-center py-4">No budgets yet</p>
+            ) : (
+              budgetsPreview.map((budget) => {
+                const category = categories.find(c => c.id === budget.categoryId);
+                const progress = 0; // We'll calculate this later from transactions
+                return (
+                  <div key={budget.id} className="space-y-1">
+                    <div className="flex items-center justify-between text-sm font-semibold text-(--color-grey-900)">
+                      <p>{category?.name || "Unknown"}</p>
+                      <p>
+                        {formatBudgetCurrency(0)} / {formatBudgetCurrency(budget.amount)}
+                      </p>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-[#ede8e1]">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${Math.min(progress, 100)}%`,
+                          backgroundColor: "var(--color-green)",
+                        }}
+                      />
+                    </div>
                   </div>
-                  <div className="h-1.5 rounded-full bg-[#ede8e1]">
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${Math.min(progress, 100)}%`,
-                        backgroundColor: budget.color,
-                      }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       </section>
@@ -268,29 +350,33 @@ export default function OverviewPage() {
             </Button>
           </div>
           <div className="space-y-4">
-            {potsPreview.map((pot) => {
-              const progress = pot.target ? (pot.saved / pot.target) * 100 : 0;
-              return (
-                <div key={pot.id} className="space-y-1">
-                  <div className="flex items-center justify-between text-sm font-semibold text-(--color-grey-900)">
-                    <p>{pot.name}</p>
-                    <p>{formatPotCurrency(pot.saved)}</p>
+            {potsPreview.length === 0 ? (
+              <p className="text-sm text-slate-500 text-center py-4">No pots yet</p>
+            ) : (
+              potsPreview.map((pot) => {
+                const progress = pot.target ? (pot.saved / pot.target) * 100 : 0;
+                return (
+                  <div key={pot.id} className="space-y-1">
+                    <div className="flex items-center justify-between text-sm font-semibold text-(--color-grey-900)">
+                      <p>{pot.name}</p>
+                      <p>{formatPotCurrency(pot.saved)}</p>
+                    </div>
+                    <p className="text-xs uppercase tracking-[0.3em] text-(--color-grey-600)">
+                      Saved of {formatPotCurrency(pot.target)} · {formatPercentage(progress)}%
+                    </p>
+                    <div className="h-1.5 rounded-full bg-[#ede8e1]">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${Math.min(progress, 100)}%`,
+                          backgroundColor: "var(--color-green)",
+                        }}
+                      />
+                    </div>
                   </div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--color-grey-600)">
-                    Saved of {formatPotCurrency(pot.target)} · {formatPercentage(progress)}%
-                  </p>
-                  <div className="h-1.5 rounded-full bg-[#ede8e1]">
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${Math.min(progress, 100)}%`,
-                        backgroundColor: pot.accentColor,
-                      }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       </section>

@@ -1,6 +1,6 @@
  "use client";
 
-import { SyntheticEvent, useState } from "react";
+import { SyntheticEvent, useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 
 import BudgetCard from "@/components/budgets/BudgetCard";
@@ -10,7 +10,7 @@ import CustomSelect from "@/components/ui/CustomSelect";
 import { Button } from "@/components/ui/button";
 import primaryActionButtonClass from "@/components/ui/primaryActionButtonClass";
 import { transactionCategoryOptions } from "@/app/transactions/data";
-import { budgetSummary, budgets } from "@/app/budgets/data";
+import { getBudgets, getCategories, createBudget, type BudgetResponse, type CategoryResponse } from "@/lib/services";
 
 const budgetCategories = transactionCategoryOptions.filter(
   (category) => category !== "All Transactions",
@@ -25,6 +25,32 @@ const budgetModalFields = {
 export default function BudgetsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formValues, setFormValues] = useState(budgetModalFields);
+  const [budgets, setBudgets] = useState<BudgetResponse[]>([]);
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const [budgetsData, categoriesData] = await Promise.all([
+        getBudgets(),
+        getCategories(),
+      ]);
+      setBudgets(budgetsData);
+      setCategories(categoriesData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load budgets");
+      console.error("Error loading data:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleFormChange = (event: SyntheticEvent<HTMLInputElement>) => {
     const target = event.target as HTMLInputElement;
@@ -38,11 +64,62 @@ export default function BudgetsPage() {
     }));
   };
 
-  const handleFormSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
+  const handleFormSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setIsModalOpen(false);
-    setFormValues(budgetModalFields);
+    
+    try {
+      const category = categories.find(c => c.name === formValues.category);
+      if (!category) {
+        alert("Please select a valid category");
+        return;
+      }
+
+      await createBudget({
+        amount: parseFloat(formValues.limit),
+        categoryId: category.id,
+      });
+      
+      setIsModalOpen(false);
+      setFormValues(budgetModalFields);
+      await loadData();
+    } catch (err) {
+      console.error("Error creating budget:", err);
+      alert("Failed to create budget. Please try again.");
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-beige-100 py-12">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
+          <PageTitle title="Budgets" />
+          <div className="rounded-3xl bg-white p-12 shadow-xl text-center">
+            <p className="text-gray-600">Loading budgets...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-beige-100 py-12">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
+          <PageTitle title="Budgets" />
+          <div className="rounded-3xl bg-white p-12 shadow-xl text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button onClick={loadData} className={primaryActionButtonClass}>
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const totalLimit = budgets.reduce((sum, b) => sum + b.amount, 0);
+  const totalSpent = 0; // We'll need to calculate this from transactions
+  const totalRemaining = totalLimit - totalSpent;
 
   return (
     <div className="min-h-screen bg-beige-100 py-12">
@@ -62,25 +139,42 @@ export default function BudgetsPage() {
         <div className="relative">
           <section className="space-y-6 pb-12">
             <BudgetSummary
-              title={budgetSummary.title}
-              description={budgetSummary.description}
-              totalLimit={budgetSummary.totalLimit}
-              totalSpent={budgetSummary.totalSpent}
-              totalRemaining={budgetSummary.totalRemaining}
-              breakdown={budgetSummary.breakdown}
+              title="Budget Overview"
+              description="Track your spending limits"
+              totalLimit={totalLimit}
+              totalSpent={totalSpent}
+              totalRemaining={totalRemaining}
+              breakdown={[]}
             />
 
             <div className="grid gap-6 md:grid-cols-2">
-              {budgets.map((budget) => (
-                <BudgetCard
-                  key={budget.id}
-                  name={budget.name}
-                  limit={budget.limit}
-                  spent={budget.spent}
-                  color={budget.color}
-                  recentSpending={budget.recentSpending}
-                />
-              ))}
+              {budgets.length === 0 ? (
+                <div className="col-span-2 rounded-3xl border border-dashed border-slate-300 p-12 text-center">
+                  <p className="text-slate-600 mb-4">No budgets yet. Create your first budget!</p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={primaryActionButtonClass}
+                    onClick={() => setIsModalOpen(true)}
+                  >
+                    Create First Budget
+                  </Button>
+                </div>
+              ) : (
+                budgets.map((budget) => {
+                  const category = categories.find(c => c.id === budget.categoryId);
+                  return (
+                    <BudgetCard
+                      key={budget.id}
+                      name={category?.name || "Unknown"}
+                      limit={budget.amount}
+                      spent={0}
+                      color="var(--color-green)"
+                      recentSpending={[]}
+                    />
+                  );
+                })
+              )}
             </div>
           </section>
 

@@ -17,14 +17,15 @@ import { Button } from "@/components/ui/button";
 import primaryActionButtonClass from "@/components/ui/primaryActionButtonClass";
 import {
   BILL_PAGE_SIZE,
-  billRecords,
   billSortOptions,
   formatCurrency,
   getBillPage,
   getBillSummary,
   type BillSortOption,
+  type Bill,
 } from "@/app/bills/data";
 import { baseCategories, type TransactionCategory } from "@/app/transactions/data";
+import { getBills, createBill, type BillResponse } from "@/lib/services";
 
 const billCategories = baseCategories;
 const billFrequencyOptions = ["Weekly", "Bi-Weekly", "Monthly", "Quarterly", "Annual"] as const;
@@ -54,19 +55,53 @@ export default function BillsPage() {
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formValues, setFormValues] = useState<BillFormValues>(billModalFields);
+  const [bills, setBills] = useState<Bill[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadBills();
+  }, []);
+
+  const loadBills = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await getBills();
+      
+      // Convert backend format to frontend format
+      const convertedBills: Bill[] = data.map((b) => ({
+        id: b.id.toString(),
+        title: b.name,
+        dueLabel: "Monthly",
+        nextDue: b.dueDate.split("T")[0],
+        amount: b.amount,
+        status: b.status.toLowerCase() as any,
+        iconLabel: b.name.substring(0, 2).toUpperCase(),
+        iconColor: "var(--color-green)",
+      }));
+      
+      setBills(convertedBills);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load bills");
+      console.error("Error loading bills:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const { data: visibleBills, currentPage, totalItems, totalPages } = useMemo(
     () =>
-      getBillPage(billRecords, {
+      getBillPage(bills, {
         searchTerm,
         sortBy,
         page,
         pageSize: BILL_PAGE_SIZE,
       }),
-    [searchTerm, sortBy, page]
+    [bills, searchTerm, sortBy, page]
   );
 
-  const summary = useMemo(() => getBillSummary(billRecords), []);
+  const summary = useMemo(() => getBillSummary(bills), [bills]);
 
   useEffect(() => {
     if (currentPage !== page) {
@@ -108,11 +143,54 @@ export default function BillsPage() {
     setFormValues((prev) => ({ ...prev, frequency: value as BillFrequency }));
   };
 
-  const handleFormSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
+  const handleFormSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setIsModalOpen(false);
-    setFormValues(billModalFields);
+    
+    try {
+      await createBill({
+        name: formValues.title,
+        amount: parseFloat(formValues.amount),
+        status: "PENDING",
+        dueDate: new Date().toISOString(),
+      });
+      
+      setIsModalOpen(false);
+      setFormValues(billModalFields);
+      await loadBills();
+    } catch (err) {
+      console.error("Error creating bill:", err);
+      alert("Failed to create bill. Please try again.");
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-beige-100 py-10 sm:py-12">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
+          <PageTitle title="Recurring Bills" />
+          <div className="rounded-3xl bg-white p-12 shadow-xl text-center">
+            <p className="text-gray-600">Loading bills...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-beige-100 py-10 sm:py-12">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
+          <PageTitle title="Recurring Bills" />
+          <div className="rounded-3xl bg-white p-12 shadow-xl text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button onClick={loadBills} className={primaryActionButtonClass}>
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-beige-100 py-10 sm:py-12">

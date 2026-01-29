@@ -1,6 +1,6 @@
 "use client";
 
-import { SyntheticEvent, useState } from "react";
+import { SyntheticEvent, useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 
 import PageTitle from "@/components/PageTitle";
@@ -8,7 +8,8 @@ import PotCard from "@/components/pots/PotCard";
 import CustomSelect from "@/components/ui/CustomSelect";
 import { Button } from "@/components/ui/button";
 import primaryActionButtonClass from "@/components/ui/primaryActionButtonClass";
-import { formatCurrency, formatPercentage, pots } from "@/app/pots/data";
+import { formatCurrency, formatPercentage } from "@/app/pots/data";
+import { getPots, createPot, type PotResponse } from "@/lib/services";
 
 const potTypeOptions = ["Travel", "Emergency Fund", "Home Improvement"];
 
@@ -22,6 +23,27 @@ const potModalFields = {
 export default function PotsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formValues, setFormValues] = useState(potModalFields);
+  const [pots, setPots] = useState<PotResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadPots();
+  }, []);
+
+  const loadPots = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await getPots();
+      setPots(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load pots");
+      console.error("Error loading pots:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const totalSaved = pots.reduce((acc, pot) => acc + pot.saved, 0);
   const totalTarget = pots.reduce((acc, pot) => acc + pot.target, 0);
@@ -55,11 +77,53 @@ export default function PotsPage() {
     setFormValues((prev) => ({ ...prev, category }));
   };
 
-  const handleFormSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
+  const handleFormSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setIsModalOpen(false);
-    setFormValues(potModalFields);
+    
+    try {
+      await createPot({
+        name: formValues.name,
+        target: parseFloat(formValues.target),
+        saved: 0,
+      });
+      
+      setIsModalOpen(false);
+      setFormValues(potModalFields);
+      await loadPots(); // Reload pots after creation
+    } catch (err) {
+      console.error("Error creating pot:", err);
+      alert("Failed to create pot. Please try again.");
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-beige-100 pt-12 pb-24">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
+          <PageTitle title="Pots" />
+          <div className="rounded-3xl bg-white p-12 shadow-xl text-center">
+            <p className="text-gray-600">Loading pots...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-beige-100 pt-12 pb-24">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
+          <PageTitle title="Pots" />
+          <div className="rounded-3xl bg-white p-12 shadow-xl text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button onClick={loadPots} className={primaryActionButtonClass}>
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-beige-100 pt-12 pb-24">
@@ -112,17 +176,31 @@ export default function PotsPage() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
-              {pots.map((pot) => (
-                <PotCard
-                  key={pot.id}
-                  name={pot.name}
-                  saved={pot.saved}
-                  target={pot.target}
-                  accentColor={pot.accentColor}
-                  description={pot.description}
-                  actions={renderPotActions()}
-                />
-              ))}
+              {pots.length === 0 ? (
+                <div className="col-span-2 rounded-3xl border border-dashed border-slate-300 p-12 text-center">
+                  <p className="text-slate-600 mb-4">No pots yet. Create your first savings goal!</p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={primaryActionButtonClass}
+                    onClick={() => setIsModalOpen(true)}
+                  >
+                    Create First Pot
+                  </Button>
+                </div>
+              ) : (
+                pots.map((pot) => (
+                  <PotCard
+                    key={pot.id}
+                    name={pot.name}
+                    saved={pot.saved}
+                    target={pot.target}
+                    accentColor="var(--color-green)"
+                    description=""
+                    actions={renderPotActions()}
+                  />
+                ))
+              )}
             </div>
           </section>
 
