@@ -2,6 +2,7 @@ package dev.atinroy.ledgerly.config;
 
 import dev.atinroy.ledgerly.security.AuthenticatedUserIdResolver;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -15,6 +16,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     private final AuthenticatedUserIdResolver authenticatedUserIdResolver;
 
+    @Value("${cors.allowed-origins:http://localhost:3000}")
+    private String allowedOrigins;
+
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         resolvers.add(authenticatedUserIdResolver);
@@ -22,10 +26,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
+        String[] origins = allowedOrigins.split(",");
         registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:3000", "https://frontend-domain.vercel.app") // TODO: Add Vercel/Next.js URL later
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedOriginPatterns(origins)
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                 .allowedHeaders("*")
-                .allowCredentials(true);
+                .allowCredentials(true)
+                .maxAge(3600);
     }
 }

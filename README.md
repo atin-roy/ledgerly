@@ -237,6 +237,8 @@ curl -H "Authorization: Bearer <token>" \
 
 ## Deployment
 
+For detailed deployment instructions for Railway (backend) and Vercel (frontend), see **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+
 ### Requirements
 - Java runtime (Java 25 or 21 LTS)
 - PostgreSQL database
@@ -250,11 +252,12 @@ curl -H "Authorization: Bearer <token>" \
 
 ### Production Checklist
 - [ ] `SPRING_PROFILES_ACTIVE=prod`
-- [ ] All environment variables set
+- [ ] All environment variables set (including `CORS_ALLOWED_ORIGINS`)
 - [ ] Database connection verified
 - [ ] JWT_SECRET is secure and unique
 - [ ] HTTPS/SSL configured
 - [ ] Health check responds: `/actuator/health`
+- [ ] CORS configured for frontend domain
 
 ## Troubleshooting
 
