@@ -8,7 +8,6 @@ WORKDIR /build
 # Copy gradle wrapper
 COPY gradlew .
 COPY gradle ./gradle
-COPY .gradle ./.gradle
 
 # Copy source code
 COPY src ./src
