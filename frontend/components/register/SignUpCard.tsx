@@ -2,6 +2,7 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
+import { AUTH_REGISTER_URL } from "@/lib/api";
 import { persistAuthTokens, AuthResponse } from "@/lib/auth";
 
 interface FormData {
@@ -22,7 +23,7 @@ interface SignUpCardProps {
 }
 
 export default function SignUpCard({
-  apiUrl = "https://ledgerly-production-4b76.up.railway.app/api/auth/register",
+  apiUrl = AUTH_REGISTER_URL,
 }: SignUpCardProps) {
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -229,7 +230,8 @@ export default function SignUpCard({
         <button
           type="submit"
           disabled={isLoading}
-          className="mt-2 rounded-full bg-[var(--color-green)] px-6 py-3 text-white transition hover:bg-[var(--color-green)]/90 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ backgroundColor: "var(--color-green)" }}
+          className="mt-2 rounded-full px-6 py-3 text-white transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? "Creating Account..." : "Sign Up"}
         </button>

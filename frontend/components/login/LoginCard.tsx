@@ -2,6 +2,7 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
+import { AUTH_LOGIN_URL } from "@/lib/api";
 import { persistAuthTokens, AuthResponse } from "@/lib/auth";
 
 interface FormData {
@@ -19,11 +20,8 @@ interface LoginCardProps {
   apiUrl?: string;
 }
 
-const DEFAULT_LOGIN_URL =
-  "https://ledgerly-production-4b76.up.railway.app/api/auth/login";
-
 export default function LoginCard({
-  apiUrl = DEFAULT_LOGIN_URL,
+  apiUrl = AUTH_LOGIN_URL,
 }: LoginCardProps) {
   const [formData, setFormData] = useState<FormData>({
     email: "",
