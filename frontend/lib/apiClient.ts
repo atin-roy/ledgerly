@@ -2,7 +2,7 @@ import { getAccessToken, clearAuthTokens } from "./auth";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
-  "https://ledgerly-production-4b76.up.railway.app/api";
+  "http://localhost:8080/api";
 
 export class ApiError extends Error {
   constructor(
@@ -38,14 +38,21 @@ export async function apiRequest<T>(
   if (requiresAuth) {
     const token = getAccessToken();
     if (!token) {
-      throw new ApiError(401, "No authentication token found");
+      console.error("❌ No authentication token found in localStorage");
+      clearAuthTokens();
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
+      throw new ApiError(401, "No authentication token found - please login");
     }
     requestHeaders["Authorization"] = `Bearer ${token}`;
   }
 
   const url = `${API_BASE_URL}${endpoint}`;
   
-  console.log(`API Request: ${fetchOptions.method || 'GET'} ${url}`);
+  console.log(`🔗 API Request: ${fetchOptions.method || 'GET'} ${url}`, {
+    hasAuth: !!requestHeaders["Authorization"],
+  });
 
   try {
     const response = await fetch(url, {
@@ -55,6 +62,7 @@ export async function apiRequest<T>(
 
     // Handle 401 Unauthorized - clear tokens and redirect to login
     if (response.status === 401) {
+      console.error("❌ API returned 401 Unauthorized - clearing tokens and redirecting to login");
       clearAuthTokens();
       if (typeof window !== "undefined") {
         window.location.href = "/login";
@@ -62,10 +70,17 @@ export async function apiRequest<T>(
       throw new ApiError(401, "Unauthorized - please login again");
     }
 
+    // Handle 403 Forbidden
+    if (response.status === 403) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error("❌ API returned 403 Forbidden", errorData);
+      throw new ApiError(403, errorData.message || "Access denied - you don't have permission for this resource", errorData);
+    }
+
     // Handle other error responses
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error(`API Error: ${response.status}`, errorData);
+      console.error(`❌ API Error: ${response.status}`, errorData);
       throw new ApiError(
         response.status,
         errorData.message || `HTTP error ${response.status}`,
@@ -79,10 +94,10 @@ export async function apiRequest<T>(
     }
 
     const data = await response.json();
-    console.log(`API Response:`, data);
+    console.log(`✅ API Response:`, data);
     return data;
   } catch (error) {
-    console.error("API Request Failed:", error);
+    console.error("❌ API Request Failed:", error);
     if (error instanceof ApiError) {
       throw error;
     }
@@ -97,13 +112,19 @@ export function getUserIdFromToken(): number | null {
 
   const userInfo = localStorage.getItem("ledgerly_user");
   if (!userInfo) {
+    console.warn("⚠️ No user info found in localStorage");
     return null;
   }
 
   try {
     const user = JSON.parse(userInfo);
+    if (!user.userId) {
+      console.warn("⚠️ No userId in stored user info:", user);
+      return null;
+    }
     return user.userId;
-  } catch {
+  } catch (err) {
+    console.error("❌ Error parsing user info from localStorage:", err);
     return null;
   }
 }

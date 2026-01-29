@@ -24,7 +24,7 @@ export interface UpdateTransactionRequest {
 export async function getTransactions(): Promise<TransactionResponse[]> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<TransactionResponse[]>(`/users/${userId}/transactions`);
@@ -33,7 +33,7 @@ export async function getTransactions(): Promise<TransactionResponse[]> {
 export async function getTransaction(transactionId: number): Promise<TransactionResponse> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<TransactionResponse>(`/users/${userId}/transactions/${transactionId}`);
@@ -44,7 +44,7 @@ export async function createTransaction(
 ): Promise<TransactionResponse> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<TransactionResponse>(`/users/${userId}/transactions`, {
@@ -59,7 +59,7 @@ export async function updateTransaction(
 ): Promise<TransactionResponse> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<TransactionResponse>(`/users/${userId}/transactions/${transactionId}`, {
@@ -71,7 +71,7 @@ export async function updateTransaction(
 export async function deleteTransaction(transactionId: number): Promise<void> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<void>(`/users/${userId}/transactions/${transactionId}`, {

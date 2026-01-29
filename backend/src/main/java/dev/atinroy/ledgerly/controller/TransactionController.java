@@ -12,11 +12,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/users/{userId}/transactions")
@@ -44,16 +44,15 @@ public class TransactionController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all transactions", description = "Retrieves a paginated list of transactions for the specified user")
+    @Operation(summary = "Get all transactions", description = "Retrieves all transactions for the specified user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Transactions retrieved successfully"),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
-    public ResponseEntity<Page<TransactionResponse>> getTransactions(
-            @PathVariable Long userId,
-            Pageable pageable) {
-        Page<TransactionResponse> responses = transactionService.getTransactions(userId, pageable);
+    public ResponseEntity<List<TransactionResponse>> getTransactions(
+            @PathVariable Long userId) {
+        List<TransactionResponse> responses = transactionService.getTransactionsList(userId);
         return ResponseEntity.ok(responses);
     }
 

@@ -19,7 +19,7 @@ export interface UpdateCategoryRequest {
 export async function getCategories(): Promise<CategoryResponse[]> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<CategoryResponse[]>(`/users/${userId}/categories`);
@@ -28,7 +28,7 @@ export async function getCategories(): Promise<CategoryResponse[]> {
 export async function getCategory(categoryId: number): Promise<CategoryResponse> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<CategoryResponse>(`/users/${userId}/categories/${categoryId}`);
@@ -37,7 +37,7 @@ export async function getCategory(categoryId: number): Promise<CategoryResponse>
 export async function createCategory(data: CreateCategoryRequest): Promise<CategoryResponse> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<CategoryResponse>(`/users/${userId}/categories`, {
@@ -52,7 +52,7 @@ export async function updateCategory(
 ): Promise<CategoryResponse> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<CategoryResponse>(`/users/${userId}/categories/${categoryId}`, {
@@ -64,7 +64,7 @@ export async function updateCategory(
 export async function deleteCategory(categoryId: number): Promise<void> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<void>(`/users/${userId}/categories/${categoryId}`, {

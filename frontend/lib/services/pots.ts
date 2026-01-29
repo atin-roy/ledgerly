@@ -22,7 +22,7 @@ export interface UpdatePotRequest {
 export async function getPots(): Promise<PotResponse[]> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<PotResponse[]>(`/users/${userId}/pots`);
@@ -31,7 +31,7 @@ export async function getPots(): Promise<PotResponse[]> {
 export async function getPot(potId: number): Promise<PotResponse> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<PotResponse>(`/users/${userId}/pots/${potId}`);
@@ -40,7 +40,7 @@ export async function getPot(potId: number): Promise<PotResponse> {
 export async function createPot(data: CreatePotRequest): Promise<PotResponse> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<PotResponse>(`/users/${userId}/pots`, {
@@ -55,7 +55,7 @@ export async function updatePot(
 ): Promise<PotResponse> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<PotResponse>(`/users/${userId}/pots/${potId}`, {
@@ -67,7 +67,7 @@ export async function updatePot(
 export async function deletePot(potId: number): Promise<void> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<void>(`/users/${userId}/pots/${potId}`, {

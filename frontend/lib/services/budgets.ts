@@ -19,7 +19,7 @@ export interface UpdateBudgetRequest {
 export async function getBudgets(): Promise<BudgetResponse[]> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<BudgetResponse[]>(`/users/${userId}/budgets`);
@@ -28,7 +28,7 @@ export async function getBudgets(): Promise<BudgetResponse[]> {
 export async function getBudget(budgetId: number): Promise<BudgetResponse> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<BudgetResponse>(`/users/${userId}/budgets/${budgetId}`);
@@ -37,7 +37,7 @@ export async function getBudget(budgetId: number): Promise<BudgetResponse> {
 export async function createBudget(data: CreateBudgetRequest): Promise<BudgetResponse> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<BudgetResponse>(`/users/${userId}/budgets`, {
@@ -52,7 +52,7 @@ export async function updateBudget(
 ): Promise<BudgetResponse> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<BudgetResponse>(`/users/${userId}/budgets/${budgetId}`, {
@@ -64,7 +64,7 @@ export async function updateBudget(
 export async function deleteBudget(budgetId: number): Promise<void> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<void>(`/users/${userId}/budgets/${budgetId}`, {

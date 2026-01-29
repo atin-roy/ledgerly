@@ -20,6 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
@@ -128,5 +130,14 @@ public class TransactionService {
         userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
         return transactionRepository.findByUser_Id(userId, pageable)
                 .map(transactionMapper::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TransactionResponse> getTransactionsList(Long userId) {
+        userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+        return transactionRepository.findByUser_Id(userId)
+                .stream()
+                .map(transactionMapper::toResponse)
+                .toList();
     }
 }

@@ -68,6 +68,8 @@ export default function LoginCard({
     setErrors({});
 
     try {
+      console.log(`🔐 Attempting login to: ${apiUrl}`);
+      
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
@@ -81,16 +83,19 @@ export default function LoginCard({
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error(`❌ Login failed with status ${response.status}:`, errorData);
         throw new Error(
           errorData?.message || `Unable to login (status ${response.status})`,
         );
       }
 
       const result = (await response.json()) as AuthResponse;
+      console.log("✅ Login successful, persisting tokens");
       persistAuthTokens(result);
+      console.log("✅ Redirecting to dashboard");
       router.replace("/overview");
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("❌ Login error:", error);
       setErrors({
         general:
           error instanceof Error

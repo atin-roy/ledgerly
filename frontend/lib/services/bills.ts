@@ -25,7 +25,7 @@ export interface UpdateBillRequest {
 export async function getBills(): Promise<BillResponse[]> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<BillResponse[]>(`/users/${userId}/bills`);
@@ -34,7 +34,7 @@ export async function getBills(): Promise<BillResponse[]> {
 export async function getBill(billId: number): Promise<BillResponse> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<BillResponse>(`/users/${userId}/bills/${billId}`);
@@ -43,7 +43,7 @@ export async function getBill(billId: number): Promise<BillResponse> {
 export async function createBill(data: CreateBillRequest): Promise<BillResponse> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<BillResponse>(`/users/${userId}/bills`, {
@@ -58,7 +58,7 @@ export async function updateBill(
 ): Promise<BillResponse> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<BillResponse>(`/users/${userId}/bills/${billId}`, {
@@ -70,7 +70,7 @@ export async function updateBill(
 export async function deleteBill(billId: number): Promise<void> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<void>(`/users/${userId}/bills/${billId}`, {
@@ -81,7 +81,7 @@ export async function deleteBill(billId: number): Promise<void> {
 export async function countBillsByStatus(status: string): Promise<number> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<number>(`/users/${userId}/bills/count?status=${status}`);
@@ -90,7 +90,7 @@ export async function countBillsByStatus(status: string): Promise<number> {
 export async function sumBillsByStatus(status: string): Promise<number> {
   const userId = getUserIdFromToken();
   if (!userId) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - no userId found");
   }
 
   return apiRequest<number>(`/users/${userId}/bills/sum?status=${status}`);
