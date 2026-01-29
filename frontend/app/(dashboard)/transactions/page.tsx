@@ -60,20 +60,27 @@ export default function TransactionsPage() {
         getCategories(),
       ]);
       
+      console.log("Transactions data:", transactionsData);
+      console.log("Categories data:", categoriesData);
+      
+      // Ensure data is an array
+      const transactionsArray = Array.isArray(transactionsData) ? transactionsData : [];
+      const categoriesArray = Array.isArray(categoriesData) ? categoriesData : [];
+      
       // Convert backend format to frontend format
-      const convertedTransactions: Transaction[] = transactionsData.map((t) => ({
+      const convertedTransactions: Transaction[] = transactionsArray.map((t) => ({
         id: t.id.toString(),
         recipient: t.partyName || "Unknown",
         description: "",
         category: t.categoryName as any,
         date: t.date.split("T")[0], // Convert ISO to date only
-        amount: t.amount,
+        amount: Math.abs(t.amount),
         type: t.amount >= 0 ? "income" : "expense",
         badgeColor: "var(--color-green)",
       }));
       
       setTransactions(convertedTransactions);
-      setCategories(categoriesData);
+      setCategories(categoriesArray);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load transactions");
       console.error("Error loading data:", err);

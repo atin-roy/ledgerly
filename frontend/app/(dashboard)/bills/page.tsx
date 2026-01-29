@@ -69,8 +69,13 @@ export default function BillsPage() {
       setError(null);
       const data = await getBills();
       
+      console.log("Bills data:", data);
+      
+      // Ensure data is an array
+      const billsArray = Array.isArray(data) ? data : [];
+      
       // Convert backend format to frontend format
-      const convertedBills: Bill[] = data.map((b) => ({
+      const convertedBills: Bill[] = billsArray.map((b) => ({
         id: b.id.toString(),
         title: b.name,
         dueLabel: "Monthly",

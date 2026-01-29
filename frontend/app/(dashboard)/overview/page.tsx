@@ -73,9 +73,17 @@ export default function OverviewPage() {
       ]);
       
       console.log("✅ Data fetched successfully");
+      console.log("Raw data:", { transactionsData, budgetsData, potsData, billsData, categoriesData });
+      
+      // Ensure data is an array
+      const transactionsArray = Array.isArray(transactionsData) ? transactionsData : [];
+      const budgetsArray = Array.isArray(budgetsData) ? budgetsData : [];
+      const potsArray = Array.isArray(potsData) ? potsData : [];
+      const billsArray = Array.isArray(billsData) ? billsData : [];
+      const categoriesArray = Array.isArray(categoriesData) ? categoriesData : [];
       
       // Convert transactions
-      const convertedTransactions: Transaction[] = transactionsData.map((t) => ({
+      const convertedTransactions: Transaction[] = transactionsArray.map((t) => ({
         id: t.id.toString(),
         recipient: t.partyName || "Unknown",
         description: "",
@@ -87,7 +95,7 @@ export default function OverviewPage() {
       }));
       
       // Convert bills
-      const convertedBills: Bill[] = billsData.map((b) => ({
+      const convertedBills: Bill[] = billsArray.map((b) => ({
         id: b.id.toString(),
         title: b.name,
         dueLabel: "Monthly",
@@ -99,10 +107,10 @@ export default function OverviewPage() {
       }));
       
       setTransactions(convertedTransactions);
-      setBudgets(budgetsData);
-      setPots(potsData);
+      setBudgets(budgetsArray);
+      setPots(potsArray);
       setBills(convertedBills);
-      setCategories(categoriesData);
+      setCategories(categoriesArray);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load data");
       console.error("Error loading data:", err);

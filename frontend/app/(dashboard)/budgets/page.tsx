@@ -42,8 +42,16 @@ export default function BudgetsPage() {
         getBudgets(),
         getCategories(),
       ]);
-      setBudgets(budgetsData);
-      setCategories(categoriesData);
+      
+      console.log("Budgets data:", budgetsData);
+      console.log("Categories data:", categoriesData);
+      
+      // Ensure data is an array
+      const budgetsArray = Array.isArray(budgetsData) ? budgetsData : [];
+      const categoriesArray = Array.isArray(categoriesData) ? categoriesData : [];
+      
+      setBudgets(budgetsArray);
+      setCategories(categoriesArray);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load budgets");
       console.error("Error loading data:", err);

@@ -36,7 +36,12 @@ export default function PotsPage() {
       setIsLoading(true);
       setError(null);
       const data = await getPots();
-      setPots(data);
+      
+      console.log("Pots data:", data);
+      
+      // Ensure data is an array
+      const potsArray = Array.isArray(data) ? data : [];
+      setPots(potsArray);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load pots");
       console.error("Error loading pots:", err);
