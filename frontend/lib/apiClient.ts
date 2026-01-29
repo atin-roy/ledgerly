@@ -60,21 +60,16 @@ export async function apiRequest<T>(
       headers: requestHeaders,
     });
 
-    // Handle 401 Unauthorized - clear tokens and redirect to login
-    if (response.status === 401) {
-      console.error("❌ API returned 401 Unauthorized - clearing tokens and redirecting to login");
+    // Handle 401 Unauthorized or 403 Forbidden - both indicate auth failure
+    // Spring Security returns 403 for unauthenticated requests (expired/invalid token)
+    if (response.status === 401 || response.status === 403) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error(`❌ API returned ${response.status} - clearing tokens and redirecting to login`, errorData);
       clearAuthTokens();
       if (typeof window !== "undefined") {
         window.location.href = "/login";
       }
-      throw new ApiError(401, "Unauthorized - please login again");
-    }
-
-    // Handle 403 Forbidden
-    if (response.status === 403) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error("❌ API returned 403 Forbidden", errorData);
-      throw new ApiError(403, errorData.message || "Access denied - you don't have permission for this resource", errorData);
+      throw new ApiError(response.status, "Session expired - please login again");
     }
 
     // Handle other error responses

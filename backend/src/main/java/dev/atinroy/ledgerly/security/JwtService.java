@@ -4,6 +4,7 @@ import dev.atinroy.ledgerly.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class JwtService {
 
@@ -48,7 +50,14 @@ public class JwtService {
         try {
             extractAllClaims(token);
             return !isTokenExpired(token);
+        } catch (io.jsonwebtoken.security.SignatureException e) {
+            log.warn("JWT signature validation failed: {}", e.getMessage());
+            return false;
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            log.warn("JWT token expired: {}", e.getMessage());
+            return false;
         } catch (Exception e) {
+            log.warn("JWT validation failed: {} - {}", e.getClass().getSimpleName(), e.getMessage());
             return false;
         }
     }
