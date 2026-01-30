@@ -1,6 +1,6 @@
 const DEFAULT_API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
-  "http://localhost:8080/api";
+  "https://ledgerly-production-4b76.up.railway.app/api";
 
 const normalizeBaseUrl = (url: string) => url.replace(/\/+$/, "");
 
