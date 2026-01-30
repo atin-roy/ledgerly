@@ -5,14 +5,16 @@ import {
   formatTransactionDate,
   type Transaction,
 } from "@/app/transactions/data";
+import { type MouseEvent } from "react";
 
 export const TRANSACTION_ROW_HEIGHT = 64;
 
 type TransactionRowProps = {
   transaction: Transaction;
+  onContextMenu?: (event: MouseEvent<HTMLDivElement>, transaction: Transaction) => void;
 };
 
-export default function TransactionRow({ transaction }: TransactionRowProps) {
+export default function TransactionRow({ transaction, onContextMenu }: TransactionRowProps) {
   const isIncome = transaction.type === "income";
   const amountClass = isIncome
     ? "text-[var(--color-green)]"
@@ -20,8 +22,9 @@ export default function TransactionRow({ transaction }: TransactionRowProps) {
 
   return (
     <div
-      className="flex items-center justify-between gap-4 px-4 py-4 md:grid md:grid-cols-[2fr_1fr_1fr_1fr] md:items-center md:gap-3 md:py-0 text-sm text-(--color-grey-900) hover:bg-beige-200 active:bg-beige-400 transition-colors cursor-pointer"
+      className="flex items-center justify-between gap-4 px-4 py-4 md:grid md:grid-cols-[2fr_1fr_1fr_1fr] md:items-center md:gap-3 md:py-0 text-sm text-(--color-grey-900) hover:bg-beige-200 active:bg-beige-400 transition-colors cursor-context-menu"
       style={{ minHeight: `${TRANSACTION_ROW_HEIGHT}px` }}
+      onContextMenu={onContextMenu ? (e) => onContextMenu(e, transaction) : undefined}
     >
       {/* Mobile layout: recipient and category stacked */}
       <div className="flex flex-col gap-1 md:hidden">

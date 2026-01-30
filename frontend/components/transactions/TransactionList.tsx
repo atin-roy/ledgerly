@@ -1,6 +1,7 @@
 "use client";
 
 import { type Transaction } from "@/app/transactions/data";
+import { type MouseEvent } from "react";
 
 import TransactionRow, {
   TRANSACTION_ROW_HEIGHT,
@@ -9,11 +10,13 @@ import TransactionRow, {
 type TransactionListProps = {
   transactions: Transaction[];
   pageSize: number;
+  onContextMenu?: (event: MouseEvent<HTMLDivElement>, transaction: Transaction) => void;
 };
 
 export default function TransactionList({
   transactions,
   pageSize,
+  onContextMenu,
 }: TransactionListProps) {
   const minBodyHeight = pageSize * TRANSACTION_ROW_HEIGHT;
   const hasTransactions = transactions.length > 0;
@@ -34,7 +37,11 @@ export default function TransactionList({
         {hasTransactions ? (
           <>
             {transactions.map((transaction) => (
-              <TransactionRow key={transaction.id} transaction={transaction} />
+              <TransactionRow 
+                key={transaction.id} 
+                transaction={transaction}
+                onContextMenu={onContextMenu}
+              />
             ))}
             {emptyRowsCount > 0 &&
               Array.from({ length: emptyRowsCount }).map((_, index) => (

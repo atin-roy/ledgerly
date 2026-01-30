@@ -1,6 +1,6 @@
 "use client";
 
-import { SyntheticEvent, useEffect, useMemo, useState } from "react";
+import { SyntheticEvent, useEffect, useMemo, useState, type MouseEvent } from "react";
 import { ChevronDown } from "lucide-react";
 
 import PageTitle from "@/components/PageTitle";
@@ -16,7 +16,8 @@ import {
   type TransactionSortOption,
   type Transaction,
 } from "@/app/transactions/data";
-import { getTransactions, getCategories, createTransaction, type TransactionResponse, type CategoryResponse } from "@/lib/services";
+import { getTransactions, getCategories, createTransaction, deleteTransaction, type TransactionResponse, type CategoryResponse } from "@/lib/services";
+import ContextMenu, { createEditMenuItem, createDeleteMenuItem } from "@/components/ui/ContextMenu";
 
 const PAGE_SIZE = 10;
 
@@ -47,6 +48,7 @@ export default function TransactionsPage() {
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; transaction: Transaction } | null>(null);
 
   useEffect(() => {
     loadData();
@@ -188,6 +190,29 @@ export default function TransactionsPage() {
     setFormValues((prev) => ({ ...prev, category: categoryName }));
   };
 
+  const handleDelete = async (transactionId: number) => {
+    if (!confirm("Are you sure you want to delete this transaction? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      await deleteTransaction(transactionId);
+      await loadData();
+    } catch (err) {
+      console.error("Error deleting transaction:", err);
+      alert("Failed to delete transaction. Please try again.");
+    }
+  };
+
+  const handleContextMenu = (event: MouseEvent<HTMLDivElement>, transaction: Transaction) => {
+    event.preventDefault();
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      transaction,
+    });
+  };
+
   const transactionButtonClass = primaryActionButtonClass;
 
   if (isLoading) {
@@ -246,7 +271,11 @@ export default function TransactionsPage() {
             />
 
             <div>
-              <TransactionList transactions={data} pageSize={PAGE_SIZE} />
+              <TransactionList 
+                transactions={data} 
+                pageSize={PAGE_SIZE}
+                onContextMenu={handleContextMenu}
+              />
             </div>
 
             <PaginationControls
@@ -379,6 +408,21 @@ export default function TransactionsPage() {
           )}
         </div>
       </div>
+
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={[
+            createEditMenuItem(() => {
+              // TODO: Implement edit functionality for transactions
+              alert("Edit transaction functionality coming soon!");
+            }),
+            createDeleteMenuItem(() => handleDelete(parseInt(contextMenu.transaction.id))),
+          ]}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
     </div>
   );
 }

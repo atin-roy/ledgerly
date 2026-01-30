@@ -7,6 +7,7 @@ import {
   useState,
   type ChangeEvent,
   type SyntheticEvent,
+  type MouseEvent,
 } from "react";
 
 import CustomSelect from "@/components/ui/CustomSelect";
@@ -14,6 +15,7 @@ import PageTitle from "@/components/PageTitle";
 import { Button } from "@/components/ui/button";
 import primaryActionButtonClass from "@/components/ui/primaryActionButtonClass";
 import { getCategories, createCategory, updateCategory, deleteCategory, type CategoryResponse } from "@/lib/services";
+import ContextMenu, { createEditMenuItem, createDeleteMenuItem } from "@/components/ui/ContextMenu";
 
 const categoryTypeOptions = ["INCOME", "EXPENSE"] as const;
 type CategoryType = typeof categoryTypeOptions[number];
@@ -36,6 +38,7 @@ export default function CategoriesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<CategoryResponse | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; category: CategoryResponse } | null>(null);
 
   useEffect(() => {
     loadCategories();
@@ -137,6 +140,15 @@ export default function CategoriesPage() {
     }
   };
 
+  const handleContextMenu = (event: MouseEvent<HTMLDivElement>, category: CategoryResponse) => {
+    event.preventDefault();
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      category,
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-beige-100 py-10 sm:py-12">
@@ -236,7 +248,8 @@ export default function CategoriesPage() {
                     filteredCategories.map((category) => (
                       <div
                         key={category.id}
-                        className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 hover:bg-slate-100 transition"
+                        onContextMenu={(e) => handleContextMenu(e, category)}
+                        className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 hover:bg-slate-100 transition cursor-context-menu"
                       >
                         <div className="flex items-center gap-3">
                           <span className="font-semibold text-slate-900">{category.name}</span>
@@ -247,20 +260,6 @@ export default function CategoriesPage() {
                           }`}>
                             {category.type}
                           </span>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleOpenModal(category)}
-                            className="rounded-lg px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-200 transition"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(category.id)}
-                            className="rounded-lg px-3 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition"
-                          >
-                            Delete
-                          </button>
                         </div>
                       </div>
                     ))
@@ -335,6 +334,18 @@ export default function CategoriesPage() {
           </div>
         </div>
       </div>
+
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={[
+            createEditMenuItem(() => handleOpenModal(contextMenu.category)),
+            createDeleteMenuItem(() => handleDelete(contextMenu.category.id)),
+          ]}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
     </div>
   );
 }
