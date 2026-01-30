@@ -1,7 +1,7 @@
 "use client";
 
 import { SyntheticEvent, useEffect, useMemo, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 
 import PageTitle from "@/components/PageTitle";
 import PaginationControls from "@/components/transactions/PaginationControls";
@@ -16,7 +16,7 @@ import {
   type TransactionSortOption,
   type Transaction,
 } from "@/app/transactions/data";
-import { getTransactions, getCategories, createTransaction, type TransactionResponse, type CategoryResponse } from "@/lib/services";
+import { getTransactions, getCategories, createTransaction, createCategory, type TransactionResponse, type CategoryResponse } from "@/lib/services";
 
 const PAGE_SIZE = 10;
 
@@ -47,6 +47,8 @@ export default function TransactionsPage() {
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
 
   useEffect(() => {
     loadData();
@@ -128,6 +130,40 @@ export default function TransactionsPage() {
   ) => {
     const target = event.target as HTMLInputElement | HTMLSelectElement;
     setFormValues((prev) => ({ ...prev, [target.name]: target.value }));
+  };
+
+  const handleOpenModal = () => {
+    // Initialize category with first available category when opening modal
+    const initialCategory = categories.length > 0 ? categories[0].name : "";
+    setFormValues({ ...modalFields, category: initialCategory });
+    setIsModalOpen(true);
+  };
+
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) {
+      alert("Please enter a category name");
+      return;
+    }
+
+    try {
+      const newCategory = await createCategory({
+        name: newCategoryName.trim(),
+        type: formValues.type === "expense" ? "EXPENSE" : "INCOME",
+      });
+      
+      // Update categories list
+      setCategories([...categories, newCategory]);
+      
+      // Set the new category as selected
+      setFormValues((prev) => ({ ...prev, category: newCategory.name }));
+      
+      // Reset create category form
+      setNewCategoryName("");
+      setIsCreatingCategory(false);
+    } catch (err) {
+      console.error("Error creating category:", err);
+      alert("Failed to create category. Please try again.");
+    }
   };
 
   const handleFormSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
@@ -221,7 +257,7 @@ export default function TransactionsPage() {
             variant="ghost"
             size="sm"
             className={`${transactionButtonClass}`}
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleOpenModal}
           >
             New transaction
           </Button>
@@ -325,14 +361,63 @@ export default function TransactionsPage() {
                       <span className="text-xs font-semibold uppercase tracking-wide text-(--color-grey-500)">
                         Category
                       </span>
-                      <CustomSelect
-                        value={formValues.category || (categories.length > 0 ? categories[0].name : "General")}
-                        options={categories.map(c => c.name)}
-                        onChange={handleFormCategoryChange}
-                        icon={<ChevronDown className="h-4 w-4" />}
-                        trailingIcon={<ChevronDown className="h-4 w-4" />}
-                        ariaLabel="Transaction category"
-                      />
+                      {isCreatingCategory ? (
+                        <div className="flex gap-2">
+                          <input
+                            value={newCategoryName}
+                            onChange={(e) => setNewCategoryName(e.target.value)}
+                            placeholder="New category name"
+                            className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleCreateCategory();
+                              } else if (e.key === "Escape") {
+                                setIsCreatingCategory(false);
+                                setNewCategoryName("");
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={handleCreateCategory}
+                            className="rounded-2xl bg-emerald-600 px-3 py-2 text-white hover:bg-emerald-700"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsCreatingCategory(false);
+                              setNewCategoryName("");
+                            }}
+                            className="rounded-2xl bg-slate-300 px-3 py-2 text-slate-700 hover:bg-slate-400"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <div className="flex-1">
+                            <CustomSelect
+                              value={formValues.category || (categories.length > 0 ? categories[0].name : "General")}
+                              options={categories.map(c => c.name)}
+                              onChange={handleFormCategoryChange}
+                              icon={<ChevronDown className="h-4 w-4" />}
+                              trailingIcon={<ChevronDown className="h-4 w-4" />}
+                              ariaLabel="Transaction category"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setIsCreatingCategory(true)}
+                            className="rounded-2xl bg-emerald-600 px-3 py-2 text-white hover:bg-emerald-700 flex items-center justify-center"
+                            title="Create new category"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
                     </label>
 
                     <label className="flex flex-col gap-2 text-sm text-slate-600">
@@ -375,3 +460,4 @@ export default function TransactionsPage() {
     </div>
   );
 }
+

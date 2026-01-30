@@ -50,9 +50,9 @@ export const pots: Pot[] = [
   },
 ];
 
-const currencyFormatter = new Intl.NumberFormat("en-US", {
+const currencyFormatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
-  currency: "USD",
+  currency: "INR",
 });
 
 const percentFormatter = new Intl.NumberFormat("en-US", {

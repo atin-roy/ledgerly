@@ -177,8 +177,42 @@ export default function OverviewPage() {
   const budgetsPreview = budgets.slice(0, 3);
   const potsPreview = pots.slice(0, 3);
 
+  // Calculate category breakdowns from actual transactions
   const expenseCategoryBreakdown: CategorySlice[] = [];
   const incomeCategoryBreakdown: CategorySlice[] = [];
+  
+  // Group transactions by category
+  const categoryTotals = new Map<string, { income: number; expense: number }>();
+  
+  transactions.forEach((transaction) => {
+    const existing = categoryTotals.get(transaction.category) || { income: 0, expense: 0 };
+    if (transaction.type === "income") {
+      existing.income += transaction.amount;
+    } else {
+      existing.expense += transaction.amount;
+    }
+    categoryTotals.set(transaction.category, existing);
+  });
+  
+  // Convert to breakdown arrays
+  categoryTotals.forEach((totals, category) => {
+    if (totals.income > 0) {
+      incomeCategoryBreakdown.push({
+        label: category,
+        value: totals.income,
+      });
+    }
+    if (totals.expense > 0) {
+      expenseCategoryBreakdown.push({
+        label: category,
+        value: totals.expense,
+      });
+    }
+  });
+  
+  // Sort by value descending
+  incomeCategoryBreakdown.sort((a, b) => b.value - a.value);
+  expenseCategoryBreakdown.sort((a, b) => b.value - a.value);
   
   const incomeSourcesTotal = incomeCategoryBreakdown.reduce(
     (total, slice) => total + slice.value,

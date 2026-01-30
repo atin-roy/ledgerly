@@ -181,9 +181,9 @@ export const transactionRecords: Transaction[] = [
   },
 ];
 
-const currencyFormatter = new Intl.NumberFormat("en-US", {
+const currencyFormatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
-  currency: "USD",
+  currency: "INR",
 });
 
 export function formatCurrency(value: number) {
