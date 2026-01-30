@@ -19,7 +19,6 @@ const budgetCategories = transactionCategoryOptions.filter(
 const budgetModalFields = {
   category: budgetCategories[0],
   limit: "",
-  description: "",
 };
 
 export default function BudgetsPage() {
@@ -228,18 +227,7 @@ export default function BudgetsPage() {
                         type="number"
                         min={0}
                         step="0.01"
-                        className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                      />
-                    </label>
-                    <label className="flex flex-col gap-2 text-sm text-slate-600">
-                      <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
-                        Description
-                      </span>
-                      <input
-                        name="description"
-                        value={formValues.description}
-                        onChange={handleFormChange}
-                        placeholder="Add notes about this goal"
+                        required
                         className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
                       />
                     </label>

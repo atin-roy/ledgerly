@@ -9,5 +9,6 @@ public record TransactionCreateRequest(
     @NotNull BigDecimal amount,
     @NotNull LocalDateTime date,
     @NotNull Long categoryId,
-    String partyName // optional - create or link an existing party
+    String partyName, // optional - create or link an existing party
+    String description // optional - transaction notes
 ) {}

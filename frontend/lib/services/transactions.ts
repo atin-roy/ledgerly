@@ -6,19 +6,22 @@ export interface TransactionResponse {
   date: string; // ISO date string
   categoryName: string;
   partyName: string;
+  description: string;
 }
 
 export interface CreateTransactionRequest {
   amount: number;
+  date: string; // ISO date string
   categoryId: number;
-  partyId?: number;
   partyName?: string;
+  description?: string;
 }
 
 export interface UpdateTransactionRequest {
   amount?: number;
   categoryId?: number;
-  partyId?: number;
+  partyName?: string;
+  description?: string;
 }
 
 export async function getTransactions(): Promise<TransactionResponse[]> {

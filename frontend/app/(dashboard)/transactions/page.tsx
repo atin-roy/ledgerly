@@ -16,7 +16,7 @@ import {
   type TransactionSortOption,
   type Transaction,
 } from "@/app/transactions/data";
-import { getTransactions, getCategories, type TransactionResponse, type CategoryResponse } from "@/lib/services";
+import { getTransactions, getCategories, createTransaction, type TransactionResponse, type CategoryResponse } from "@/lib/services";
 
 const PAGE_SIZE = 10;
 
@@ -26,6 +26,7 @@ const modalFields = {
   amount: "",
   category: "",
   type: "expense",
+  date: new Date().toISOString().split("T")[0], // Today's date in YYYY-MM-DD format
 };
 
 const transactionTypes = [
@@ -71,7 +72,7 @@ export default function TransactionsPage() {
       const convertedTransactions: Transaction[] = transactionsArray.map((t) => ({
         id: t.id.toString(),
         recipient: t.partyName || "Unknown",
-        description: "",
+        description: t.description || "",
         category: t.categoryName as any,
         date: t.date.split("T")[0], // Convert ISO to date only
         amount: Math.abs(t.amount),
@@ -129,10 +130,40 @@ export default function TransactionsPage() {
     setFormValues((prev) => ({ ...prev, [target.name]: target.value }));
   };
 
-  const handleFormSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
+  const handleFormSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setIsModalOpen(false);
-    setFormValues(modalFields);
+    
+    try {
+      const category = categories.find(c => c.name === formValues.category);
+      if (!category) {
+        alert("Please select a valid category");
+        return;
+      }
+
+      const amount = parseFloat(formValues.amount);
+      if (isNaN(amount) || amount <= 0) {
+        alert("Please enter a valid amount");
+        return;
+      }
+
+      // Convert date to ISO format with time
+      const dateTime = new Date(formValues.date + "T00:00:00").toISOString();
+
+      await createTransaction({
+        amount: formValues.type === "expense" ? -amount : amount,
+        date: dateTime,
+        categoryId: category.id,
+        partyName: formValues.recipient.trim() || undefined,
+        description: formValues.description.trim() || undefined,
+      });
+      
+      setIsModalOpen(false);
+      setFormValues(modalFields);
+      await loadData();
+    } catch (err) {
+      console.error("Error creating transaction:", err);
+      alert("Failed to create transaction. Please try again.");
+    }
   };
 
   const transactionTypeLabel =
@@ -144,6 +175,10 @@ export default function TransactionsPage() {
     if (option) {
       setFormValues((prev) => ({ ...prev, type: option.value }));
     }
+  };
+
+  const handleFormCategoryChange = (categoryName: string) => {
+    setFormValues((prev) => ({ ...prev, category: categoryName }));
   };
 
   const transactionButtonClass = primaryActionButtonClass;
@@ -272,17 +307,31 @@ export default function TransactionsPage() {
                       className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
                     />
                   </label>
+                  <label className="flex flex-col gap-2 text-sm text-slate-600">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-(--color-grey-500)">
+                      Date
+                    </span>
+                    <input
+                      name="date"
+                      value={formValues.date}
+                      onChange={handleFormChange}
+                      type="date"
+                      required
+                      className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                    />
+                  </label>
                   <div className="grid gap-4 md:grid-cols-2">
                     <label className="flex flex-col gap-2 text-sm text-slate-600">
                       <span className="text-xs font-semibold uppercase tracking-wide text-(--color-grey-500)">
                         Category
                       </span>
-                      <input
-                        name="category"
-                        value={formValues.category}
-                        onChange={handleFormChange}
-                        placeholder="General"
-                        className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                      <CustomSelect
+                        value={formValues.category || (categories.length > 0 ? categories[0].name : "General")}
+                        options={categories.map(c => c.name)}
+                        onChange={handleFormCategoryChange}
+                        icon={<ChevronDown className="h-4 w-4" />}
+                        trailingIcon={<ChevronDown className="h-4 w-4" />}
+                        ariaLabel="Transaction category"
                       />
                     </label>
 

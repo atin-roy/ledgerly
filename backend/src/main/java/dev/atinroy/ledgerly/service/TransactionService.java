@@ -102,6 +102,9 @@ public class TransactionService {
                 transaction.setParty(party);
             }
         }
+        if (request.description() != null) {
+            transaction.setDescription(request.description());
+        }
 
         Transaction saved = transactionRepository.save(transaction);
         return transactionMapper.toResponse(saved);

@@ -8,5 +8,6 @@ public record TransactionResponse(
     BigDecimal amount,
     LocalDateTime date,
     String categoryName,
-    String partyName
+    String partyName,
+    String description
 ) {}
