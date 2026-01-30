@@ -16,7 +16,15 @@ import {
   type TransactionSortOption,
   type Transaction,
 } from "@/app/transactions/data";
-import { getTransactions, getCategories, createTransaction, deleteTransaction, type TransactionResponse, type CategoryResponse } from "@/lib/services";
+import {
+  getTransactions,
+  getCategories,
+  createTransaction,
+  updateTransaction,
+  deleteTransaction,
+  type TransactionResponse,
+  type CategoryResponse,
+} from "@/lib/services";
 import ContextMenu, { createEditMenuItem, createDeleteMenuItem } from "@/components/ui/ContextMenu";
 
 const PAGE_SIZE = 10;
@@ -44,6 +52,7 @@ export default function TransactionsPage() {
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formValues, setFormValues] = useState(modalFields);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -158,21 +167,45 @@ export default function TransactionsPage() {
       // Convert date to ISO format with time
       const dateTime = new Date(formValues.date + "T00:00:00").toISOString();
 
-      await createTransaction({
-        amount: formValues.type === "expense" ? -amount : amount,
-        date: dateTime,
-        categoryId: category.id,
-        partyName: formValues.recipient.trim() || undefined,
-        description: formValues.description.trim() || undefined,
-      });
+      if (editingTransaction) {
+        await updateTransaction(parseInt(editingTransaction.id), {
+          amount: formValues.type === "expense" ? -amount : amount,
+          date: dateTime,
+          categoryId: category.id,
+          partyName: formValues.recipient.trim() || undefined,
+          description: formValues.description.trim() || undefined,
+        });
+      } else {
+        await createTransaction({
+          amount: formValues.type === "expense" ? -amount : amount,
+          date: dateTime,
+          categoryId: category.id,
+          partyName: formValues.recipient.trim() || undefined,
+          description: formValues.description.trim() || undefined,
+        });
+      }
       
       setIsModalOpen(false);
       setFormValues(modalFields);
+      setEditingTransaction(null);
       await loadData();
     } catch (err) {
-      console.error("Error creating transaction:", err);
-      alert("Failed to create transaction. Please try again.");
+      console.error("Error saving transaction:", err);
+      alert("Failed to save transaction. Please try again.");
     }
+  };
+
+  const handleEdit = (transaction: Transaction) => {
+    setFormValues({
+      recipient: transaction.recipient,
+      description: transaction.description || "",
+      amount: transaction.amount.toString(),
+      category: transaction.category,
+      type: transaction.type,
+      date: transaction.date,
+    });
+    setEditingTransaction(transaction);
+    setIsModalOpen(true);
   };
 
   const transactionTypeLabel =
@@ -291,17 +324,21 @@ export default function TransactionsPage() {
           {isModalOpen && (
             <div className="absolute inset-0 z-40 flex items-center justify-center rounded-3xl bg-black/40 px-4 py-8">
               <div className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-[var(--color-grey-900)]">
-                    New transaction
-                  </h3>
-                  <button
-                    type="button"
-                    className="text-sm font-semibold text-slate-500 hover:text-slate-700"
-                    onClick={() => setIsModalOpen(false)}
-                  >
-                    Close
-                  </button>
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-[var(--color-grey-900)]">
+                      {editingTransaction ? "Edit transaction" : "New transaction"}
+                    </h3>
+                    <button
+                      type="button"
+                      className="text-sm font-semibold text-slate-500 hover:text-slate-700"
+                      onClick={() => {
+                        setIsModalOpen(false);
+                        setEditingTransaction(null);
+                        setFormValues(modalFields);
+                      }}
+                    >
+                      Close
+                    </button>
                 </div>
                 <form className="mt-2 space-y-4" onSubmit={handleFormSubmit}>
                   <label className="flex flex-col gap-2 text-sm font-semibold text-(--color-grey-600)">
@@ -389,7 +426,11 @@ export default function TransactionsPage() {
                     <Button
                       variant="ghost"
                       className="rounded-2xl px-6 py-3 text-sm font-semibold bg-rose-600 text-white shadow-lg focus-visible:ring-rose-500 active:translate-y-[1px] active:scale-95 hover:bg-rose-600 hover:text-white hover:shadow-none"
-                      onClick={() => setIsModalOpen(false)}
+                      onClick={() => {
+                        setIsModalOpen(false);
+                        setEditingTransaction(null);
+                        setFormValues(modalFields);
+                      }}
                       type="button"
                     >
                       Cancel
@@ -415,8 +456,7 @@ export default function TransactionsPage() {
           y={contextMenu.y}
           items={[
             createEditMenuItem(() => {
-              // TODO: Implement edit functionality for transactions
-              alert("Edit transaction functionality coming soon!");
+              handleEdit(contextMenu.transaction);
             }),
             createDeleteMenuItem(() => handleDelete(parseInt(contextMenu.transaction.id))),
           ]}

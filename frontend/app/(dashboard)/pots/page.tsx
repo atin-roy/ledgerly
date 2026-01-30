@@ -13,12 +13,11 @@ import { getPots, createPot, updatePot, deletePot, type PotResponse } from "@/li
 import ContextMenu, { createEditMenuItem, createDeleteMenuItem } from "@/components/ui/ContextMenu";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
-const potTypeOptions = ["Travel", "Emergency Fund", "Home Improvement"];
+
 
 const potModalFields = {
   name: "",
   target: "",
-  category: potTypeOptions[0],
   description: "",
 };
 
@@ -87,9 +86,7 @@ export default function PotsPage() {
     setFormValues((prev) => ({ ...prev, [target.name]: target.value }));
   };
 
-  const handleCategoryChange = (category: string) => {
-    setFormValues((prev) => ({ ...prev, category }));
-  };
+
 
   const handleFormSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -123,7 +120,6 @@ export default function PotsPage() {
     setFormValues({
       name: pot.name,
       target: pot.target.toString(),
-      category: potTypeOptions[0], // We might want to allow editing category if backend supports it, but for now default
       description: "", // Description might be missing in response type
     });
     setEditingPot(pot);
@@ -314,19 +310,7 @@ export default function PotsPage() {
                       className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
                     />
                   </label>
-                  <label className="flex flex-col gap-2 text-sm text-slate-600">
-                    <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
-                      Category
-                    </span>
-                    <CustomSelect
-                      value={formValues.category}
-                      options={potTypeOptions}
-                      onChange={handleCategoryChange}
-                      icon={<ChevronDown className="h-4 w-4" />}
-                      trailingIcon={<ChevronDown className="h-4 w-4" />}
-                      ariaLabel="Pot category"
-                    />
-                  </label>
+
                   <label className="flex flex-col gap-2 text-sm text-slate-600">
                     <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
                       Target

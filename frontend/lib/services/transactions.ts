@@ -22,6 +22,7 @@ export interface UpdateTransactionRequest {
   categoryId?: number;
   partyName?: string;
   description?: string;
+  date?: string; // ISO date string
 }
 
 export async function getTransactions(): Promise<TransactionResponse[]> {
