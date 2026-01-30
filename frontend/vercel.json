@@ -25,12 +25,5 @@
         }
       ]
     }
-  ],
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "/overview",
-      "permanent": false
-    }
   ]
 }
