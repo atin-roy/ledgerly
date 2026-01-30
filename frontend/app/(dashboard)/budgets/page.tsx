@@ -1,6 +1,6 @@
  "use client";
 
-import { SyntheticEvent, useState, useEffect } from "react";
+import { SyntheticEvent, useState, useEffect, type MouseEvent } from "react";
 import { ChevronDown } from "lucide-react";
 
 import BudgetCard from "@/components/budgets/BudgetCard";
@@ -10,7 +10,9 @@ import CustomSelect from "@/components/ui/CustomSelect";
 import { Button } from "@/components/ui/button";
 import primaryActionButtonClass from "@/components/ui/primaryActionButtonClass";
 import { transactionCategoryOptions } from "@/app/transactions/data";
-import { getBudgets, getCategories, createBudget, type BudgetResponse, type CategoryResponse } from "@/lib/services";
+import { getBudgets, getCategories, createBudget, deleteBudget, type BudgetResponse, type CategoryResponse } from "@/lib/services";
+import ContextMenu, { createEditMenuItem, createDeleteMenuItem } from "@/components/ui/ContextMenu";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 const budgetCategories = transactionCategoryOptions.filter(
   (category) => category !== "All Transactions",
@@ -28,6 +30,8 @@ export default function BudgetsPage() {
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; budget: BudgetResponse } | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean; budgetId?: number; message?: string }>({ isOpen: false });
 
   useEffect(() => {
     loadData();
@@ -77,7 +81,7 @@ export default function BudgetsPage() {
     try {
       const category = categories.find(c => c.name === formValues.category);
       if (!category) {
-        alert("Please select a valid category");
+        setConfirmDialog({ isOpen: true, message: "Please select a valid category" });
         return;
       }
 
@@ -91,8 +95,27 @@ export default function BudgetsPage() {
       await loadData();
     } catch (err) {
       console.error("Error creating budget:", err);
-      alert("Failed to create budget. Please try again.");
+      setConfirmDialog({ isOpen: true, message: "Failed to create budget. Please try again." });
     }
+  };
+
+  const handleDelete = async (budgetId: number) => {
+    try {
+      await deleteBudget(budgetId);
+      await loadData();
+    } catch (err) {
+      console.error("Error deleting budget:", err);
+      setConfirmDialog({ isOpen: true, message: "Failed to delete budget. Please try again." });
+    }
+  };
+
+  const handleContextMenu = (event: MouseEvent<HTMLDivElement>, budget: BudgetResponse) => {
+    event.preventDefault();
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      budget,
+    });
   };
 
   if (isLoading) {
@@ -171,14 +194,19 @@ export default function BudgetsPage() {
                 budgets.map((budget) => {
                   const category = categories.find(c => c.id === budget.categoryId);
                   return (
-                    <BudgetCard
+                    <div
                       key={budget.id}
-                      name={category?.name || "Unknown"}
-                      limit={budget.amount}
-                      spent={0}
-                      color="var(--color-green)"
-                      recentSpending={[]}
-                    />
+                      onContextMenu={(e) => handleContextMenu(e, budget)}
+                      className="cursor-context-menu"
+                    >
+                      <BudgetCard
+                        name={category?.name || "Unknown"}
+                        limit={budget.amount}
+                        spent={0}
+                        color="var(--color-green)"
+                        recentSpending={[]}
+                      />
+                    </div>
                   );
                 })
               )}
@@ -255,6 +283,42 @@ export default function BudgetsPage() {
           )}
         </div>
       </div>
+
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={[
+            createEditMenuItem(() => {
+              // TODO: Implement edit functionality
+              setConfirmDialog({ isOpen: true, message: "Edit budget functionality coming soon!" });
+            }),
+            createDeleteMenuItem(() => {
+              setConfirmDialog({
+                isOpen: true,
+                budgetId: contextMenu.budget.id,
+                message: "Are you sure you want to delete this budget? This action cannot be undone.",
+              });
+            }),
+          ]}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.budgetId ? "Delete Budget" : "Notice"}
+        message={confirmDialog.message || ""}
+        confirmLabel={confirmDialog.budgetId ? "Delete" : "OK"}
+        cancelLabel={confirmDialog.budgetId ? "Cancel" : "Close"}
+        variant={confirmDialog.budgetId ? "danger" : "default"}
+        onConfirm={() => {
+          if (confirmDialog.budgetId) {
+            handleDelete(confirmDialog.budgetId);
+          }
+        }}
+        onCancel={() => setConfirmDialog({ isOpen: false })}
+      />
     </div>
   );
 }
