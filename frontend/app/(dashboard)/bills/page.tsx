@@ -7,6 +7,7 @@ import {
   useState,
   type ChangeEvent,
   type SyntheticEvent,
+  type MouseEvent,
 } from "react";
 
 import CustomSelect from "@/components/ui/CustomSelect";
@@ -25,7 +26,9 @@ import {
   type Bill,
 } from "@/app/bills/data";
 import { baseCategories, type TransactionCategory } from "@/app/transactions/data";
-import { getBills, createBill, type BillResponse } from "@/lib/services";
+import { getBills, createBill, deleteBill, type BillResponse } from "@/lib/services";
+import ContextMenu, { createEditMenuItem, createDeleteMenuItem } from "@/components/ui/ContextMenu";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 const billCategories = baseCategories;
 const billFrequencyOptions = ["Weekly", "Bi-Weekly", "Monthly", "Quarterly", "Annual"] as const;
@@ -58,6 +61,8 @@ export default function BillsPage() {
   const [bills, setBills] = useState<Bill[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; bill: Bill } | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean; billId?: number; message?: string }>({ isOpen: false });
 
   useEffect(() => {
     loadBills();
@@ -164,8 +169,27 @@ export default function BillsPage() {
       await loadBills();
     } catch (err) {
       console.error("Error creating bill:", err);
-      alert("Failed to create bill. Please try again.");
+      setConfirmDialog({ isOpen: true, message: "Failed to create bill. Please try again." });
     }
+  };
+
+  const handleDelete = async (billId: number) => {
+    try {
+      await deleteBill(billId);
+      await loadBills();
+    } catch (err) {
+      console.error("Error deleting bill:", err);
+      setConfirmDialog({ isOpen: true, message: "Failed to delete bill. Please try again." });
+    }
+  };
+
+  const handleContextMenu = (event: MouseEvent<HTMLDivElement>, bill: Bill) => {
+    event.preventDefault();
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      bill,
+    });
   };
 
   if (isLoading) {
@@ -309,7 +333,13 @@ export default function BillsPage() {
 
               <div className="mt-6 space-y-4">
                 {visibleBills.map((bill) => (
-                  <BillCard key={bill.id} bill={bill} />
+                  <div
+                    key={bill.id}
+                    onContextMenu={(e) => handleContextMenu(e, bill)}
+                    className="cursor-context-menu"
+                  >
+                    <BillCard bill={bill} />
+                  </div>
                 ))}
                 {visibleBills.length === 0 && (
                   <p className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
@@ -443,6 +473,42 @@ export default function BillsPage() {
           </div>
         </div>
       </div>
+
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={[
+            createEditMenuItem(() => {
+              // TODO: Implement edit functionality
+              setConfirmDialog({ isOpen: true, message: "Edit bill functionality coming soon!" });
+            }),
+            createDeleteMenuItem(() => {
+              setConfirmDialog({
+                isOpen: true,
+                billId: typeof contextMenu.bill.id === 'string' ? parseInt(contextMenu.bill.id) : contextMenu.bill.id,
+                message: "Are you sure you want to delete this bill? This action cannot be undone.",
+              });
+            }),
+          ]}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.billId ? "Delete Bill" : "Notice"}
+        message={confirmDialog.message || ""}
+        confirmLabel={confirmDialog.billId ? "Delete" : "OK"}
+        cancelLabel={confirmDialog.billId ? "Cancel" : "Close"}
+        variant={confirmDialog.billId ? "danger" : "default"}
+        onConfirm={() => {
+          if (confirmDialog.billId) {
+            handleDelete(confirmDialog.billId);
+          }
+        }}
+        onCancel={() => setConfirmDialog({ isOpen: false })}
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { SyntheticEvent, useState, useEffect } from "react";
+import { SyntheticEvent, useState, useEffect, type MouseEvent } from "react";
 import { ChevronDown } from "lucide-react";
 
 import PageTitle from "@/components/PageTitle";
@@ -9,7 +9,9 @@ import CustomSelect from "@/components/ui/CustomSelect";
 import { Button } from "@/components/ui/button";
 import primaryActionButtonClass from "@/components/ui/primaryActionButtonClass";
 import { formatCurrency, formatPercentage } from "@/app/pots/data";
-import { getPots, createPot, type PotResponse } from "@/lib/services";
+import { getPots, createPot, updatePot, deletePot, type PotResponse } from "@/lib/services";
+import ContextMenu, { createEditMenuItem, createDeleteMenuItem } from "@/components/ui/ContextMenu";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 const potTypeOptions = ["Travel", "Emergency Fund", "Home Improvement"];
 
@@ -26,6 +28,10 @@ export default function PotsPage() {
   const [pots, setPots] = useState<PotResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; pot: PotResponse } | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean; potId?: number; message?: string }>({ isOpen: false });
+  const [moneyModal, setMoneyModal] = useState<{ isOpen: boolean; pot: PotResponse | null; type: 'add' | 'withdraw' }>({ isOpen: false, pot: null, type: 'add' });
+  const [moneyAmount, setMoneyAmount] = useState("");
 
   useEffect(() => {
     loadPots();
@@ -56,16 +62,18 @@ export default function PotsPage() {
   const progressWidth = Math.min(Math.max(rawProgress, 0), 100);
   const progressLabel = `${formatPercentage(rawProgress)}%`;
 
-  const renderPotActions = () => (
+  const renderPotActions = (pot: PotResponse) => (
     <div className="flex flex-wrap gap-3">
       <button
         type="button"
+        onClick={() => setMoneyModal({ isOpen: true, pot, type: 'add' })}
         className="rounded-full border border-[var(--color-grey-300)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[var(--color-grey-600)] transition hover:border-[var(--color-grey-500)] hover:text-[var(--color-grey-900)]"
       >
         + Add Money
       </button>
       <button
         type="button"
+        onClick={() => setMoneyModal({ isOpen: true, pot, type: 'withdraw' })}
         className="rounded-full border border-[var(--color-grey-300)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[var(--color-grey-600)] transition hover:border-[var(--color-grey-500)] hover:text-[var(--color-grey-900)]"
       >
         Withdraw
@@ -97,8 +105,46 @@ export default function PotsPage() {
       await loadPots(); // Reload pots after creation
     } catch (err) {
       console.error("Error creating pot:", err);
-      alert("Failed to create pot. Please try again.");
+      setConfirmDialog({ isOpen: true, message: "Failed to create pot. Please try again." });
     }
+  };
+
+  const handleMoneyOperation = async () => {
+    if (!moneyModal.pot || !moneyAmount) return;
+
+    try {
+      const amount = parseFloat(moneyAmount);
+      const newSaved = moneyModal.type === 'add' 
+        ? moneyModal.pot.saved + amount 
+        : Math.max(0, moneyModal.pot.saved - amount);
+
+      await updatePot(moneyModal.pot.id, { saved: newSaved });
+      setMoneyModal({ isOpen: false, pot: null, type: 'add' });
+      setMoneyAmount("");
+      await loadPots();
+    } catch (err) {
+      console.error("Error updating pot:", err);
+      setConfirmDialog({ isOpen: true, message: `Failed to ${moneyModal.type} money. Please try again.` });
+    }
+  };
+
+  const handleDelete = async (potId: number) => {
+    try {
+      await deletePot(potId);
+      await loadPots();
+    } catch (err) {
+      console.error("Error deleting pot:", err);
+      setConfirmDialog({ isOpen: true, message: "Failed to delete pot. Please try again." });
+    }
+  };
+
+  const handleContextMenu = (event: MouseEvent<HTMLDivElement>, pot: PotResponse) => {
+    event.preventDefault();
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      pot,
+    });
   };
 
   if (isLoading) {
@@ -195,15 +241,20 @@ export default function PotsPage() {
                 </div>
               ) : (
                 pots.map((pot) => (
-                  <PotCard
+                  <div
                     key={pot.id}
-                    name={pot.name}
-                    saved={pot.saved}
-                    target={pot.target}
-                    accentColor="var(--color-green)"
-                    description=""
-                    actions={renderPotActions()}
-                  />
+                    onContextMenu={(e) => handleContextMenu(e, pot)}
+                    className="cursor-context-menu"
+                  >
+                    <PotCard
+                      name={pot.name}
+                      saved={pot.saved}
+                      target={pot.target}
+                      accentColor="var(--color-green)"
+                      description=""
+                      actions={renderPotActions(pot)}
+                    />
+                  </div>
                 ))
               )}
             </div>
@@ -302,6 +353,88 @@ export default function PotsPage() {
           )}
         </div>
       </div>
+
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={[
+            createEditMenuItem(() => {
+              // TODO: Implement edit functionality
+              setConfirmDialog({ isOpen: true, message: "Edit pot functionality coming soon!" });
+            }),
+            createDeleteMenuItem(() => {
+              setConfirmDialog({
+                isOpen: true,
+                potId: contextMenu.pot.id,
+                message: "Are you sure you want to delete this pot? This action cannot be undone.",
+              });
+            }),
+          ]}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
+
+      {moneyModal.isOpen && moneyModal.pot && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMoneyModal({ isOpen: false, pot: null, type: 'add' })} />
+          <div className="relative w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl mx-4">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">
+              {moneyModal.type === 'add' ? 'Add Money' : 'Withdraw Money'}
+            </h3>
+            <p className="text-sm text-slate-600 mb-4">
+              {moneyModal.type === 'add' ? 'Add money to' : 'Withdraw money from'} <strong>{moneyModal.pot.name}</strong>
+            </p>
+            <input
+              type="number"
+              value={moneyAmount}
+              onChange={(e) => setMoneyAmount(e.target.value)}
+              placeholder="0.00"
+              min={0}
+              step="0.01"
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200 mb-6"
+            />
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setMoneyModal({ isOpen: false, pot: null, type: 'add' });
+                  setMoneyAmount("");
+                }}
+                className="rounded-2xl px-6 py-3 text-sm font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={handleMoneyOperation}
+                className={`rounded-2xl px-6 py-3 text-sm font-semibold text-white shadow-lg ${
+                  moneyModal.type === 'add' 
+                    ? 'bg-emerald-600 hover:bg-emerald-700' 
+                    : 'bg-rose-600 hover:bg-rose-700'
+                }`}
+              >
+                {moneyModal.type === 'add' ? 'Add' : 'Withdraw'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.potId ? "Delete Pot" : "Notice"}
+        message={confirmDialog.message || ""}
+        confirmLabel={confirmDialog.potId ? "Delete" : "OK"}
+        cancelLabel={confirmDialog.potId ? "Cancel" : "Close"}
+        variant={confirmDialog.potId ? "danger" : "default"}
+        onConfirm={() => {
+          if (confirmDialog.potId) {
+            handleDelete(confirmDialog.potId);
+          }
+        }}
+        onCancel={() => setConfirmDialog({ isOpen: false })}
+      />
     </div>
   );
 }
