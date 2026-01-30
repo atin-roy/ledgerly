@@ -69,9 +69,6 @@ export default function CategoriesPage() {
     );
   }, [categories, searchTerm]);
 
-  const incomeCategories = filteredCategories.filter(c => c.type === "INCOME");
-  const expenseCategories = filteredCategories.filter(c => c.type === "EXPENSE");
-
   const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
@@ -188,25 +185,7 @@ export default function CategoriesPage() {
               </p>
             </div>
 
-            <div className="rounded-[32px] bg-white p-6 shadow-xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.35em] text-slate-400">
-                Summary
-              </p>
-              <div className="mt-6 space-y-4 text-sm">
-                <div className="flex items-center justify-between text-slate-500">
-                  <span>Income categories</span>
-                  <span className="font-semibold text-slate-900">
-                    {incomeCategories.length}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-slate-500">
-                  <span>Expense categories</span>
-                  <span className="font-semibold text-slate-900">
-                    {expenseCategories.length}
-                  </span>
-                </div>
-              </div>
-            </div>
+
           </div>
 
           <div className="relative">
@@ -247,79 +226,45 @@ export default function CategoriesPage() {
                 </Button>
               </div>
 
-              <div className="mt-6 space-y-6">
-                {/* Income Categories */}
-                <div>
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-600 mb-3">
-                    Income
-                  </h3>
-                  <div className="space-y-2">
-                    {incomeCategories.length === 0 ? (
-                      <p className="rounded-2xl border border-dashed border-slate-200 p-4 text-center text-sm text-slate-500">
-                        No income categories yet.
-                      </p>
-                    ) : (
-                      incomeCategories.map((category) => (
-                        <div
-                          key={category.id}
-                          className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 hover:bg-slate-100 transition"
-                        >
+              <div className="mt-6">
+                <div className="space-y-2">
+                  {filteredCategories.length === 0 ? (
+                    <p className="rounded-2xl border border-dashed border-slate-200 p-4 text-center text-sm text-slate-500">
+                      No categories yet.
+                    </p>
+                  ) : (
+                    filteredCategories.map((category) => (
+                      <div
+                        key={category.id}
+                        className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 hover:bg-slate-100 transition"
+                      >
+                        <div className="flex items-center gap-3">
                           <span className="font-semibold text-slate-900">{category.name}</span>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleOpenModal(category)}
-                              className="rounded-lg px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-200 transition"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDelete(category.id)}
-                              className="rounded-lg px-3 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition"
-                            >
-                              Delete
-                            </button>
-                          </div>
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                            category.type === "INCOME" 
+                              ? "bg-emerald-100 text-emerald-700" 
+                              : "bg-rose-100 text-rose-700"
+                          }`}>
+                            {category.type}
+                          </span>
                         </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-
-                {/* Expense Categories */}
-                <div>
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-rose-600 mb-3">
-                    Expenses
-                  </h3>
-                  <div className="space-y-2">
-                    {expenseCategories.length === 0 ? (
-                      <p className="rounded-2xl border border-dashed border-slate-200 p-4 text-center text-sm text-slate-500">
-                        No expense categories yet.
-                      </p>
-                    ) : (
-                      expenseCategories.map((category) => (
-                        <div
-                          key={category.id}
-                          className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 hover:bg-slate-100 transition"
-                        >
-                          <span className="font-semibold text-slate-900">{category.name}</span>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleOpenModal(category)}
-                              className="rounded-lg px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-200 transition"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDelete(category.id)}
-                              className="rounded-lg px-3 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition"
-                            >
-                              Delete
-                            </button>
-                          </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleOpenModal(category)}
+                            className="rounded-lg px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-200 transition"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(category.id)}
+                            className="rounded-lg px-3 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition"
+                          >
+                            Delete
+                          </button>
                         </div>
-                      ))
-                    )}
-                  </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
