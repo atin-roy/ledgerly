@@ -3,9 +3,6 @@
   "installCommand": "pnpm install",
   "framework": "nextjs",
   "outputDirectory": ".next",
-  "env": {
-    "NEXT_PUBLIC_API_BASE_URL": "@ledgerly_api_base_url"
-  },
   "headers": [
     {
       "source": "/(.*)",
