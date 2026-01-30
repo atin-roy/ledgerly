@@ -10,7 +10,7 @@ import CustomSelect from "@/components/ui/CustomSelect";
 import { Button } from "@/components/ui/button";
 import primaryActionButtonClass from "@/components/ui/primaryActionButtonClass";
 import { transactionCategoryOptions } from "@/app/transactions/data";
-import { getBudgets, getCategories, createBudget, deleteBudget, type BudgetResponse, type CategoryResponse } from "@/lib/services";
+import { getBudgets, getCategories, createBudget, updateBudget, deleteBudget, type BudgetResponse, type CategoryResponse } from "@/lib/services";
 import ContextMenu, { createEditMenuItem, createDeleteMenuItem } from "@/components/ui/ContextMenu";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
@@ -26,6 +26,7 @@ const budgetModalFields = {
 export default function BudgetsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formValues, setFormValues] = useState(budgetModalFields);
+  const [editingBudget, setEditingBudget] = useState<BudgetResponse | null>(null);
   const [budgets, setBudgets] = useState<BudgetResponse[]>([]);
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -85,18 +86,36 @@ export default function BudgetsPage() {
         return;
       }
 
-      await createBudget({
-        amount: parseFloat(formValues.limit),
-        categoryId: category.id,
-      });
+      if (editingBudget) {
+        await updateBudget(editingBudget.id, {
+          amount: parseFloat(formValues.limit),
+          categoryId: category.id,
+        });
+      } else {
+        await createBudget({
+          amount: parseFloat(formValues.limit),
+          categoryId: category.id,
+        });
+      }
       
       setIsModalOpen(false);
       setFormValues(budgetModalFields);
+      setEditingBudget(null);
       await loadData();
     } catch (err) {
-      console.error("Error creating budget:", err);
-      setConfirmDialog({ isOpen: true, message: "Failed to create budget. Please try again." });
+      console.error("Error saving budget:", err);
+      setConfirmDialog({ isOpen: true, message: "Failed to save budget. Please try again." });
     }
+  };
+
+  const handleEdit = (budget: BudgetResponse) => {
+    const category = categories.find(c => c.id === budget.categoryId);
+    setFormValues({
+      category: (category?.name || budgetCategories[0]) as typeof budgetCategories[number],
+      limit: budget.amount.toString(),
+    });
+    setEditingBudget(budget);
+    setIsModalOpen(true);
   };
 
   const handleDelete = async (budgetId: number) => {
@@ -219,12 +238,16 @@ export default function BudgetsPage() {
                 <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
                   <div className="mb-4 flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-(--color-grey-900)">
-                      New budget
+                      {editingBudget ? "Edit budget" : "New budget"}
                     </h3>
                     <button
                       type="button"
                       className="text-sm font-semibold text-slate-500 hover:text-slate-700"
-                      onClick={() => setIsModalOpen(false)}
+                      onClick={() => {
+                        setIsModalOpen(false);
+                        setEditingBudget(null);
+                        setFormValues(budgetModalFields);
+                      }}
                     >
                       Close
                     </button>
@@ -263,7 +286,11 @@ export default function BudgetsPage() {
                       <Button
                         variant="ghost"
                         className="rounded-2xl px-6 py-3 text-sm font-semibold bg-rose-600 text-white shadow-lg focus-visible:ring-rose-500 active:translate-y-px active:scale-95 hover:bg-rose-600 hover:text-white hover:shadow-none"
-                        onClick={() => setIsModalOpen(false)}
+                        onClick={() => {
+                          setIsModalOpen(false);
+                          setEditingBudget(null);
+                          setFormValues(budgetModalFields);
+                        }}
                         type="button"
                       >
                         Cancel
@@ -290,8 +317,7 @@ export default function BudgetsPage() {
           y={contextMenu.y}
           items={[
             createEditMenuItem(() => {
-              // TODO: Implement edit functionality
-              setConfirmDialog({ isOpen: true, message: "Edit budget functionality coming soon!" });
+              handleEdit(contextMenu.budget);
             }),
             createDeleteMenuItem(() => {
               setConfirmDialog({

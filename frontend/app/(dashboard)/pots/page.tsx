@@ -25,6 +25,7 @@ const potModalFields = {
 export default function PotsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formValues, setFormValues] = useState(potModalFields);
+  const [editingPot, setEditingPot] = useState<PotResponse | null>(null);
   const [pots, setPots] = useState<PotResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -94,19 +95,39 @@ export default function PotsPage() {
     event.preventDefault();
     
     try {
-      await createPot({
-        name: formValues.name,
-        target: parseFloat(formValues.target),
-        saved: 0,
-      });
+      if (editingPot) {
+        await updatePot(editingPot.id, {
+          name: formValues.name,
+          target: parseFloat(formValues.target),
+          // We don't update saved amount here, that's done via add/withdraw
+        });
+      } else {
+        await createPot({
+          name: formValues.name,
+          target: parseFloat(formValues.target),
+          saved: 0,
+        });
+      }
       
       setIsModalOpen(false);
       setFormValues(potModalFields);
-      await loadPots(); // Reload pots after creation
+      setEditingPot(null);
+      await loadPots(); // Reload pots after creation/update
     } catch (err) {
-      console.error("Error creating pot:", err);
-      setConfirmDialog({ isOpen: true, message: "Failed to create pot. Please try again." });
+      console.error("Error saving pot:", err);
+      setConfirmDialog({ isOpen: true, message: "Failed to save pot. Please try again." });
     }
+  };
+
+  const handleEdit = (pot: PotResponse) => {
+    setFormValues({
+      name: pot.name,
+      target: pot.target.toString(),
+      category: potTypeOptions[0], // We might want to allow editing category if backend supports it, but for now default
+      description: "", // Description might be missing in response type
+    });
+    setEditingPot(pot);
+    setIsModalOpen(true);
   };
 
   const handleMoneyOperation = async () => {
@@ -264,18 +285,22 @@ export default function PotsPage() {
             <div className="absolute inset-x-0 top-0 bottom-12 z-40 rounded-3xl bg-black/40 px-4">
               <div className="flex justify-center pt-40">
                 <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-[var(--color-grey-900)]">
-                    New pot
-                  </h3>
-                  <button
-                    type="button"
-                    className="text-sm font-semibold text-slate-500 hover:text-slate-700"
-                    onClick={() => setIsModalOpen(false)}
-                  >
-                    Close
-                  </button>
-                </div>
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-[var(--color-grey-900)]">
+                      {editingPot ? "Edit pot" : "New pot"}
+                    </h3>
+                    <button
+                      type="button"
+                      className="text-sm font-semibold text-slate-500 hover:text-slate-700"
+                      onClick={() => {
+                        setIsModalOpen(false);
+                        setEditingPot(null);
+                        setFormValues(potModalFields);
+                      }}
+                    >
+                      Close
+                    </button>
+                  </div>
                 <form className="mt-2 space-y-4" onSubmit={handleFormSubmit}>
                   <label className="flex flex-col gap-2 text-sm text-slate-600">
                     <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
@@ -330,14 +355,18 @@ export default function PotsPage() {
                     />
                   </label>
                   <div className="flex justify-center gap-3 pt-1">
-                    <Button
-                      variant="ghost"
-                      className="rounded-2xl px-6 py-3 text-sm font-semibold bg-rose-600 text-white shadow-lg focus-visible:ring-rose-500 active:translate-y-[1px] active:scale-95 hover:bg-rose-600 hover:text-white hover:shadow-none"
-                      onClick={() => setIsModalOpen(false)}
-                      type="button"
-                    >
-                      Cancel
-                    </Button>
+                      <Button
+                        variant="ghost"
+                        className="rounded-2xl px-6 py-3 text-sm font-semibold bg-rose-600 text-white shadow-lg focus-visible:ring-rose-500 active:translate-y-[1px] active:scale-95 hover:bg-rose-600 hover:text-white hover:shadow-none"
+                        onClick={() => {
+                          setIsModalOpen(false);
+                          setEditingPot(null);
+                          setFormValues(potModalFields);
+                        }}
+                        type="button"
+                      >
+                        Cancel
+                      </Button>
                     <Button
                       variant="ghost"
                       type="submit"
@@ -360,8 +389,7 @@ export default function PotsPage() {
           y={contextMenu.y}
           items={[
             createEditMenuItem(() => {
-              // TODO: Implement edit functionality
-              setConfirmDialog({ isOpen: true, message: "Edit pot functionality coming soon!" });
+              handleEdit(contextMenu.pot);
             }),
             createDeleteMenuItem(() => {
               setConfirmDialog({

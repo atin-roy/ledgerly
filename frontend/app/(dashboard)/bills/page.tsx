@@ -26,7 +26,7 @@ import {
   type Bill,
 } from "@/app/bills/data";
 import { baseCategories, type TransactionCategory } from "@/app/transactions/data";
-import { getBills, createBill, deleteBill, type BillResponse } from "@/lib/services";
+import { getBills, createBill, updateBill, deleteBill, type BillResponse } from "@/lib/services";
 import ContextMenu, { createEditMenuItem, createDeleteMenuItem } from "@/components/ui/ContextMenu";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
@@ -39,16 +39,14 @@ type BillFrequency = (typeof billFrequencyOptions)[number];
 type BillFormValues = {
   title: string;
   amount: string;
-  category: BillCategory;
-  frequency: BillFrequency;
+  date: string;
   description: string;
 };
 
 const billModalFields: BillFormValues = {
   title: "",
   amount: "",
-  category: billCategories[0],
-  frequency: billFrequencyOptions[2],
+  date: "",
   description: "",
 };
 
@@ -61,6 +59,7 @@ export default function BillsPage() {
   const [bills, setBills] = useState<Bill[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingBill, setEditingBill] = useState<Bill | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; bill: Bill } | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean; billId?: number; message?: string }>({ isOpen: false });
 
@@ -145,32 +144,47 @@ export default function BillsPage() {
     setFormValues((prev) => ({ ...prev, [target.name]: target.value }));
   };
 
-  const handleCategoryChange = (value: string) => {
-    setFormValues((prev) => ({ ...prev, category: value as BillCategory }));
-  };
 
-  const handleFrequencyChange = (value: string) => {
-    setFormValues((prev) => ({ ...prev, frequency: value as BillFrequency }));
-  };
 
   const handleFormSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     
     try {
-      await createBill({
-        name: formValues.title,
-        amount: parseFloat(formValues.amount),
-        status: "PENDING",
-        dueDate: new Date().toISOString(),
-      });
+      if (editingBill) {
+        await updateBill(parseInt(editingBill.id), {
+          name: formValues.title,
+          amount: parseFloat(formValues.amount),
+          dueDate: new Date(formValues.date).toISOString(),
+          // status preserved or updated if needed
+        });
+      } else {
+        await createBill({
+          name: formValues.title,
+          amount: parseFloat(formValues.amount),
+          status: "PENDING",
+          dueDate: new Date(formValues.date).toISOString(),
+        });
+      }
       
       setIsModalOpen(false);
+      setEditingBill(null);
       setFormValues(billModalFields);
       await loadBills();
     } catch (err) {
-      console.error("Error creating bill:", err);
-      setConfirmDialog({ isOpen: true, message: "Failed to create bill. Please try again." });
+      console.error("Error saving bill:", err);
+      setConfirmDialog({ isOpen: true, message: "Failed to save bill. Please try again." });
     }
+  };
+
+  const handleEdit = (bill: Bill) => {
+    setFormValues({
+      title: bill.title,
+      amount: bill.amount.toString(),
+      date: bill.nextDue, // Assuming nextDue is YYYY-MM-DD from loadBills conversion
+      description: "", // Description not in Bill type currently
+    });
+    setEditingBill(bill);
+    setIsModalOpen(true);
   };
 
   const handleDelete = async (billId: number) => {
@@ -373,12 +387,16 @@ export default function BillsPage() {
                 <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
                   <div className="mb-4 flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-(--color-grey-900)">
-                      New bill
+                      {editingBill ? "Edit bill" : "New bill"}
                     </h3>
                     <button
                       type="button"
                       className="text-sm font-semibold text-slate-500 hover:text-slate-700"
-                      onClick={() => setIsModalOpen(false)}
+                      onClick={() => {
+                        setIsModalOpen(false);
+                        setEditingBill(null);
+                        setFormValues(billModalFields);
+                      }}
                     >
                       Close
                     </button>
@@ -398,28 +416,14 @@ export default function BillsPage() {
                     </label>
                     <label className="flex flex-col gap-2 text-sm text-slate-600">
                       <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
-                        Category
+                        Due Date
                       </span>
-                      <CustomSelect
-                        value={formValues.category}
-                        options={billCategories}
-                        onChange={handleCategoryChange}
-                        icon={<ChevronDown className="h-4 w-4" />}
-                        trailingIcon={<ChevronDown className="h-4 w-4" />}
-                        ariaLabel="Bill category"
-                      />
-                    </label>
-                    <label className="flex flex-col gap-2 text-sm text-slate-600">
-                      <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
-                        Frequency
-                      </span>
-                      <CustomSelect
-                        value={formValues.frequency}
-                        options={billFrequencyOptions}
-                        onChange={handleFrequencyChange}
-                        icon={<ChevronDown className="h-4 w-4" />}
-                        trailingIcon={<ChevronDown className="h-4 w-4" />}
-                        ariaLabel="Billing frequency"
+                      <input
+                        name="date"
+                        type="date"
+                        value={formValues.date}
+                        onChange={handleFormChange}
+                        className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
                       />
                     </label>
                     <label className="flex flex-col gap-2 text-sm text-slate-600">
@@ -453,7 +457,11 @@ export default function BillsPage() {
                       <Button
                         variant="ghost"
                         className="rounded-2xl px-6 py-3 text-sm font-semibold bg-rose-600 text-white shadow-lg focus-visible:ring-rose-500 active:translate-y-px active:scale-95 hover:bg-rose-600 hover:text-white hover:shadow-none"
-                        onClick={() => setIsModalOpen(false)}
+                        onClick={() => {
+                          setIsModalOpen(false);
+                          setEditingBill(null);
+                          setFormValues(billModalFields);
+                        }}
                         type="button"
                       >
                         Cancel
@@ -480,8 +488,7 @@ export default function BillsPage() {
           y={contextMenu.y}
           items={[
             createEditMenuItem(() => {
-              // TODO: Implement edit functionality
-              setConfirmDialog({ isOpen: true, message: "Edit bill functionality coming soon!" });
+              handleEdit(contextMenu.bill);
             }),
             createDeleteMenuItem(() => {
               setConfirmDialog({
