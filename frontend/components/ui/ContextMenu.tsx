@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
-import { Edit2, Trash2, X } from "lucide-react";
+import { Edit2, Trash2 } from "lucide-react";
 
 export type ContextMenuItem = {
   label: string;

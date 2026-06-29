@@ -1,11 +1,9 @@
 "use client";
 
 import { SyntheticEvent, useState, useEffect, type MouseEvent } from "react";
-import { ChevronDown } from "lucide-react";
 
 import PageTitle from "@/components/PageTitle";
 import PotCard from "@/components/pots/PotCard";
-import CustomSelect from "@/components/ui/CustomSelect";
 import { Button } from "@/components/ui/button";
 import primaryActionButtonClass from "@/components/ui/primaryActionButtonClass";
 import { formatCurrency, formatPercentage } from "@/app/pots/data";
@@ -42,10 +40,6 @@ export default function PotsPage() {
       setIsLoading(true);
       setError(null);
       const data = await getPots();
-      
-      console.log("Pots data:", data);
-      
-      // Ensure data is an array
       const potsArray = Array.isArray(data) ? data : [];
       setPots(potsArray);
     } catch (err) {

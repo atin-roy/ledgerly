@@ -143,21 +143,13 @@ export default function DashboardLayout({
   children: ReactNode;
 }) {
   const router = useRouter();
-  const [isChecking, setIsChecking] = useState(true);
+  const [isChecking] = useState(() =>
+    typeof window === "undefined" ? true : !isAuthenticated(),
+  );
 
   useEffect(() => {
-    // Check authentication on mount
-    if (typeof window !== "undefined") {
-      const authenticated = isAuthenticated();
-      console.log("🔒 Dashboard Auth Check:", authenticated);
-      
-      if (!authenticated) {
-        console.log("❌ Not authenticated, redirecting to login...");
-        router.replace("/login");
-      } else {
-        console.log("✅ Authenticated, loading dashboard");
-        setIsChecking(false);
-      }
+    if (typeof window !== "undefined" && !isAuthenticated()) {
+      router.replace("/login");
     }
   }, [router]);
 

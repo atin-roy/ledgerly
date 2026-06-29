@@ -4,6 +4,7 @@ export interface TransactionResponse {
   id: number;
   amount: number;
   date: string; // ISO date string
+  categoryId: number;
   categoryName: string;
   partyName: string;
   description: string;

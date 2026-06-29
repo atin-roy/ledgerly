@@ -1,7 +1,7 @@
 package dev.atinroy.ledgerly.security;
 
-import dev.atinroy.ledgerly.entity.User;
-import dev.atinroy.ledgerly.repository.UserRepository;
+import dev.atinroy.ledgerly.domain.user.entity.User;
+import dev.atinroy.ledgerly.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

@@ -9,17 +9,12 @@ import PageTitle from "@/components/PageTitle";
 import CustomSelect from "@/components/ui/CustomSelect";
 import { Button } from "@/components/ui/button";
 import primaryActionButtonClass from "@/components/ui/primaryActionButtonClass";
-import { transactionCategoryOptions } from "@/app/transactions/data";
 import { getBudgets, getCategories, createBudget, updateBudget, deleteBudget, type BudgetResponse, type CategoryResponse } from "@/lib/services";
 import ContextMenu, { createEditMenuItem, createDeleteMenuItem } from "@/components/ui/ContextMenu";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
-const budgetCategories = transactionCategoryOptions.filter(
-  (category) => category !== "All Transactions",
-);
-
 const budgetModalFields = {
-  category: budgetCategories[0],
+  category: "",
   limit: "",
 };
 
@@ -46,11 +41,7 @@ export default function BudgetsPage() {
         getBudgets(),
         getCategories(),
       ]);
-      
-      console.log("Budgets data:", budgetsData);
-      console.log("Categories data:", categoriesData);
-      
-      // Ensure data is an array
+
       const budgetsArray = Array.isArray(budgetsData) ? budgetsData : [];
       const categoriesArray = Array.isArray(categoriesData) ? categoriesData : [];
       
@@ -58,7 +49,6 @@ export default function BudgetsPage() {
       setCategories(categoriesArray);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load budgets");
-      console.error("Error loading data:", err);
     } finally {
       setIsLoading(false);
     }
@@ -70,10 +60,7 @@ export default function BudgetsPage() {
   };
 
   const handleCategoryChange = (category: string) => {
-    setFormValues((prev) => ({
-      ...prev,
-      category: category as (typeof budgetCategories)[number],
-    }));
+    setFormValues((prev) => ({ ...prev, category }));
   };
 
   const handleFormSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
@@ -111,7 +98,7 @@ export default function BudgetsPage() {
   const handleEdit = (budget: BudgetResponse) => {
     const category = categories.find(c => c.id === budget.categoryId);
     setFormValues({
-      category: (category?.name || budgetCategories[0]) as typeof budgetCategories[number],
+      category: category?.name ?? "",
       limit: budget.amount.toString(),
     });
     setEditingBudget(budget);
@@ -167,7 +154,7 @@ export default function BudgetsPage() {
   }
 
   const totalLimit = budgets.reduce((sum, b) => sum + b.amount, 0);
-  const totalSpent = 0; // We'll need to calculate this from transactions
+  const totalSpent = budgets.reduce((sum, b) => sum + b.spent, 0);
   const totalRemaining = totalLimit - totalSpent;
 
   return (
@@ -179,7 +166,7 @@ export default function BudgetsPage() {
             variant="ghost"
             size="sm"
             className={primaryActionButtonClass}
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => { setFormValues({ category: categories[0]?.name ?? "", limit: "" }); setIsModalOpen(true); }}
           >
             New budget
           </Button>
@@ -204,7 +191,7 @@ export default function BudgetsPage() {
                     variant="ghost"
                     size="sm"
                     className={primaryActionButtonClass}
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={() => { setFormValues({ category: categories[0]?.name ?? "", limit: "" }); setIsModalOpen(true); }}
                   >
                     Create First Budget
                   </Button>
@@ -221,7 +208,7 @@ export default function BudgetsPage() {
                       <BudgetCard
                         name={category?.name || "Unknown"}
                         limit={budget.amount}
-                        spent={0}
+                        spent={budget.spent}
                         color="var(--color-green)"
                         recentSpending={[]}
                       />
@@ -258,8 +245,8 @@ export default function BudgetsPage() {
                         Category
                       </span>
                       <CustomSelect
-                        value={formValues.category}
-                        options={budgetCategories}
+                        value={formValues.category || (categories.length > 0 ? categories[0].name : "")}
+                        options={categories.map(c => c.name)}
                         onChange={handleCategoryChange}
                         icon={<ChevronDown className="h-4 w-4" />}
                         trailingIcon={<ChevronDown className="h-4 w-4" />}

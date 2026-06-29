@@ -1,7 +1,7 @@
 package dev.atinroy.ledgerly.security;
 
-import dev.atinroy.ledgerly.entity.User;
-import dev.atinroy.ledgerly.entity.enums.UserRole;
+import dev.atinroy.ledgerly.domain.user.entity.User;
+import dev.atinroy.ledgerly.domain.user.entity.UserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -104,6 +104,15 @@ class JwtServiceTest {
         }
 
         @Test
+        @DisplayName("should mark access token with access token type")
+        void shouldMarkAccessTokenWithAccessTokenType() {
+            String token = jwtService.generateAccessToken(testUser);
+
+            assertThat(jwtService.extractTokenType(token)).isEqualTo("access");
+            assertThat(jwtService.isRefreshToken(token)).isFalse();
+        }
+
+        @Test
         @DisplayName("should generate different tokens for different users")
         void shouldGenerateDifferentTokensForDifferentUsers() {
             // Arrange: Create second user
@@ -152,6 +161,15 @@ class JwtServiceTest {
             // Assert
             Long extractedUserId = jwtService.extractUserId(token);
             assertThat(extractedUserId).isEqualTo(1L);
+        }
+
+        @Test
+        @DisplayName("should mark refresh token with refresh token type")
+        void shouldMarkRefreshTokenWithRefreshTokenType() {
+            String token = jwtService.generateRefreshToken(testUser);
+
+            assertThat(jwtService.extractTokenType(token)).isEqualTo("refresh");
+            assertThat(jwtService.isRefreshToken(token)).isTrue();
         }
 
         @Test

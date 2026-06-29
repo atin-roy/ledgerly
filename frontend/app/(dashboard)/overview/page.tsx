@@ -11,16 +11,13 @@ import {
   type Bill,
 } from "@/app/bills/data";
 import {
-  baseCategories,
   formatCurrency as formatTransactionCurrency,
   formatTransactionDate,
-  TransactionCategory,
-  TransactionType,
   type Transaction,
 } from "@/app/transactions/data";
 import { formatBudgetCurrency } from "@/app/budgets/data";
 import { formatCurrency as formatPotCurrency, formatPercentage } from "@/app/pots/data";
-import { getTransactions, getBudgets, getPots, getBills, getCategories, type TransactionResponse, type BudgetResponse, type PotResponse, type BillResponse, type CategoryResponse } from "@/lib/services";
+import { getTransactions, getBudgets, getPots, getBills, getCategories, type BudgetResponse, type PotResponse, type CategoryResponse } from "@/lib/services";
 
 const statusStyles: Record<BillStatus, string> = {
   pending: "bg-amber-50 text-amber-600",
@@ -28,6 +25,20 @@ const statusStyles: Record<BillStatus, string> = {
   overdue: "bg-red-50 text-red-600",
   cancelled: "bg-slate-100 text-slate-500",
 };
+
+function normalizeBillStatus(status: string): BillStatus {
+  const normalized = status.toLowerCase();
+  if (
+    normalized === "pending" ||
+    normalized === "paid" ||
+    normalized === "overdue" ||
+    normalized === "cancelled"
+  ) {
+    return normalized;
+  }
+
+  return "pending";
+}
 
 type CategorySlice = {
   label: string;
@@ -44,16 +55,6 @@ export default function OverviewPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Debug auth status
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("ledgerly_access_token");
-      const user = localStorage.getItem("ledgerly_user");
-      console.log("🔐 Auth Check:", {
-        hasToken: !!token,
-        hasUser: !!user,
-        user: user ? JSON.parse(user) : null
-      });
-    }
     loadData();
   }, []);
 
@@ -61,19 +62,14 @@ export default function OverviewPage() {
     try {
       setIsLoading(true);
       setError(null);
-      
-      console.log("📡 Starting data fetch...");
-      
+
       const [transactionsData, budgetsData, potsData, billsData, categoriesData] = await Promise.all([
-        getTransactions().catch(err => { console.error("Transactions error:", err); throw err; }),
-        getBudgets().catch(err => { console.error("Budgets error:", err); throw err; }),
-        getPots().catch(err => { console.error("Pots error:", err); throw err; }),
-        getBills().catch(err => { console.error("Bills error:", err); throw err; }),
-        getCategories().catch(err => { console.error("Categories error:", err); throw err; }),
+        getTransactions(),
+        getBudgets(),
+        getPots(),
+        getBills(),
+        getCategories(),
       ]);
-      
-      console.log("✅ Data fetched successfully");
-      console.log("Raw data:", { transactionsData, budgetsData, potsData, billsData, categoriesData });
       
       // Ensure data is an array
       const transactionsArray = Array.isArray(transactionsData) ? transactionsData : [];
@@ -87,7 +83,8 @@ export default function OverviewPage() {
         id: t.id.toString(),
         recipient: t.partyName || "Unknown",
         description: "",
-        category: t.categoryName as any,
+        category: t.categoryName,
+        categoryId: t.categoryId,
         date: t.date.split("T")[0],
         amount: Math.abs(t.amount),
         type: t.amount >= 0 ? "income" : "expense",
@@ -101,7 +98,7 @@ export default function OverviewPage() {
         dueLabel: "Monthly",
         nextDue: b.dueDate.split("T")[0],
         amount: b.amount,
-        status: b.status.toLowerCase() as any,
+        status: normalizeBillStatus(b.status),
         iconLabel: b.name.substring(0, 2).toUpperCase(),
         iconColor: "var(--color-green)",
       }));
@@ -113,7 +110,6 @@ export default function OverviewPage() {
       setCategories(categoriesArray);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load data");
-      console.error("Error loading data:", err);
     } finally {
       setIsLoading(false);
     }

@@ -24,17 +24,11 @@ import {
   getBillSummary,
   type BillSortOption,
   type Bill,
+  type BillStatus,
 } from "@/app/bills/data";
-import { baseCategories, type TransactionCategory } from "@/app/transactions/data";
-import { getBills, createBill, updateBill, deleteBill, type BillResponse } from "@/lib/services";
+import { getBills, createBill, updateBill, deleteBill } from "@/lib/services";
 import ContextMenu, { createEditMenuItem, createDeleteMenuItem } from "@/components/ui/ContextMenu";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
-
-const billCategories = baseCategories;
-const billFrequencyOptions = ["Weekly", "Bi-Weekly", "Monthly", "Quarterly", "Annual"] as const;
-
-type BillCategory = TransactionCategory;
-type BillFrequency = (typeof billFrequencyOptions)[number];
 
 type BillFormValues = {
   title: string;
@@ -49,6 +43,20 @@ const billModalFields: BillFormValues = {
   date: "",
   description: "",
 };
+
+function normalizeBillStatus(status: string): BillStatus {
+  const normalized = status.toLowerCase();
+  if (
+    normalized === "pending" ||
+    normalized === "paid" ||
+    normalized === "overdue" ||
+    normalized === "cancelled"
+  ) {
+    return normalized;
+  }
+
+  return "pending";
+}
 
 export default function BillsPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -72,10 +80,6 @@ export default function BillsPage() {
       setIsLoading(true);
       setError(null);
       const data = await getBills();
-      
-      console.log("Bills data:", data);
-      
-      // Ensure data is an array
       const billsArray = Array.isArray(data) ? data : [];
       
       // Convert backend format to frontend format
@@ -85,7 +89,7 @@ export default function BillsPage() {
         dueLabel: "Monthly",
         nextDue: b.dueDate.split("T")[0],
         amount: b.amount,
-        status: b.status.toLowerCase() as any,
+        status: normalizeBillStatus(b.status),
         iconLabel: b.name.substring(0, 2).toUpperCase(),
         iconColor: "var(--color-green)",
       }));

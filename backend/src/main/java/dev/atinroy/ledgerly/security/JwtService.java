@@ -1,6 +1,6 @@
 package dev.atinroy.ledgerly.security;
 
-import dev.atinroy.ledgerly.entity.User;
+import dev.atinroy.ledgerly.domain.user.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -31,7 +31,8 @@ public class JwtService {
                 Map.of(
                         "userId", user.getId(),
                         "email", user.getEmail(),
-                        "role", user.getRole().name()
+                        "role", user.getRole().name(),
+                        "tokenType", "access"
                 ),
                 user.getEmail(),
                 accessTokenExpiration
@@ -40,7 +41,10 @@ public class JwtService {
 
     public String generateRefreshToken(User user) {
         return buildToken(
-                Map.of("userId", user.getId()),
+                Map.of(
+                        "userId", user.getId(),
+                        "tokenType", "refresh"
+                ),
                 user.getEmail(),
                 refreshTokenExpiration
         );
@@ -72,6 +76,14 @@ public class JwtService {
 
     public String extractRole(String token) {
         return extractAllClaims(token).get("role", String.class);
+    }
+
+    public String extractTokenType(String token) {
+        return extractAllClaims(token).get("tokenType", String.class);
+    }
+
+    public boolean isRefreshToken(String token) {
+        return "refresh".equals(extractTokenType(token));
     }
 
     private String buildToken(Map<String, Object> claims, String subject, long expiration) {

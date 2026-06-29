@@ -89,7 +89,7 @@ JWT_SECRET=your-secret-key-here
 
 #### Frontend (`frontend/.env.local`)
 ```properties
-NEXT_PUBLIC_API_URL=http://localhost:8080
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api
 ```
 
 ## API Documentation

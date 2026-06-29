@@ -41,6 +41,9 @@ export default function PaginationControls({
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
+      <p className="w-full text-center text-xs font-medium text-(--color-grey-500)">
+        Showing {rangeStart}-{rangeEnd} of {totalItems} {itemLabel}
+      </p>
       <div className="flex items-center gap-2">
         <button
           type="button"

@@ -29,7 +29,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body style={{ backgroundColor: "var(--beige-100)"}}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable}`}
+        style={{ backgroundColor: "var(--beige-100)" }}
+      >
         <div className="flex flex-col min-h-screen md:h-svh">{children}</div>
       </body>
     </html>

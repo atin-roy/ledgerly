@@ -9,7 +9,7 @@ export const baseCategories = [
   "Travel",
 ] as const;
 
-export type TransactionCategory = (typeof baseCategories)[number];
+export type TransactionCategory = string;
 
 export const transactionCategoryOptions = [
   "All Transactions",
@@ -39,10 +39,11 @@ export interface Transaction {
   recipient: string;
   description?: string;
   category: TransactionCategory;
+  categoryId: number;
   date: string; // ISO date
   amount: number;
   type: TransactionType;
-  badgeColor: string;
+  badgeColor?: string;
 }
 
 export const transactionRecords: Transaction[] = [
@@ -51,6 +52,7 @@ export const transactionRecords: Transaction[] = [
     recipient: "Emma Richardson",
     description: "Freelance design project payment",
     category: "General",
+    categoryId: 0,
     date: "2024-08-19",
     amount: 75.5,
     type: "income",
@@ -61,6 +63,7 @@ export const transactionRecords: Transaction[] = [
     recipient: "Savory Bites Bistro",
     description: "Dinner with colleagues after work",
     category: "Dining Out",
+    categoryId: 0,
     date: "2024-08-19",
     amount: 55.5,
     type: "expense",
@@ -70,6 +73,7 @@ export const transactionRecords: Transaction[] = [
     id: "txn-3",
     recipient: "Daniel Carter",
     category: "General",
+    categoryId: 0,
     date: "2024-08-18",
     amount: 42.3,
     type: "expense",
@@ -80,6 +84,7 @@ export const transactionRecords: Transaction[] = [
     recipient: "Sun Park",
     description: "Monthly allowance from parents",
     category: "General",
+    categoryId: 0,
     date: "2024-08-17",
     amount: 120,
     type: "income",
@@ -89,6 +94,7 @@ export const transactionRecords: Transaction[] = [
     id: "txn-5",
     recipient: "Urban Services Hub",
     category: "General",
+    categoryId: 0,
     date: "2024-08-17",
     amount: 65,
     type: "expense",
@@ -100,6 +106,7 @@ export const transactionRecords: Transaction[] = [
     description:
       "Refund for returned electronics item that was defective upon arrival",
     category: "Groceries",
+    categoryId: 0,
     date: "2024-08-15",
     amount: 65.75,
     type: "income",
@@ -109,6 +116,7 @@ export const transactionRecords: Transaction[] = [
     id: "txn-7",
     recipient: "Lily Ramirez",
     category: "General",
+    categoryId: 0,
     date: "2024-08-14",
     amount: 50,
     type: "income",
@@ -118,6 +126,7 @@ export const transactionRecords: Transaction[] = [
     id: "txn-8",
     recipient: "Ethan Clark",
     category: "Dining Out",
+    categoryId: 0,
     date: "2024-08-13",
     amount: 32.5,
     type: "expense",
@@ -128,6 +137,7 @@ export const transactionRecords: Transaction[] = [
     recipient: "James Thompson",
     description: "Movie ticket for evening show",
     category: "Entertainment",
+    categoryId: 0,
     date: "2024-08-11",
     amount: 5,
     type: "expense",
@@ -137,6 +147,7 @@ export const transactionRecords: Transaction[] = [
     id: "txn-10",
     recipient: "Pixel Playground",
     category: "Entertainment",
+    categoryId: 0,
     date: "2024-08-11",
     amount: 10,
     type: "expense",
@@ -146,6 +157,7 @@ export const transactionRecords: Transaction[] = [
     id: "txn-11",
     recipient: "Penny Market",
     category: "Groceries",
+    categoryId: 0,
     date: "2024-08-10",
     amount: 82,
     type: "expense",
@@ -155,6 +167,7 @@ export const transactionRecords: Transaction[] = [
     id: "txn-12",
     recipient: "Airline Rewards",
     category: "Travel",
+    categoryId: 0,
     date: "2024-08-08",
     amount: 200,
     type: "income",
@@ -165,6 +178,7 @@ export const transactionRecords: Transaction[] = [
     recipient: "Solstice Co-Op",
     description: "Monthly electricity bill payment",
     category: "Utilities",
+    categoryId: 0,
     date: "2024-08-05",
     amount: 90.25,
     type: "expense",
@@ -174,6 +188,7 @@ export const transactionRecords: Transaction[] = [
     id: "txn-14",
     recipient: "Harbor Fitness",
     category: "General",
+    categoryId: 0,
     date: "2024-08-03",
     amount: 40,
     type: "expense",

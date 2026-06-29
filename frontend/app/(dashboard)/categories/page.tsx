@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpDown, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import {
   useEffect,
   useMemo,
@@ -49,10 +49,6 @@ export default function CategoriesPage() {
       setIsLoading(true);
       setError(null);
       const data = await getCategories();
-      
-      console.log("Categories data:", data);
-      
-      // Ensure data is an array
       const categoriesArray = Array.isArray(data) ? data : [];
       setCategories(categoriesArray);
     } catch (err) {

@@ -93,8 +93,6 @@ export default function SignUpCard({
     setErrors({});
 
     try {
-      console.log(`📝 Attempting signup to: ${apiUrl}`);
-      
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
@@ -108,23 +106,17 @@ export default function SignUpCard({
       });
 
       if (!response.ok) {
-        console.error("❌ Signup failed with status:", response.status);
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = await response.json().catch(() => ({})) as { message?: string };
         throw new Error(
           errorData.message || `HTTP error! status: ${response.status}`,
         );
       }
 
       const result = (await response.json()) as AuthResponse;
-
-      console.log("✅ Signup successful, persisting tokens");
       persistAuthTokens(result);
-      // Reset form on success
       setFormData({ name: "", email: "", password: "" });
-      console.log("✅ Redirecting to dashboard");
       router.replace("/overview");
     } catch (error) {
-      console.error("❌ Signup error:", error);
       setErrors({
         general:
           error instanceof Error

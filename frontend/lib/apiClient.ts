@@ -1,14 +1,15 @@
-import { getAccessToken, clearAuthTokens } from "./auth";
+import { getAccessToken, getRefreshToken, clearAuthTokens, persistAuthTokens, type AuthResponse } from "./auth";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  "https://ledgerly-production-4b76.up.railway.app/api";
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api";
+
+export { API_BASE_URL };
 
 export class ApiError extends Error {
   constructor(
     public status: number,
     message: string,
-    public data?: any
+    public data?: unknown
   ) {
     super(message);
     this.name = "ApiError";
@@ -19,11 +20,38 @@ interface RequestOptions extends RequestInit {
   requiresAuth?: boolean;
 }
 
+function redirectToLogin() {
+  clearAuthTokens();
+  if (typeof window !== "undefined") {
+    window.location.href = "/login";
+  }
+}
+
+async function tryRefreshToken(): Promise<string | null> {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return null;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!response.ok) return null;
+
+    const data = await response.json() as AuthResponse;
+    persistAuthTokens(data);
+    return data.accessToken;
+  } catch {
+    return null;
+  }
+}
+
 export async function apiRequest<T>(
   endpoint: string,
   options: RequestOptions = {}
 ): Promise<T> {
-  // Only run on client side
   if (typeof window === "undefined") {
     throw new ApiError(0, "API calls can only be made from the browser");
   }
@@ -38,21 +66,13 @@ export async function apiRequest<T>(
   if (requiresAuth) {
     const token = getAccessToken();
     if (!token) {
-      console.error("❌ No authentication token found in localStorage");
-      clearAuthTokens();
-      if (typeof window !== "undefined") {
-        window.location.href = "/login";
-      }
+      redirectToLogin();
       throw new ApiError(401, "No authentication token found - please login");
     }
     requestHeaders["Authorization"] = `Bearer ${token}`;
   }
 
   const url = `${API_BASE_URL}${endpoint}`;
-  
-  console.log(`🔗 API Request: ${fetchOptions.method || 'GET'} ${url}`, {
-    hasAuth: !!requestHeaders["Authorization"],
-  });
 
   try {
     const response = await fetch(url, {
@@ -60,39 +80,56 @@ export async function apiRequest<T>(
       headers: requestHeaders,
     });
 
-    // Handle 401 Unauthorized or 403 Forbidden - both indicate auth failure
-    // Spring Security returns 403 for unauthenticated requests (expired/invalid token)
-    if (response.status === 401 || response.status === 403) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error(`❌ API returned ${response.status} - clearing tokens and redirecting to login`, errorData);
-      clearAuthTokens();
-      if (typeof window !== "undefined") {
-        window.location.href = "/login";
+    if (response.status === 401 && requiresAuth) {
+      const newToken = await tryRefreshToken();
+      if (newToken) {
+        const retryResponse = await fetch(url, {
+          ...fetchOptions,
+          headers: { ...requestHeaders, Authorization: `Bearer ${newToken}` },
+        });
+
+        if (retryResponse.status === 401) {
+          redirectToLogin();
+          throw new ApiError(401, "Session expired - please login again");
+        }
+
+        if (!retryResponse.ok) {
+          const errorData = await retryResponse.json().catch(() => ({}));
+          throw new ApiError(
+            retryResponse.status,
+            (errorData as { message?: string }).message || `HTTP error ${retryResponse.status}`,
+            errorData
+          );
+        }
+
+        if (retryResponse.status === 204) return null as T;
+        return await retryResponse.json();
       }
-      throw new ApiError(response.status, "Session expired - please login again");
+
+      redirectToLogin();
+      throw new ApiError(401, "Session expired - please login again");
     }
 
-    // Handle other error responses
+    if (response.status === 403) {
+      redirectToLogin();
+      throw new ApiError(403, "Access denied");
+    }
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error(`❌ API Error: ${response.status}`, errorData);
       throw new ApiError(
         response.status,
-        errorData.message || `HTTP error ${response.status}`,
+        (errorData as { message?: string }).message || `HTTP error ${response.status}`,
         errorData
       );
     }
 
-    // Handle 204 No Content
     if (response.status === 204) {
       return null as T;
     }
 
-    const data = await response.json();
-    console.log(`✅ API Response:`, data);
-    return data;
+    return await response.json();
   } catch (error) {
-    console.error("❌ API Request Failed:", error);
     if (error instanceof ApiError) {
       throw error;
     }
@@ -107,19 +144,13 @@ export function getUserIdFromToken(): number | null {
 
   const userInfo = localStorage.getItem("ledgerly_user");
   if (!userInfo) {
-    console.warn("⚠️ No user info found in localStorage");
     return null;
   }
 
   try {
-    const user = JSON.parse(userInfo);
-    if (!user.userId) {
-      console.warn("⚠️ No userId in stored user info:", user);
-      return null;
-    }
-    return user.userId;
-  } catch (err) {
-    console.error("❌ Error parsing user info from localStorage:", err);
+    const user = JSON.parse(userInfo) as { userId?: number };
+    return user.userId ?? null;
+  } catch {
     return null;
   }
 }

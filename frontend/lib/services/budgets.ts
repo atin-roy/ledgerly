@@ -4,6 +4,7 @@ export interface BudgetResponse {
   id: number;
   amount: number;
   categoryId: number;
+  spent: number;
 }
 
 export interface CreateBudgetRequest {

@@ -22,7 +22,6 @@ import {
   createTransaction,
   updateTransaction,
   deleteTransaction,
-  type TransactionResponse,
   type CategoryResponse,
 } from "@/lib/services";
 import ContextMenu, { createEditMenuItem, createDeleteMenuItem } from "@/components/ui/ContextMenu";
@@ -71,31 +70,26 @@ export default function TransactionsPage() {
         getTransactions(),
         getCategories(),
       ]);
-      
-      console.log("Transactions data:", transactionsData);
-      console.log("Categories data:", categoriesData);
-      
-      // Ensure data is an array
+
       const transactionsArray = Array.isArray(transactionsData) ? transactionsData : [];
       const categoriesArray = Array.isArray(categoriesData) ? categoriesData : [];
-      
+
       // Convert backend format to frontend format
       const convertedTransactions: Transaction[] = transactionsArray.map((t) => ({
         id: t.id.toString(),
         recipient: t.partyName || "Unknown",
         description: t.description || "",
-        category: t.categoryName as any,
+        category: t.categoryName,
+        categoryId: t.categoryId,
         date: t.date.split("T")[0], // Convert ISO to date only
         amount: Math.abs(t.amount),
         type: t.amount >= 0 ? "income" : "expense",
-        badgeColor: "var(--color-green)",
       }));
       
       setTransactions(convertedTransactions);
       setCategories(categoriesArray);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load transactions");
-      console.error("Error loading data:", err);
     } finally {
       setIsLoading(false);
     }
@@ -196,11 +190,12 @@ export default function TransactionsPage() {
   };
 
   const handleEdit = (transaction: Transaction) => {
+    const categoryName = categories.find(c => c.id === transaction.categoryId)?.name ?? transaction.category;
     setFormValues({
       recipient: transaction.recipient,
       description: transaction.description || "",
       amount: transaction.amount.toString(),
-      category: transaction.category,
+      category: categoryName,
       type: transaction.type,
       date: transaction.date,
     });
@@ -466,4 +461,3 @@ export default function TransactionsPage() {
     </div>
   );
 }
-
