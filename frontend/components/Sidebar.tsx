@@ -13,6 +13,7 @@ import {
   Tag,
 } from "lucide-react";
 import { clearAuthTokens } from "@/lib/auth";
+import WordmarkStamp from "@/components/brand/WordmarkStamp";
 import styles from "./Sidebar.module.css";
 
 export type NavItem = {
@@ -44,10 +45,7 @@ export default function Sidebar() {
       <div className={styles.inner}>
         <div>
           <div className={styles.brand}>
-            <span className={styles.stamp}>
-              Ledgerly
-              <span className={styles.stampSub}>personal ledger</span>
-            </span>
+            <WordmarkStamp className={styles.wordmark} />
           </div>
           <nav className={styles.nav}>
             {navItems.map(({ label, href, Icon }) => {

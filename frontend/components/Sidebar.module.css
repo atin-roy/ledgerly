@@ -30,30 +30,12 @@
   margin-bottom: 22px;
 }
 
-.stamp {
-  display: inline-block;
-  font-family: var(--font-display), serif;
-  font-weight: 700;
-  font-size: 20px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--brass-lt);
-  border: 2px solid var(--brass);
-  box-shadow: inset 0 0 0 1px rgba(198, 165, 78, 0.35);
-  padding: 6px 14px 4px;
-  transform: rotate(-2.5deg);
-}
-
-.stampSub {
+.wordmark {
   display: block;
-  margin-top: 3px;
-  font-family: var(--font-body), sans-serif;
-  font-weight: 600;
-  font-size: 8px;
-  letter-spacing: 0.34em;
-  text-transform: uppercase;
-  color: var(--brass);
-  text-align: center;
+  width: 152px;
+  height: auto;
+  color: var(--brass-lt);
+  transform: rotate(-2.5deg);
 }
 
 /* --- navigation: ledger index tabs --- */

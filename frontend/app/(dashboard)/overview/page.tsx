@@ -28,6 +28,7 @@ import {
   type PotResponse,
   type CategoryResponse,
 } from "@/lib/services";
+import SealStamp from "@/components/brand/SealStamp";
 import styles from "./overview.module.css";
 
 const statusClass: Record<BillStatus, string> = {
@@ -216,10 +217,7 @@ export default function OverviewPage() {
             </div>
           </div>
         </div>
-        <div className={styles.seal}>
-          <span className={styles.sealB}>LEDGER</span>
-          <span className={styles.sealSpan}>summary</span>
-        </div>
+        <SealStamp className={styles.seal} />
       </section>
 
       {/* --- recent transactions ledger sheet --- */}
