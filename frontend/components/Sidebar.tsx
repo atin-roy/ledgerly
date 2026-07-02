@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import {
   type LucideIcon,
   CreditCard,
-  Home,
+  LayoutGrid,
   LogOut,
   PieChart,
   PiggyBank,
@@ -13,6 +13,7 @@ import {
   Tag,
 } from "lucide-react";
 import { clearAuthTokens } from "@/lib/auth";
+import styles from "./Sidebar.module.css";
 
 export type NavItem = {
   label: string;
@@ -21,16 +22,13 @@ export type NavItem = {
 };
 
 export const navItems: NavItem[] = [
-  { label: "Dashboard", href: "/overview", Icon: Home },
+  { label: "Overview", href: "/overview", Icon: LayoutGrid },
   { label: "Transactions", href: "/transactions", Icon: Repeat },
   { label: "Categories", href: "/categories", Icon: Tag },
   { label: "Budgets", href: "/budgets", Icon: PieChart },
   { label: "Pots", href: "/pots", Icon: PiggyBank },
-  { label: "Recurring bills", href: "/bills", Icon: CreditCard },
+  { label: "Bills", href: "/bills", Icon: CreditCard },
 ];
-
-const classNames = (...classes: Array<string | undefined>) =>
-  classes.filter(Boolean).join(" ");
 
 export default function Sidebar() {
   const pathname = usePathname() ?? "/";
@@ -42,18 +40,16 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="hidden min-h-screen w-80 flex-col bg-[#1f2126] px-6 py-8 text-sm text-white shadow-xl lg:flex">
-      <div className="flex h-full flex-col justify-between">
-        <div className="space-y-10">
-          <div>
-            <p className="text-2xl font-semibold uppercase tracking-[0.6em] text-white">
-              ledgerly
-            </p>
-            <p className="text-xs font-semibold uppercase tracking-[0.5em] text-slate-400">
-              personal finance
-            </p>
+    <aside className={styles.aside}>
+      <div className={styles.inner}>
+        <div>
+          <div className={styles.brand}>
+            <span className={styles.stamp}>
+              Ledgerly
+              <span className={styles.stampSub}>personal ledger</span>
+            </span>
           </div>
-          <nav className="space-y-1">
+          <nav className={styles.nav}>
             {navItems.map(({ label, href, Icon }) => {
               const isActive =
                 pathname === href || pathname.startsWith(href + "/");
@@ -61,28 +57,28 @@ export default function Sidebar() {
                 <Link
                   key={label}
                   href={href}
-                  className={classNames(
-                    "flex items-center gap-3 rounded-2xl px-4 py-3 transition",
+                  aria-current={isActive ? "page" : undefined}
+                  className={
                     isActive
-                      ? "bg-slate-900 text-white shadow-inner"
-                      : "text-slate-300 hover:bg-white/10 hover:text-white",
-                  )}
+                      ? `${styles.navItem} ${styles.navItemActive}`
+                      : styles.navItem
+                  }
                 >
-                  <Icon className="h-4 w-4" />
-                  <span className="font-semibold text-sm">{label}</span>
+                  <Icon className={styles.icon} aria-hidden />
+                  <span className={styles.label}>{label}</span>
                 </Link>
               );
             })}
           </nav>
         </div>
-        <div className="mt-6 mb-16">
+        <div className={styles.bottom}>
           <button
             type="button"
             onClick={handleSignOut}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold uppercase tracking-[0.4em] text-slate-300 transition hover:bg-white/10 hover:text-white"
+            className={styles.signout}
           >
-            <LogOut className="h-4 w-4 text-slate-300" />
-            <span>Sign Out</span>
+            <LogOut className={styles.icon} aria-hidden />
+            <span>Sign out</span>
           </button>
         </div>
       </div>

@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import actionButtonClass from "@/components/ui/actionButtonClass";
 import {
   formatCurrency as formatBillCurrency,
   formatBillDueDate,
@@ -16,14 +14,27 @@ import {
   type Transaction,
 } from "@/app/transactions/data";
 import { formatBudgetCurrency } from "@/app/budgets/data";
-import { formatCurrency as formatPotCurrency, formatPercentage } from "@/app/pots/data";
-import { getTransactions, getBudgets, getPots, getBills, getCategories, type BudgetResponse, type PotResponse, type CategoryResponse } from "@/lib/services";
+import {
+  formatCurrency as formatPotCurrency,
+  formatPercentage,
+} from "@/app/pots/data";
+import {
+  getTransactions,
+  getBudgets,
+  getPots,
+  getBills,
+  getCategories,
+  type BudgetResponse,
+  type PotResponse,
+  type CategoryResponse,
+} from "@/lib/services";
+import styles from "./overview.module.css";
 
-const statusStyles: Record<BillStatus, string> = {
-  pending: "bg-amber-50 text-amber-600",
-  paid: "bg-emerald-50 text-emerald-600",
-  overdue: "bg-red-50 text-red-600",
-  cancelled: "bg-slate-100 text-slate-500",
+const statusClass: Record<BillStatus, string> = {
+  pending: styles.statusPending,
+  paid: styles.statusPaid,
+  overdue: styles.statusOverdue,
+  cancelled: styles.statusCancelled,
 };
 
 function normalizeBillStatus(status: string): BillStatus {
@@ -36,14 +47,10 @@ function normalizeBillStatus(status: string): BillStatus {
   ) {
     return normalized;
   }
-
   return "pending";
 }
 
-type CategorySlice = {
-  label: string;
-  value: number;
-};
+type CategorySlice = { label: string; value: number };
 
 export default function OverviewPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -63,22 +70,23 @@ export default function OverviewPage() {
       setIsLoading(true);
       setError(null);
 
-      const [transactionsData, budgetsData, potsData, billsData, categoriesData] = await Promise.all([
-        getTransactions(),
-        getBudgets(),
-        getPots(),
-        getBills(),
-        getCategories(),
-      ]);
-      
-      // Ensure data is an array
-      const transactionsArray = Array.isArray(transactionsData) ? transactionsData : [];
+      const [transactionsData, budgetsData, potsData, billsData, categoriesData] =
+        await Promise.all([
+          getTransactions(),
+          getBudgets(),
+          getPots(),
+          getBills(),
+          getCategories(),
+        ]);
+
+      const transactionsArray = Array.isArray(transactionsData)
+        ? transactionsData
+        : [];
       const budgetsArray = Array.isArray(budgetsData) ? budgetsData : [];
       const potsArray = Array.isArray(potsData) ? potsData : [];
       const billsArray = Array.isArray(billsData) ? billsData : [];
       const categoriesArray = Array.isArray(categoriesData) ? categoriesData : [];
-      
-      // Convert transactions
+
       const convertedTransactions: Transaction[] = transactionsArray.map((t) => ({
         id: t.id.toString(),
         recipient: t.partyName || "Unknown",
@@ -88,10 +96,8 @@ export default function OverviewPage() {
         date: t.date.split("T")[0],
         amount: Math.abs(t.amount),
         type: t.amount >= 0 ? "income" : "expense",
-        badgeColor: "var(--color-green)",
       }));
-      
-      // Convert bills
+
       const convertedBills: Bill[] = billsArray.map((b) => ({
         id: b.id.toString(),
         title: b.name,
@@ -100,9 +106,9 @@ export default function OverviewPage() {
         amount: b.amount,
         status: normalizeBillStatus(b.status),
         iconLabel: b.name.substring(0, 2).toUpperCase(),
-        iconColor: "var(--color-green)",
+        iconColor: "var(--brass)",
       }));
-      
+
       setTransactions(convertedTransactions);
       setBudgets(budgetsArray);
       setPots(potsArray);
@@ -117,54 +123,38 @@ export default function OverviewPage() {
 
   if (isLoading) {
     return (
-      <main className="space-y-10 text-(--color-grey-900) pb-12">
-        <header className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.5em] text-(--color-grey-600)">
-              Personal snapshot
-            </p>
-            <h1 className="text-3xl font-semibold text-(--color-grey-900)">Dashboard</h1>
-          </div>
-        </header>
-        <div className="rounded-2xl border border-[#eee7de] bg-white p-12 shadow-sm text-center">
-          <p className="text-gray-600">Loading dashboard...</p>
-        </div>
-      </main>
+      <div className={styles.page}>
+        <p className={styles.eyebrow}>Statement</p>
+        <div className={styles.state}>Balancing the books…</div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <main className="space-y-10 text-(--color-grey-900) pb-12">
-        <header className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.5em] text-(--color-grey-600)">
-              Personal snapshot
-            </p>
-            <h1 className="text-3xl font-semibold text-(--color-grey-900)">Dashboard</h1>
-          </div>
-        </header>
-        <div className="rounded-2xl border border-[#eee7de] bg-white p-12 shadow-sm text-center">
-          <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={loadData}>Try Again</Button>
+      <div className={styles.page}>
+        <p className={styles.eyebrow}>Statement</p>
+        <div className={styles.state}>
+          <p>{error}</p>
+          <button type="button" onClick={loadData} className={styles.retry}>
+            Try again
+          </button>
         </div>
-      </main>
+      </div>
     );
   }
 
   const incomeTotal = transactions
-    .filter((transaction) => transaction.type === "income")
-    .reduce((total, transaction) => total + transaction.amount, 0);
-
+    .filter((t) => t.type === "income")
+    .reduce((sum, t) => sum + t.amount, 0);
   const expenseTotal = transactions
-    .filter((transaction) => transaction.type === "expense")
-    .reduce((total, transaction) => total + transaction.amount, 0);
-
+    .filter((t) => t.type === "expense")
+    .reduce((sum, t) => sum + t.amount, 0);
   const currentBalance = incomeTotal - expenseTotal;
 
   const recentTransactions = [...transactions]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 3);
+    .slice(0, 5);
 
   const upcomingBills = [...bills]
     .sort((a, b) => new Date(a.nextDue).getTime() - new Date(b.nextDue).getTime())
@@ -173,325 +163,269 @@ export default function OverviewPage() {
   const budgetsPreview = budgets.slice(0, 3);
   const potsPreview = pots.slice(0, 3);
 
-  // Calculate category breakdowns from actual transactions
-  const expenseCategoryBreakdown: CategorySlice[] = [];
-  const incomeCategoryBreakdown: CategorySlice[] = [];
-  
-  // Group transactions by category
   const categoryTotals = new Map<string, { income: number; expense: number }>();
-  
-  transactions.forEach((transaction) => {
-    const existing = categoryTotals.get(transaction.category) || { income: 0, expense: 0 };
-    if (transaction.type === "income") {
-      existing.income += transaction.amount;
-    } else {
-      existing.expense += transaction.amount;
-    }
-    categoryTotals.set(transaction.category, existing);
+  transactions.forEach((t) => {
+    const existing = categoryTotals.get(t.category) || { income: 0, expense: 0 };
+    if (t.type === "income") existing.income += t.amount;
+    else existing.expense += t.amount;
+    categoryTotals.set(t.category, existing);
   });
-  
-  // Convert to breakdown arrays
+
+  const incomeCategoryBreakdown: CategorySlice[] = [];
+  const expenseCategoryBreakdown: CategorySlice[] = [];
   categoryTotals.forEach((totals, category) => {
-    if (totals.income > 0) {
-      incomeCategoryBreakdown.push({
-        label: category,
-        value: totals.income,
-      });
-    }
-    if (totals.expense > 0) {
-      expenseCategoryBreakdown.push({
-        label: category,
-        value: totals.expense,
-      });
-    }
+    if (totals.income > 0)
+      incomeCategoryBreakdown.push({ label: category, value: totals.income });
+    if (totals.expense > 0)
+      expenseCategoryBreakdown.push({ label: category, value: totals.expense });
   });
-  
-  // Sort by value descending
   incomeCategoryBreakdown.sort((a, b) => b.value - a.value);
   expenseCategoryBreakdown.sort((a, b) => b.value - a.value);
-  
-  const incomeSourcesTotal = incomeCategoryBreakdown.reduce(
-    (total, slice) => total + slice.value,
-    0,
-  );
-  const expenseSourcesTotal = expenseCategoryBreakdown.reduce(
-    (total, slice) => total + slice.value,
-    0,
-  );
 
   return (
-    <main className="space-y-10 text-(--color-grey-900) pb-12">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+    <div className={styles.page}>
+      {/* --- statement hero --- */}
+      <section className={styles.hero}>
         <div>
-          <p className="text-xs uppercase tracking-[0.5em] text-(--color-grey-600)">
-            Personal snapshot
-          </p>
-          <h1 className="text-3xl font-semibold text-(--color-grey-900)">Dashboard</h1>
-        </div>
-      </header>
-
-      <section className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-[#eee7de] bg-white p-6 shadow-sm">
-          <p className="text-sm uppercase tracking-[0.4em] text-(--color-grey-600)">
-            Balance
-          </p>
-          <p className="mt-2 text-3xl font-semibold text-(--color-grey-900)">
+          <p className={styles.eyebrow}>Statement</p>
+          <div className={styles.balance}>
             {formatTransactionCurrency(currentBalance)}
+          </div>
+          <p className={styles.balanceSub}>
+            Current balance across all recorded activity.
           </p>
-          <p className="mt-3 text-sm text-(--color-grey-600)">
-            Balance reflects the last 30 transactions.
-          </p>
+          <div className={styles.dc}>
+            <div className={styles.dcCell}>
+              <div className={styles.dcK}>Money out</div>
+              <div className={`${styles.dcV} ${styles.debit}`}>
+                {formatTransactionCurrency(expenseTotal)}
+              </div>
+            </div>
+            <div className={styles.dcCell}>
+              <div className={styles.dcK}>Money in</div>
+              <div className={`${styles.dcV} ${styles.credit}`}>
+                {formatTransactionCurrency(incomeTotal)}
+              </div>
+            </div>
+            <div className={styles.dcCell}>
+              <div className={styles.dcK}>Net</div>
+              <div className={styles.dcV}>
+                {currentBalance >= 0 ? "+" : ""}
+                {formatTransactionCurrency(currentBalance)}
+              </div>
+            </div>
+          </div>
         </div>
-
-        <div className="rounded-2xl border border-[#eee7de] bg-white p-6 shadow-sm">
-          <p className="text-sm uppercase tracking-[0.4em] text-(--color-grey-600)">Income</p>
-          <p className="mt-2 text-3xl font-semibold text-(--color-green)">
-            {formatTransactionCurrency(incomeTotal)}
-          </p>
-          <p className="mt-3 text-sm text-(--color-grey-600)">
-            Total credited amounts over the full history.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-[#eee7de] bg-white p-6 shadow-sm">
-          <p className="text-sm uppercase tracking-[0.4em] text-(--color-grey-600)">
-            Expenses
-          </p>
-          <p className="mt-2 text-3xl font-semibold text-(--color-red)">
-            {formatTransactionCurrency(expenseTotal)}
-          </p>
-          <p className="mt-3 text-sm text-(--color-grey-600)">
-            Sum of every documented payment.
-          </p>
+        <div className={styles.seal}>
+          <span className={styles.sealB}>LEDGER</span>
+          <span className={styles.sealSpan}>summary</span>
         </div>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-        <div className="space-y-4 rounded-2xl border border-[#eee7de] bg-white p-6 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-[0.4em] text-(--color-grey-600)">
-                Transactions
-              </p>
-              <h2 className="text-xl font-semibold text-(--color-grey-900)">Recent transactions</h2>
-            </div>
-            <Button variant="ghost" size="sm" className={actionButtonClass} asChild>
-              <Link href="/transactions">New transaction</Link>
-            </Button>
+      {/* --- recent transactions ledger sheet --- */}
+      <section className={styles.sheet}>
+        <div className={styles.sheetHd}>
+          <h2 className={styles.sheetTitle}>Recent entries</h2>
+          <Link href="/transactions" className={styles.sheetLink}>
+            Open ledger
+          </Link>
+        </div>
+        {recentTransactions.length === 0 ? (
+          <p className={styles.emptyPaper}>No entries recorded yet.</p>
+        ) : (
+          <table className={styles.ledger}>
+            <thead>
+              <tr>
+                <th className={`${styles.th} ${styles.thLeft}`}>Date</th>
+                <th className={`${styles.th} ${styles.thLeft}`}>Account</th>
+                <th className={styles.th}>Debit</th>
+                <th className={styles.th}>Credit</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentTransactions.map((t) => {
+                const isIncome = t.type === "income";
+                return (
+                  <tr key={t.id} className={styles.tr}>
+                    <td className={`${styles.td} ${styles.tdLeft} ${styles.date}`}>
+                      {formatTransactionDate(t.date)}
+                    </td>
+                    <td className={`${styles.td} ${styles.tdLeft}`}>
+                      <span className={styles.acct}>{t.recipient}</span>
+                    </td>
+                    <td className={`${styles.td} ${styles.debitC}`}>
+                      {isIncome ? "—" : formatTransactionCurrency(t.amount)}
+                    </td>
+                    <td className={`${styles.td} ${styles.creditC}`}>
+                      {isIncome ? formatTransactionCurrency(t.amount) : "—"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </section>
+
+      {/* --- budgets / pots / bills panels --- */}
+      <section className={styles.cols}>
+        {/* Budgets */}
+        <div className={styles.panel}>
+          <div className={styles.panelHd}>
+            <h3 className={styles.panelTitle}>Budgets</h3>
+            <Link href="/budgets" className={styles.panelLink}>
+              View all
+            </Link>
           </div>
-          <div className="divide-y border-t border-[#f0e8df]">
-            {recentTransactions.map((transaction) => {
-              const isIncome = transaction.type === "income";
-              const amountClass = isIncome ? "text-(--color-green)" : "text-(--color-red)";
+          {budgetsPreview.length === 0 ? (
+            <p className={styles.empty}>No budgets yet</p>
+          ) : (
+            budgetsPreview.map((budget) => {
+              const category = categories.find((c) => c.id === budget.categoryId);
+              const spent = budget.spent ?? 0;
+              const progress =
+                budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
+              const over = spent > budget.amount;
               return (
-                <div
-                  key={transaction.id}
-                  className="grid gap-2 py-4 md:grid-cols-[2fr_1fr_1fr_1fr] md:items-center"
-                >
-                  <div>
-                    <p className="text-sm font-semibold text-(--color-grey-900)">
-                      {transaction.recipient}
-                    </p>
-                    {transaction.description && (
-                      <p className="text-xs text-(--color-grey-600)">{transaction.description}</p>
-                    )}
+                <div key={budget.id} className={styles.row}>
+                  <div className={styles.rowLabel}>
+                    <b>{category?.name || "Unknown"}</b>
+                    <small>
+                      {formatBudgetCurrency(spent)} of{" "}
+                      {formatBudgetCurrency(budget.amount)}
+                      {over ? " · over" : ""}
+                    </small>
                   </div>
-                  <p className="text-xs text-(--color-grey-600) text-left">{transaction.category}</p>
-                  <p className="text-xs text-(--color-grey-600) md:text-right">
-                    {formatTransactionDate(transaction.date)}
-                  </p>
-                  <p className={`text-sm font-semibold ${amountClass} md:text-base md:text-right`}>
-                    {isIncome ? "+" : "-"}
-                    {formatTransactionCurrency(transaction.amount)}
-                  </p>
+                  <span
+                    className={`${styles.meter} ${over ? styles.meterOver : ""}`}
+                  >
+                    <i
+                      className={styles.meterFill}
+                      style={{ width: `${Math.min(progress, 100)}%` }}
+                    />
+                  </span>
                 </div>
               );
-            })}
-          </div>
+            })
+          )}
         </div>
 
-        <div className="space-y-4 rounded-2xl border border-[#eee7de] bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.4em] text-(--color-grey-600)">
-                Budgets
-              </p>
-              <h2 className="text-xl font-semibold text-(--color-grey-900)">Compact view</h2>
-            </div>
-            <Button variant="ghost" size="sm" className={actionButtonClass} asChild>
-              <Link href="/budgets">New budget</Link>
-            </Button>
+        {/* Pots */}
+        <div className={styles.panel}>
+          <div className={styles.panelHd}>
+            <h3 className={styles.panelTitle}>Pots</h3>
+            <Link href="/pots" className={styles.panelLink}>
+              View all
+            </Link>
           </div>
-            <div className="space-y-4">
-            {budgetsPreview.length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-4">No budgets yet</p>
-            ) : (
-              budgetsPreview.map((budget) => {
-                const category = categories.find(c => c.id === budget.categoryId);
-                const progress = 0; // We'll calculate this later from transactions
-                return (
-                  <div key={budget.id} className="space-y-1">
-                    <div className="flex items-center justify-between text-sm font-semibold text-(--color-grey-900)">
-                      <p>{category?.name || "Unknown"}</p>
-                      <p>
-                        {formatBudgetCurrency(0)} / {formatBudgetCurrency(budget.amount)}
-                      </p>
-                    </div>
-                    <div className="h-1.5 rounded-full bg-[#ede8e1]">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${Math.min(progress, 100)}%`,
-                          backgroundColor: "var(--color-green)",
-                        }}
-                      />
-                    </div>
+          {potsPreview.length === 0 ? (
+            <p className={styles.empty}>No pots yet</p>
+          ) : (
+            potsPreview.map((pot) => {
+              const progress = pot.target ? (pot.saved / pot.target) * 100 : 0;
+              return (
+                <div key={pot.id} className={styles.row}>
+                  <div className={styles.rowLabel}>
+                    <b>{pot.name}</b>
+                    <small>goal {formatPotCurrency(pot.target)}</small>
                   </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-2">
-        <div className="space-y-4 rounded-2xl border border-[#eee7de] bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.4em] text-(--color-grey-600)">
-                Upcoming bills
-              </p>
-              <h2 className="text-xl font-semibold text-(--color-grey-900)">Next 3</h2>
-            </div>
-            <Button variant="ghost" size="sm" className={actionButtonClass} asChild>
-              <Link href="/bills">New bill</Link>
-            </Button>
-          </div>
-          <div className="space-y-3 rounded-2xl border border-[#f5efe7] bg-beige-100 p-4">
-            {upcomingBills.map((bill) => (
-              <div key={bill.id} className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-(--color-grey-900)">{bill.title}</p>
-                  <p className="text-xs text-(--color-grey-600)">{bill.dueLabel}</p>
+                  <div className={styles.amt}>
+                    {formatPotCurrency(pot.saved)}
+                    <span className={styles.amtDim}>
+                      {" "}
+                      · {formatPercentage(progress)}%
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-col items-end">
-                  <p className="text-sm font-semibold text-(--color-grey-900)">
-                    {formatBillCurrency(bill.amount)}
-                  </p>
-                  <p className="text-xs text-(--color-grey-600)">
-                    {formatBillDueDate(bill.nextDue)}
-                  </p>
+              );
+            })
+          )}
+        </div>
+
+        {/* Bills */}
+        <div className={styles.panel}>
+          <div className={styles.panelHd}>
+            <h3 className={styles.panelTitle}>Bills</h3>
+            <Link href="/bills" className={styles.panelLink}>
+              View all
+            </Link>
+          </div>
+          {upcomingBills.length === 0 ? (
+            <p className={styles.empty}>No bills yet</p>
+          ) : (
+            upcomingBills.map((bill) => (
+              <div key={bill.id} className={styles.row}>
+                <div className={styles.rowLabel}>
+                  <b>{bill.title}</b>
+                  <small>{formatBillDueDate(bill.nextDue)}</small>
                   <span
-                    className={`mt-1 rounded-full px-2 py-1 text-[0.6rem] font-semibold ${statusStyles[bill.status]}`}
+                    className={`${styles.status} ${statusClass[bill.status]}`}
                   >
                     {bill.status}
                   </span>
                 </div>
+                <div className={styles.amt}>
+                  {formatBillCurrency(bill.amount)}
+                </div>
               </div>
-            ))}
-          </div>
+            ))
+          )}
         </div>
+      </section>
 
-        <div className="space-y-4 rounded-2xl border border-[#eee7de] bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.4em] text-(--color-grey-600)">Pots</p>
-              <h2 className="text-xl font-semibold text-(--color-grey-900)">Aligned goals</h2>
+      {/* --- sources --- */}
+      <section className={styles.sources}>
+        <p className={styles.sectionEyebrow}>Sources</p>
+        <h2 className={styles.sectionTitle}>Income &amp; expenses by category</h2>
+        <p className={styles.sourcesSub}>All-time breakdown.</p>
+        <div className={styles.sourcesGrid}>
+          <div className={styles.panel}>
+            <div className={styles.sourceTotal}>
+              <span>Income</span>
+              <span className={styles.amt}>
+                {formatTransactionCurrency(incomeTotal)}
+              </span>
             </div>
-            <Button variant="ghost" size="sm" className={actionButtonClass} asChild>
-              <Link href="/pots">New pot</Link>
-            </Button>
-          </div>
-          <div className="space-y-4">
-            {potsPreview.length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-4">No pots yet</p>
-            ) : (
-              potsPreview.map((pot) => {
-                const progress = pot.target ? (pot.saved / pot.target) * 100 : 0;
-                return (
-                  <div key={pot.id} className="space-y-1">
-                    <div className="flex items-center justify-between text-sm font-semibold text-(--color-grey-900)">
-                      <p>{pot.name}</p>
-                      <p>{formatPotCurrency(pot.saved)}</p>
-                    </div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-(--color-grey-600)">
-                      Saved of {formatPotCurrency(pot.target)} · {formatPercentage(progress)}%
-                    </p>
-                    <div className="h-1.5 rounded-full bg-[#ede8e1]">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${Math.min(progress, 100)}%`,
-                          backgroundColor: "var(--color-green)",
-                        }}
-                      />
-                    </div>
+            {incomeCategoryBreakdown.length ? (
+              incomeCategoryBreakdown.map((slice) => (
+                <div key={slice.label} className={styles.row}>
+                  <div className={styles.rowLabel}>
+                    <b>{slice.label}</b>
                   </div>
-                );
-              })
+                  <div className={styles.amt}>
+                    {formatTransactionCurrency(slice.value)}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className={styles.empty}>No income yet.</p>
+            )}
+          </div>
+
+          <div className={styles.panel}>
+            <div className={styles.sourceTotal}>
+              <span>Expenses</span>
+              <span className={styles.amt}>
+                {formatTransactionCurrency(expenseTotal)}
+              </span>
+            </div>
+            {expenseCategoryBreakdown.length ? (
+              expenseCategoryBreakdown.map((slice) => (
+                <div key={slice.label} className={styles.row}>
+                  <div className={styles.rowLabel}>
+                    <b>{slice.label}</b>
+                  </div>
+                  <div className={styles.amt}>
+                    {formatTransactionCurrency(slice.value)}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className={styles.empty}>No expenses yet.</p>
             )}
           </div>
         </div>
       </section>
-
-      <section className="rounded-2xl border border-[#eee7de] bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-(--color-grey-600)">
-              Sources
-            </p>
-            <h2 className="text-xl font-semibold text-(--color-grey-900)">
-              Income & expense sources
-            </h2>
-          </div>
-        </div>
-        <p className="mt-2 text-sm text-(--color-grey-600)">
-          All time breakdown by category.
-        </p>
-        <div className="mt-6 grid gap-6 md:grid-cols-2">
-          <div className="space-y-3 rounded-2xl border border-[#f0e8df] bg-beige-100 p-4">
-            <div className="flex items-center justify-between text-sm font-semibold text-(--color-grey-900)">
-              <p>Income</p>
-              <p>{formatTransactionCurrency(incomeSourcesTotal)}</p>
-            </div>
-            <div className="space-y-2">
-              {incomeCategoryBreakdown.length ? (
-                incomeCategoryBreakdown.map((slice) => (
-                  <div key={slice.label} className="flex items-center justify-between text-sm text-(--color-grey-600)">
-                    <p>{slice.label}</p>
-                    <p className="font-semibold text-(--color-grey-900)">
-                      {formatTransactionCurrency(slice.value)}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs text-(--color-grey-500)">No income sources yet.</p>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-3 rounded-2xl border border-[#f0e8df] bg-beige-100 p-4">
-            <div className="flex items-center justify-between text-sm font-semibold text-(--color-grey-900)">
-              <p>Expenses</p>
-              <p>{formatTransactionCurrency(expenseSourcesTotal)}</p>
-            </div>
-            <div className="space-y-2">
-              {expenseCategoryBreakdown.length ? (
-                expenseCategoryBreakdown.map((slice) => (
-                  <div key={slice.label} className="flex items-center justify-between text-sm text-(--color-grey-600)">
-                    <p>{slice.label}</p>
-                    <p className="font-semibold text-(--color-grey-900)">
-                      {formatTransactionCurrency(slice.value)}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs text-(--color-grey-500)">No expense sources yet.</p>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
+    </div>
   );
 }

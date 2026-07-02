@@ -1,0 +1,143 @@
+.aside {
+  display: none;
+  flex-direction: column;
+  width: 18rem;
+  min-height: 100vh;
+  background: var(--ink);
+  border-right: 1px solid var(--ink-line);
+  padding: 28px 20px 24px;
+  color: var(--cream-text);
+}
+
+@media (min-width: 1024px) {
+  .aside {
+    display: flex;
+  }
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  flex: 1;
+}
+
+/* --- brass rubber-stamp wordmark (placeholder for the Inkscape asset) --- */
+.brand {
+  padding: 0 4px 26px;
+  border-bottom: 1px solid var(--ink-line);
+  margin-bottom: 22px;
+}
+
+.stamp {
+  display: inline-block;
+  font-family: var(--font-display), serif;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brass-lt);
+  border: 2px solid var(--brass);
+  box-shadow: inset 0 0 0 1px rgba(198, 165, 78, 0.35);
+  padding: 6px 14px 4px;
+  transform: rotate(-2.5deg);
+}
+
+.stampSub {
+  display: block;
+  margin-top: 3px;
+  font-family: var(--font-body), sans-serif;
+  font-weight: 600;
+  font-size: 8px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--brass);
+  text-align: center;
+}
+
+/* --- navigation: ledger index tabs --- */
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-left: 2px solid transparent;
+  color: var(--cream-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.navItem:hover {
+  color: var(--cream-text);
+  background: var(--ink-2);
+}
+
+.navItem:focus-visible {
+  outline: 2px solid var(--brass-lt);
+  outline-offset: -2px;
+}
+
+.navItemActive {
+  color: var(--cream-text);
+  background: var(--ink-2);
+  border-left-color: var(--brass-lt);
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.label {
+  font-weight: 500;
+}
+
+/* --- sign out --- */
+.bottom {
+  margin-top: 24px;
+}
+
+.signout {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 14px;
+  background: transparent;
+  border: 1px solid var(--ink-line);
+  color: var(--cream-muted);
+  font-family: var(--font-body), sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.signout:hover {
+  color: var(--debit);
+  border-color: var(--debit);
+}
+
+.signout:focus-visible {
+  outline: 2px solid var(--brass-lt);
+  outline-offset: 2px;
+}
