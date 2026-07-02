@@ -1,18 +1,29 @@
 "use client";
 
-import { SyntheticEvent, useEffect, useMemo, useState, type MouseEvent } from "react";
-import { ChevronDown } from "lucide-react";
-
-import PageTitle from "@/components/PageTitle";
-import PaginationControls from "@/components/transactions/PaginationControls";
-import TransactionFilters from "@/components/transactions/TransactionFilters";
-import TransactionList from "@/components/transactions/TransactionList";
-import CustomSelect from "@/components/ui/CustomSelect";
-import { Button } from "@/components/ui/button";
-import primaryActionButtonClass from "@/components/ui/primaryActionButtonClass";
 import {
+  SyntheticEvent,
+  useEffect,
+  useMemo,
+  useState,
+  type MouseEvent,
+} from "react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  X,
+} from "lucide-react";
+
+import {
+  formatCurrency,
+  formatTransactionDate,
   getTransactionPage,
-  transactionCategoryOptions,
+  transactionSortOptions,
   type TransactionSortOption,
   type Transaction,
 } from "@/app/transactions/data";
@@ -24,17 +35,17 @@ import {
   deleteTransaction,
   type CategoryResponse,
 } from "@/lib/services";
-import ContextMenu, { createEditMenuItem, createDeleteMenuItem } from "@/components/ui/ContextMenu";
+import styles from "./transactions.module.css";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 12;
 
-const modalFields = {
+const emptyForm = {
   recipient: "",
   description: "",
   amount: "",
   category: "",
   type: "expense",
-  date: new Date().toISOString().split("T")[0], // Today's date in YYYY-MM-DD format
+  date: new Date().toISOString().split("T")[0],
 };
 
 const transactionTypes = [
@@ -42,21 +53,31 @@ const transactionTypes = [
   { label: "Income", value: "income" },
 ];
 
+/** Signed contribution of an entry to the running account balance. */
+function signedAmount(t: Transaction) {
+  return t.type === "income" ? t.amount : -t.amount;
+}
+
 export default function TransactionsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [category, setCategory] = useState<string>(
-    transactionCategoryOptions[0],
-  );
+  const [category, setCategory] = useState("All Transactions");
   const [sortBy, setSortBy] = useState<TransactionSortOption>("latest");
   const [page, setPage] = useState(1);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formValues, setFormValues] = useState(modalFields);
-  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [formValues, setFormValues] = useState(emptyForm);
+  const [editingTransaction, setEditingTransaction] =
+    useState<Transaction | null>(null);
+
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; transaction: Transaction } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    transaction: Transaction;
+  } | null>(null);
 
   useEffect(() => {
     loadData();
@@ -71,29 +92,68 @@ export default function TransactionsPage() {
         getCategories(),
       ]);
 
-      const transactionsArray = Array.isArray(transactionsData) ? transactionsData : [];
-      const categoriesArray = Array.isArray(categoriesData) ? categoriesData : [];
+      const transactionsArray = Array.isArray(transactionsData)
+        ? transactionsData
+        : [];
+      const categoriesArray = Array.isArray(categoriesData)
+        ? categoriesData
+        : [];
 
-      // Convert backend format to frontend format
-      const convertedTransactions: Transaction[] = transactionsArray.map((t) => ({
-        id: t.id.toString(),
-        recipient: t.partyName || "Unknown",
-        description: t.description || "",
-        category: t.categoryName,
-        categoryId: t.categoryId,
-        date: t.date.split("T")[0], // Convert ISO to date only
-        amount: Math.abs(t.amount),
-        type: t.amount >= 0 ? "income" : "expense",
-      }));
-      
+      const convertedTransactions: Transaction[] = transactionsArray.map(
+        (t) => ({
+          id: t.id.toString(),
+          recipient: t.partyName || "Unknown",
+          description: t.description || "",
+          category: t.categoryName,
+          categoryId: t.categoryId,
+          date: t.date.split("T")[0],
+          amount: Math.abs(t.amount),
+          type: t.amount >= 0 ? "income" : "expense",
+        }),
+      );
+
       setTransactions(convertedTransactions);
       setCategories(categoriesArray);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load transactions");
+      setError(
+        err instanceof Error ? err.message : "Failed to load transactions",
+      );
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Running account balance after each entry, computed over the full set in
+  // chronological order — this is what makes the sheet a ledger, not a list.
+  const balanceById = useMemo(() => {
+    const chrono = [...transactions].sort((a, b) => {
+      const byDate = new Date(a.date).getTime() - new Date(b.date).getTime();
+      if (byDate !== 0) return byDate;
+      return a.id.localeCompare(b.id, undefined, { numeric: true });
+    });
+    const map = new Map<string, number>();
+    let balance = 0;
+    for (const entry of chrono) {
+      balance += signedAmount(entry);
+      map.set(entry.id, balance);
+    }
+    return map;
+  }, [transactions]);
+
+  const accountBalance = useMemo(
+    () => transactions.reduce((sum, t) => sum + signedAmount(t), 0),
+    [transactions],
+  );
+
+  const categoryFilterOptions = useMemo(
+    () => [
+      "All Transactions",
+      "Income",
+      "Expense",
+      ...categories.map((c) => c.name),
+    ],
+    [categories],
+  );
 
   const { data, totalItems, totalPages, currentPage } = useMemo(
     () =>
@@ -113,84 +173,44 @@ export default function TransactionsPage() {
     }
   }, [currentPage, page]);
 
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-    setPage(1);
-  };
+  // Close the context menu on any outside interaction.
+  useEffect(() => {
+    if (!contextMenu) return;
+    const close = () => setContextMenu(null);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
+    const id = setTimeout(() => {
+      document.addEventListener("mousedown", close);
+      document.addEventListener("keydown", onKey);
+      window.addEventListener("scroll", close, true);
+    }, 0);
+    return () => {
+      clearTimeout(id);
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", close, true);
+    };
+  }, [contextMenu]);
 
-  const handleCategoryChange = (value: string) => {
-    setCategory(value);
-    setPage(1);
-  };
+  const pageDebit = data
+    .filter((t) => t.type === "expense")
+    .reduce((sum, t) => sum + t.amount, 0);
+  const pageCredit = data
+    .filter((t) => t.type === "income")
+    .reduce((sum, t) => sum + t.amount, 0);
 
-  const handleSortChange = (value: TransactionSortOption) => {
-    setSortBy(value);
-    setPage(1);
-  };
-
-  const handleFormChange = (
-    event: SyntheticEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const target = event.target as HTMLInputElement | HTMLSelectElement;
-    setFormValues((prev) => ({ ...prev, [target.name]: target.value }));
-  };
-
-  const handleOpenModal = () => {
-    // Initialize category with first available category when opening modal
-    const initialCategory = categories.length > 0 ? categories[0].name : "";
-    setFormValues({ ...modalFields, category: initialCategory });
+  const handleOpenNew = () => {
+    setEditingTransaction(null);
+    setFormValues({
+      ...emptyForm,
+      category: categories.length > 0 ? categories[0].name : "",
+    });
     setIsModalOpen(true);
   };
 
-  const handleFormSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    
-    try {
-      const category = categories.find(c => c.name === formValues.category);
-      if (!category) {
-        alert("Please select a valid category");
-        return;
-      }
-
-      const amount = parseFloat(formValues.amount);
-      if (isNaN(amount) || amount <= 0) {
-        alert("Please enter a valid amount");
-        return;
-      }
-
-      // Convert date to ISO format with time
-      const dateTime = new Date(formValues.date + "T00:00:00").toISOString();
-
-      if (editingTransaction) {
-        await updateTransaction(parseInt(editingTransaction.id), {
-          amount: formValues.type === "expense" ? -amount : amount,
-          date: dateTime,
-          categoryId: category.id,
-          partyName: formValues.recipient.trim() || undefined,
-          description: formValues.description.trim() || undefined,
-        });
-      } else {
-        await createTransaction({
-          amount: formValues.type === "expense" ? -amount : amount,
-          date: dateTime,
-          categoryId: category.id,
-          partyName: formValues.recipient.trim() || undefined,
-          description: formValues.description.trim() || undefined,
-        });
-      }
-      
-      setIsModalOpen(false);
-      setFormValues(modalFields);
-      setEditingTransaction(null);
-      await loadData();
-    } catch (err) {
-      console.error("Error saving transaction:", err);
-      alert("Failed to save transaction. Please try again.");
-    }
-  };
-
   const handleEdit = (transaction: Transaction) => {
-    const categoryName = categories.find(c => c.id === transaction.categoryId)?.name ?? transaction.category;
+    const categoryName =
+      categories.find((c) => c.id === transaction.categoryId)?.name ??
+      transaction.category;
     setFormValues({
       recipient: transaction.recipient,
       description: transaction.description || "",
@@ -203,26 +223,67 @@ export default function TransactionsPage() {
     setIsModalOpen(true);
   };
 
-  const transactionTypeLabel =
-    transactionTypes.find((type) => type.value === formValues.type)?.label ??
-    transactionTypes[0].label;
-
-  const handleTransactionTypeChange = (label: string) => {
-    const option = transactionTypes.find((type) => type.label === label);
-    if (option) {
-      setFormValues((prev) => ({ ...prev, type: option.value }));
-    }
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingTransaction(null);
+    setFormValues(emptyForm);
   };
 
-  const handleFormCategoryChange = (categoryName: string) => {
-    setFormValues((prev) => ({ ...prev, category: categoryName }));
+  const handleFormChange = (
+    event: SyntheticEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    const target = event.target as HTMLInputElement | HTMLSelectElement;
+    setFormValues((prev) => ({ ...prev, [target.name]: target.value }));
+  };
+
+  const handleFormSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    try {
+      const selectedCategory = categories.find(
+        (c) => c.name === formValues.category,
+      );
+      if (!selectedCategory) {
+        alert("Please select a valid category");
+        return;
+      }
+
+      const amount = parseFloat(formValues.amount);
+      if (isNaN(amount) || amount <= 0) {
+        alert("Please enter a valid amount");
+        return;
+      }
+
+      const dateTime = new Date(formValues.date + "T00:00:00").toISOString();
+      const payload = {
+        amount: formValues.type === "expense" ? -amount : amount,
+        date: dateTime,
+        categoryId: selectedCategory.id,
+        partyName: formValues.recipient.trim() || undefined,
+        description: formValues.description.trim() || undefined,
+      };
+
+      if (editingTransaction) {
+        await updateTransaction(parseInt(editingTransaction.id), payload);
+      } else {
+        await createTransaction(payload);
+      }
+
+      closeModal();
+      await loadData();
+    } catch (err) {
+      console.error("Error saving transaction:", err);
+      alert("Failed to save transaction. Please try again.");
+    }
   };
 
   const handleDelete = async (transactionId: number) => {
-    if (!confirm("Are you sure you want to delete this transaction? This action cannot be undone.")) {
+    if (
+      !confirm(
+        "Delete this entry? This removes it from the ledger permanently.",
+      )
+    ) {
       return;
     }
-
     try {
       await deleteTransaction(transactionId);
       await loadData();
@@ -232,231 +293,439 @@ export default function TransactionsPage() {
     }
   };
 
-  const handleContextMenu = (event: MouseEvent<HTMLDivElement>, transaction: Transaction) => {
+  const openContextMenu = (
+    event: MouseEvent<HTMLElement>,
+    transaction: Transaction,
+  ) => {
     event.preventDefault();
     setContextMenu({
-      x: event.clientX,
-      y: event.clientY,
+      x: Math.min(event.clientX, window.innerWidth - 176),
+      y: Math.min(event.clientY, window.innerHeight - 96),
       transaction,
     });
   };
 
-  const transactionButtonClass = primaryActionButtonClass;
+  const masthead = (
+    <div className={styles.head}>
+      <div>
+        <p className={styles.eyebrow}>The Ledger</p>
+        <h1 className={styles.title}>Transactions</h1>
+        <p className={styles.subtitle}>
+          Every entry recorded in order, with a running balance.
+        </p>
+      </div>
+      <button type="button" className={styles.newBtn} onClick={handleOpenNew}>
+        <Plus size={15} aria-hidden />
+        New entry
+      </button>
+    </div>
+  );
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-beige-100 py-12">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
-          <PageTitle title="Transactions" />
-          <div className="rounded-3xl bg-white p-12 shadow-xl text-center">
-            <p className="text-gray-600">Loading transactions...</p>
-          </div>
-        </div>
+      <div className={styles.page}>
+        {masthead}
+        <div className={styles.state}>Opening the ledger…</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-beige-100 py-12">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
-          <PageTitle title="Transactions" />
-          <div className="rounded-3xl bg-white p-12 shadow-xl text-center">
-            <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={loadData} className={primaryActionButtonClass}>
-              Try Again
-            </Button>
-          </div>
+      <div className={styles.page}>
+        {masthead}
+        <div className={styles.state}>
+          <p>{error}</p>
+          <button type="button" onClick={loadData} className={styles.retry}>
+            Try again
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-beige-100 py-12">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <PageTitle title="Transactions" />
-          <Button
-            variant="ghost"
-            size="sm"
-            className={`${transactionButtonClass}`}
-            onClick={handleOpenModal}
-          >
-            New transaction
-          </Button>
+    <div className={styles.page}>
+      {masthead}
+
+      <div className={styles.toolbar}>
+        <div className={styles.search}>
+          <Search className={styles.searchIcon} aria-hidden />
+          <input
+            className={styles.searchInput}
+            type="search"
+            placeholder="Search by party or category"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPage(1);
+            }}
+            aria-label="Search entries"
+          />
         </div>
 
-        <div className="relative">
-          <section className="space-y-6 rounded-3xl bg-white p-6 shadow-xl">
-            <TransactionFilters
-              search={searchTerm}
-              category={category}
-              sortBy={sortBy}
-              onSearchChange={handleSearchChange}
-              onCategoryChange={handleCategoryChange}
-              onSortChange={handleSortChange}
-            />
+        <div className={styles.selectWrap}>
+          <select
+            className={styles.select}
+            value={category}
+            onChange={(e) => {
+              setCategory(e.target.value);
+              setPage(1);
+            }}
+            aria-label="Filter by category"
+          >
+            {categoryFilterOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className={styles.selectChevron} aria-hidden />
+        </div>
 
-            <div>
-              <TransactionList 
-                transactions={data} 
-                pageSize={PAGE_SIZE}
-                onContextMenu={handleContextMenu}
-              />
-            </div>
-
-            <PaginationControls
-              currentPage={currentPage}
-              totalPages={totalPages}
-              itemsOnPage={data.length}
-              pageSize={PAGE_SIZE}
-              totalItems={totalItems}
-              onPageChange={setPage}
-            />
-          </section>
-
-          {isModalOpen && (
-            <div className="absolute inset-0 z-40 flex items-center justify-center rounded-3xl bg-black/40 px-4 py-8">
-              <div className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
-                  <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-[var(--color-grey-900)]">
-                      {editingTransaction ? "Edit transaction" : "New transaction"}
-                    </h3>
-                    <button
-                      type="button"
-                      className="text-sm font-semibold text-slate-500 hover:text-slate-700"
-                      onClick={() => {
-                        setIsModalOpen(false);
-                        setEditingTransaction(null);
-                        setFormValues(modalFields);
-                      }}
-                    >
-                      Close
-                    </button>
-                </div>
-                <form className="mt-2 space-y-4" onSubmit={handleFormSubmit}>
-                  <label className="flex flex-col gap-2 text-sm font-semibold text-(--color-grey-600)">
-                    <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
-                      Recipient/Sender
-                    </span>
-                    <input
-                      name="recipient"
-                      value={formValues.recipient}
-                      onChange={handleFormChange}
-                      placeholder="Name"
-                      className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                    />
-                  </label>
-                  <label className="flex flex-col gap-2 text-sm text-slate-600">
-                    <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
-                      Description
-                    </span>
-                    <input
-                      name="description"
-                      value={formValues.description}
-                      onChange={handleFormChange}
-                      placeholder="Add a note"
-                      className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                    />
-                  </label>
-                  <label className="flex flex-col gap-2 text-sm text-slate-600">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-(--color-grey-500)">
-                      Amount
-                    </span>
-                    <input
-                      name="amount"
-                      value={formValues.amount}
-                      onChange={handleFormChange}
-                      placeholder="0.00"
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                    />
-                  </label>
-                  <label className="flex flex-col gap-2 text-sm text-slate-600">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-(--color-grey-500)">
-                      Date
-                    </span>
-                    <input
-                      name="date"
-                      value={formValues.date}
-                      onChange={handleFormChange}
-                      type="date"
-                      required
-                      className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                    />
-                  </label>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <label className="flex flex-col gap-2 text-sm text-slate-600">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-(--color-grey-500)">
-                        Category
-                      </span>
-                      <CustomSelect
-                        value={formValues.category || (categories.length > 0 ? categories[0].name : "General")}
-                        options={categories.map(c => c.name)}
-                        onChange={handleFormCategoryChange}
-                        icon={<ChevronDown className="h-4 w-4" />}
-                        trailingIcon={<ChevronDown className="h-4 w-4" />}
-                        ariaLabel="Transaction category"
-                      />
-                    </label>
-
-                    <label className="flex flex-col gap-2 text-sm text-slate-600">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-(--color-grey-500)">
-                        Type
-                      </span>
-                      <CustomSelect
-                        value={transactionTypeLabel}
-                        options={transactionTypes.map((type) => type.label)}
-                        onChange={handleTransactionTypeChange}
-                        icon={<ChevronDown className="h-4 w-4" />}
-                        trailingIcon={<ChevronDown className="h-4 w-4" />}
-                        ariaLabel="Transaction type"
-                      />
-                    </label>
-                  </div>
-                  <div className="flex justify-center gap-3 pt-1">
-                    <Button
-                      variant="ghost"
-                      className="rounded-2xl px-6 py-3 text-sm font-semibold bg-rose-600 text-white shadow-lg focus-visible:ring-rose-500 active:translate-y-[1px] active:scale-95 hover:bg-rose-600 hover:text-white hover:shadow-none"
-                      onClick={() => {
-                        setIsModalOpen(false);
-                        setEditingTransaction(null);
-                        setFormValues(modalFields);
-                      }}
-                      type="button"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      type="submit"
-                      className="rounded-2xl px-6 py-3 text-sm font-semibold bg-emerald-600 text-white shadow-lg focus-visible:ring-emerald-500 active:translate-y-[1px] active:scale-95 hover:bg-emerald-600 hover:text-white hover:shadow-none"
-                    >
-                      Save
-                    </Button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
+        <div className={styles.selectWrap}>
+          <select
+            className={styles.select}
+            value={sortBy}
+            onChange={(e) => {
+              setSortBy(e.target.value as TransactionSortOption);
+              setPage(1);
+            }}
+            aria-label="Sort entries"
+          >
+            {transactionSortOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className={styles.selectChevron} aria-hidden />
         </div>
       </div>
 
+      <section className={styles.sheet}>
+        <div className={styles.sheetHd}>
+          <h2 className={styles.sheetTitle}>General Ledger</h2>
+          <span className={styles.sheetMeta}>
+            {totalItems} {totalItems === 1 ? "entry" : "entries"}
+          </span>
+        </div>
+
+        {data.length === 0 ? (
+          <p className={styles.emptyPaper}>
+            {transactions.length === 0
+              ? "No entries recorded yet. Add your first to open the ledger."
+              : "No entries match this view."}
+          </p>
+        ) : (
+          <div className={styles.scroll}>
+            <table className={styles.ledger}>
+              <thead>
+                <tr>
+                  <th className={`${styles.th} ${styles.thLeft}`}>Date</th>
+                  <th className={`${styles.th} ${styles.thLeft}`}>
+                    Particulars
+                  </th>
+                  <th className={styles.th}>Debit</th>
+                  <th className={styles.th}>Credit</th>
+                  <th className={styles.th}>Balance</th>
+                  <th className={styles.th} aria-label="Actions" />
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((t) => {
+                  const isIncome = t.type === "income";
+                  const balance = balanceById.get(t.id) ?? 0;
+                  return (
+                    <tr
+                      key={t.id}
+                      className={styles.tr}
+                      onContextMenu={(e) => openContextMenu(e, t)}
+                    >
+                      <td className={`${styles.td} ${styles.tdLeft} ${styles.date}`}>
+                        {formatTransactionDate(t.date)}
+                      </td>
+                      <td className={`${styles.td} ${styles.tdLeft}`}>
+                        <span className={styles.particulars}>
+                          <span className={styles.party}>{t.recipient}</span>
+                          {t.description ? (
+                            <span className={styles.note}>{t.description}</span>
+                          ) : null}
+                          <span className={styles.cat}>{t.category}</span>
+                        </span>
+                      </td>
+                      <td className={`${styles.td} ${styles.figure}`}>
+                        {isIncome ? (
+                          <span className={styles.dash}>—</span>
+                        ) : (
+                          <span className={styles.debitFig}>
+                            {formatCurrency(t.amount)}
+                          </span>
+                        )}
+                      </td>
+                      <td className={`${styles.td} ${styles.figure}`}>
+                        {isIncome ? (
+                          <span className={styles.creditFig}>
+                            {formatCurrency(t.amount)}
+                          </span>
+                        ) : (
+                          <span className={styles.dash}>—</span>
+                        )}
+                      </td>
+                      <td
+                        className={`${styles.td} ${styles.figure} ${styles.balanceFig} ${
+                          balance < 0 ? styles.balanceNeg : ""
+                        }`}
+                      >
+                        {formatCurrency(balance)}
+                      </td>
+                      <td className={styles.td}>
+                        <button
+                          type="button"
+                          className={styles.rowActions}
+                          onClick={(e) => openContextMenu(e, t)}
+                          aria-label={`Actions for ${t.recipient}`}
+                        >
+                          <MoreHorizontal size={16} aria-hidden />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot className={styles.foot}>
+                <tr>
+                  <td className={`${styles.td} ${styles.tdLeft}`} colSpan={2}>
+                    <span className={styles.footLabel}>Page totals</span>
+                  </td>
+                  <td className={`${styles.td} ${styles.footFig} ${styles.debitFig}`}>
+                    {formatCurrency(pageDebit)}
+                  </td>
+                  <td className={`${styles.td} ${styles.footFig} ${styles.creditFig}`}>
+                    {formatCurrency(pageCredit)}
+                  </td>
+                  <td
+                    className={`${styles.td} ${styles.footFig} ${
+                      accountBalance < 0 ? styles.balanceNeg : ""
+                    }`}
+                  >
+                    {formatCurrency(accountBalance)}
+                  </td>
+                  <td className={styles.td} />
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {totalItems > 0 && (
+        <div className={styles.pager}>
+          <p className={styles.pagerInfo}>
+            Page <b>{currentPage}</b> of <b>{totalPages}</b> · showing{" "}
+            <b>{data.length}</b> of <b>{totalItems}</b>
+          </p>
+          <div className={styles.pagerBtns}>
+            <button
+              type="button"
+              className={styles.pageBtn}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage <= 1}
+            >
+              <ChevronLeft size={15} aria-hidden />
+              Prev
+            </button>
+            <button
+              type="button"
+              className={styles.pageBtn}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage >= totalPages}
+            >
+              Next
+              <ChevronRight size={15} aria-hidden />
+            </button>
+          </div>
+        </div>
+      )}
+
       {contextMenu && (
-        <ContextMenu
-          x={contextMenu.x}
-          y={contextMenu.y}
-          items={[
-            createEditMenuItem(() => {
+        <div
+          className={styles.menu}
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            className={styles.menuItem}
+            onClick={() => {
               handleEdit(contextMenu.transaction);
-            }),
-            createDeleteMenuItem(() => handleDelete(parseInt(contextMenu.transaction.id))),
-          ]}
-          onClose={() => setContextMenu(null)}
-        />
+              setContextMenu(null);
+            }}
+          >
+            <Pencil size={15} aria-hidden />
+            Edit entry
+          </button>
+          <button
+            type="button"
+            className={`${styles.menuItem} ${styles.menuDanger}`}
+            onClick={() => {
+              handleDelete(parseInt(contextMenu.transaction.id));
+              setContextMenu(null);
+            }}
+          >
+            <Trash2 size={15} aria-hidden />
+            Delete entry
+          </button>
+        </div>
+      )}
+
+      {isModalOpen && (
+        <div
+          className={styles.overlay}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) closeModal();
+          }}
+        >
+          <div className={styles.modal} role="dialog" aria-modal="true">
+            <div className={styles.modalHd}>
+              <h3 className={styles.modalTitle}>
+                {editingTransaction ? "Edit entry" : "New entry"}
+              </h3>
+              <button
+                type="button"
+                className={styles.modalClose}
+                onClick={closeModal}
+                aria-label="Close"
+              >
+                <X size={18} aria-hidden />
+              </button>
+            </div>
+            <form className={styles.form} onSubmit={handleFormSubmit}>
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="tx-recipient">
+                  Party
+                </label>
+                <input
+                  id="tx-recipient"
+                  name="recipient"
+                  className={styles.input}
+                  value={formValues.recipient}
+                  onChange={handleFormChange}
+                  placeholder="Who it was with"
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="tx-description">
+                  Note
+                </label>
+                <input
+                  id="tx-description"
+                  name="description"
+                  className={styles.input}
+                  value={formValues.description}
+                  onChange={handleFormChange}
+                  placeholder="Optional detail"
+                />
+              </div>
+
+              <div className={styles.fieldRow}>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="tx-amount">
+                    Amount
+                  </label>
+                  <input
+                    id="tx-amount"
+                    name="amount"
+                    className={`${styles.input} ${styles.inputNum}`}
+                    value={formValues.amount}
+                    onChange={handleFormChange}
+                    placeholder="0.00"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="tx-date">
+                    Date
+                  </label>
+                  <input
+                    id="tx-date"
+                    name="date"
+                    className={styles.input}
+                    value={formValues.date}
+                    onChange={handleFormChange}
+                    type="date"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className={styles.fieldRow}>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="tx-category">
+                    Category
+                  </label>
+                  <div className={styles.selectWrap}>
+                    <select
+                      id="tx-category"
+                      name="category"
+                      className={styles.select}
+                      value={formValues.category}
+                      onChange={handleFormChange}
+                    >
+                      {categories.length === 0 ? (
+                        <option value="">No categories</option>
+                      ) : (
+                        categories.map((c) => (
+                          <option key={c.id} value={c.name}>
+                            {c.name}
+                          </option>
+                        ))
+                      )}
+                    </select>
+                    <ChevronDown className={styles.selectChevron} aria-hidden />
+                  </div>
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="tx-type">
+                    Type
+                  </label>
+                  <div className={styles.selectWrap}>
+                    <select
+                      id="tx-type"
+                      name="type"
+                      className={styles.select}
+                      value={formValues.type}
+                      onChange={handleFormChange}
+                    >
+                      {transactionTypes.map((type) => (
+                        <option key={type.value} value={type.value}>
+                          {type.label}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className={styles.selectChevron} aria-hidden />
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.modalActions}>
+                <button
+                  type="button"
+                  className={styles.btnGhost}
+                  onClick={closeModal}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className={styles.btnPrimary}>
+                  {editingTransaction ? "Save changes" : "Record entry"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );
