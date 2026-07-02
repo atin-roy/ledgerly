@@ -3,12 +3,9 @@ export type BillStatus = "pending" | "paid" | "overdue" | "cancelled";
 export interface Bill {
   id: string;
   title: string;
-  dueLabel: string;
   nextDue: string;
   amount: number;
   status: BillStatus;
-  iconLabel: string;
-  iconColor: string;
 }
 
 export const billSortOptions = [
@@ -19,89 +16,6 @@ export const billSortOptions = [
 ] as const;
 
 export type BillSortOption = (typeof billSortOptions)[number]["value"];
-
-export const billRecords: Bill[] = [
-  {
-    id: "bill-1",
-    title: "Spark Electric Solutions",
-    dueLabel: "Monthly · 2nd",
-    nextDue: "2026-03-02",
-    amount: 90,
-    status: "pending",
-    iconLabel: "SE",
-    iconColor: "var(--color-orange)",
-  },
-  {
-    id: "bill-2",
-    title: "Serenity Spa & Wellness",
-    dueLabel: "Monthly · 3rd",
-    nextDue: "2026-03-03",
-    amount: 45,
-    status: "pending",
-    iconLabel: "SW",
-    iconColor: "var(--color-magenta)",
-  },
-  {
-    id: "bill-3",
-    title: "Elevate Education",
-    dueLabel: "Monthly · 4th",
-    nextDue: "2026-03-04",
-    amount: 50,
-    status: "paid",
-    iconLabel: "EE",
-    iconColor: "var(--color-yellow)",
-  },
-  {
-    id: "bill-4",
-    title: "Pixel Playground",
-    dueLabel: "Monthly · 11th",
-    nextDue: "2026-03-11",
-    amount: 10,
-    status: "paid",
-    iconLabel: "PP",
-    iconColor: "var(--color-purple)",
-  },
-  {
-    id: "bill-5",
-    title: "Nimbus Data Storage",
-    dueLabel: "Monthly · 21st",
-    nextDue: "2026-03-21",
-    amount: 9.99,
-    status: "overdue",
-    iconLabel: "ND",
-    iconColor: "var(--color-grey-900)",
-  },
-  {
-    id: "bill-6",
-    title: "ByteWise",
-    dueLabel: "Monthly · 23rd",
-    nextDue: "2026-03-23",
-    amount: 49.99,
-    status: "overdue",
-    iconLabel: "BW",
-    iconColor: "var(--color-cyan)",
-  },
-  {
-    id: "bill-7",
-    title: "EcoFuel Energy",
-    dueLabel: "Monthly · 29th",
-    nextDue: "2026-03-29",
-    amount: 35,
-    status: "paid",
-    iconLabel: "EE",
-    iconColor: "var(--color-green)",
-  },
-  {
-    id: "bill-8",
-    title: "Aqua Flow Utilities",
-    dueLabel: "Monthly · 30th",
-    nextDue: "2026-03-30",
-    amount: 95,
-    status: "cancelled",
-    iconLabel: "AF",
-    iconColor: "var(--color-blue)",
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
@@ -207,10 +121,7 @@ export function filterAndSortBills(
       return true;
     }
 
-    return (
-      bill.title.toLowerCase().includes(normalizedSearch) ||
-      bill.dueLabel.toLowerCase().includes(normalizedSearch)
-    );
+    return bill.title.toLowerCase().includes(normalizedSearch);
   });
 
   return applySort(filtered, sortBy);

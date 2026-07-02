@@ -102,12 +102,9 @@ export default function OverviewPage() {
       const convertedBills: Bill[] = billsArray.map((b) => ({
         id: b.id.toString(),
         title: b.name,
-        dueLabel: "Monthly",
         nextDue: b.dueDate.split("T")[0],
         amount: b.amount,
         status: normalizeBillStatus(b.status),
-        iconLabel: b.name.substring(0, 2).toUpperCase(),
-        iconColor: "var(--brass)",
       }));
 
       setTransactions(convertedTransactions);

@@ -1,25 +1,29 @@
 "use client";
 
-import { ArrowUpDown, ChevronDown } from "lucide-react";
 import {
+  SyntheticEvent,
   useEffect,
   useMemo,
   useState,
-  type ChangeEvent,
-  type SyntheticEvent,
   type MouseEvent,
 } from "react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  X,
+} from "lucide-react";
 
-import CustomSelect from "@/components/ui/CustomSelect";
-import PageTitle from "@/components/PageTitle";
-import BillCard from "@/components/bills/BillCard";
-import PaginationControls from "@/components/transactions/PaginationControls";
-import { Button } from "@/components/ui/button";
-import primaryActionButtonClass from "@/components/ui/primaryActionButtonClass";
 import {
   BILL_PAGE_SIZE,
   billSortOptions,
   formatCurrency,
+  formatBillDueDate,
   getBillPage,
   getBillSummary,
   type BillSortOption,
@@ -27,21 +31,27 @@ import {
   type BillStatus,
 } from "@/app/bills/data";
 import { getBills, createBill, updateBill, deleteBill } from "@/lib/services";
-import ContextMenu, { createEditMenuItem, createDeleteMenuItem } from "@/components/ui/ContextMenu";
-import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import styles from "./bills.module.css";
 
-type BillFormValues = {
-  title: string;
-  amount: string;
-  date: string;
-  description: string;
-};
-
-const billModalFields: BillFormValues = {
+const emptyForm = {
   title: "",
   amount: "",
-  date: "",
-  description: "",
+  date: new Date().toISOString().split("T")[0],
+  status: "pending" as BillStatus,
+};
+
+const billStatuses: { label: string; value: BillStatus }[] = [
+  { label: "Pending", value: "pending" },
+  { label: "Paid", value: "paid" },
+  { label: "Overdue", value: "overdue" },
+  { label: "Cancelled", value: "cancelled" },
+];
+
+const stampClass: Record<BillStatus, string> = {
+  pending: styles.stampPending,
+  paid: styles.stampPaid,
+  overdue: styles.stampOverdue,
+  cancelled: styles.stampCancelled,
 };
 
 function normalizeBillStatus(status: string): BillStatus {
@@ -54,22 +64,26 @@ function normalizeBillStatus(status: string): BillStatus {
   ) {
     return normalized;
   }
-
   return "pending";
 }
 
 export default function BillsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState<BillSortOption>("latest");
+  const [sortBy, setSortBy] = useState<BillSortOption>("soonest");
   const [page, setPage] = useState(1);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formValues, setFormValues] = useState<BillFormValues>(billModalFields);
+  const [formValues, setFormValues] = useState(emptyForm);
+  const [editingBill, setEditingBill] = useState<Bill | null>(null);
+
   const [bills, setBills] = useState<Bill[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [editingBill, setEditingBill] = useState<Bill | null>(null);
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; bill: Bill } | null>(null);
-  const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean; billId?: number; message?: string }>({ isOpen: false });
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    bill: Bill;
+  } | null>(null);
 
   useEffect(() => {
     loadBills();
@@ -81,29 +95,25 @@ export default function BillsPage() {
       setError(null);
       const data = await getBills();
       const billsArray = Array.isArray(data) ? data : [];
-      
-      // Convert backend format to frontend format
-      const convertedBills: Bill[] = billsArray.map((b) => ({
+      const converted: Bill[] = billsArray.map((b) => ({
         id: b.id.toString(),
         title: b.name,
-        dueLabel: "Monthly",
         nextDue: b.dueDate.split("T")[0],
         amount: b.amount,
         status: normalizeBillStatus(b.status),
-        iconLabel: b.name.substring(0, 2).toUpperCase(),
-        iconColor: "var(--color-green)",
       }));
-      
-      setBills(convertedBills);
+      setBills(converted);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load bills");
-      console.error("Error loading bills:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const { data: visibleBills, currentPage, totalItems, totalPages } = useMemo(
+  const summary = useMemo(() => getBillSummary(bills), [bills]);
+  const outstanding = summary.pending.amount + summary.overdue.amount;
+
+  const { data, totalItems, totalPages, currentPage } = useMemo(
     () =>
       getBillPage(bills, {
         searchTerm,
@@ -111,10 +121,8 @@ export default function BillsPage() {
         page,
         pageSize: BILL_PAGE_SIZE,
       }),
-    [bills, searchTerm, sortBy, page]
+    [bills, searchTerm, sortBy, page],
   );
-
-  const summary = useMemo(() => getBillSummary(bills), [bills]);
 
   useEffect(() => {
     if (currentPage !== page) {
@@ -122,404 +130,455 @@ export default function BillsPage() {
     }
   }, [currentPage, page]);
 
-  const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
-    setPage(1);
-  };
+  // Close the context menu on any outside interaction.
+  useEffect(() => {
+    if (!contextMenu) return;
+    const close = () => setContextMenu(null);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
+    const id = setTimeout(() => {
+      document.addEventListener("mousedown", close);
+      document.addEventListener("keydown", onKey);
+      window.addEventListener("scroll", close, true);
+    }, 0);
+    return () => {
+      clearTimeout(id);
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", close, true);
+    };
+  }, [contextMenu]);
 
-  const handleSortChange = (value: BillSortOption) => {
-    setSortBy(value);
-    setPage(1);
-  };
+  const pageTotal = data.reduce((sum, b) => sum + b.amount, 0);
 
-  const handleSortSelection = (label: string) => {
-    const option = billSortOptions.find((opt) => opt.label === label);
-    if (option) {
-      handleSortChange(option.value);
-    }
-  };
-
-  const currentSortLabel =
-    billSortOptions.find((option) => option.value === sortBy)?.label ?? sortBy;
-  const placeholderCount = Math.max(0, BILL_PAGE_SIZE - visibleBills.length);
-
-  const handleFormChange = (event: SyntheticEvent<HTMLInputElement>) => {
-    const target = event.target as HTMLInputElement;
-    setFormValues((prev) => ({ ...prev, [target.name]: target.value }));
-  };
-
-
-
-  const handleFormSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    
-    try {
-      if (editingBill) {
-        await updateBill(parseInt(editingBill.id), {
-          name: formValues.title,
-          amount: parseFloat(formValues.amount),
-          dueDate: new Date(formValues.date).toISOString(),
-          // status preserved or updated if needed
-        });
-      } else {
-        await createBill({
-          name: formValues.title,
-          amount: parseFloat(formValues.amount),
-          status: "PENDING",
-          dueDate: new Date(formValues.date).toISOString(),
-        });
-      }
-      
-      setIsModalOpen(false);
-      setEditingBill(null);
-      setFormValues(billModalFields);
-      await loadBills();
-    } catch (err) {
-      console.error("Error saving bill:", err);
-      setConfirmDialog({ isOpen: true, message: "Failed to save bill. Please try again." });
-    }
+  const handleOpenNew = () => {
+    setEditingBill(null);
+    setFormValues({ ...emptyForm, date: new Date().toISOString().split("T")[0] });
+    setIsModalOpen(true);
   };
 
   const handleEdit = (bill: Bill) => {
     setFormValues({
       title: bill.title,
       amount: bill.amount.toString(),
-      date: bill.nextDue, // Assuming nextDue is YYYY-MM-DD from loadBills conversion
-      description: "", // Description not in Bill type currently
+      date: bill.nextDue,
+      status: bill.status,
     });
     setEditingBill(bill);
     setIsModalOpen(true);
   };
 
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingBill(null);
+    setFormValues(emptyForm);
+  };
+
+  const handleFormChange = (
+    event: SyntheticEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    const target = event.target as HTMLInputElement | HTMLSelectElement;
+    setFormValues((prev) => ({ ...prev, [target.name]: target.value }));
+  };
+
+  const handleFormSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    try {
+      const amount = parseFloat(formValues.amount);
+      if (isNaN(amount) || amount <= 0) {
+        alert("Please enter a valid amount");
+        return;
+      }
+      const dueDate = new Date(formValues.date + "T00:00:00").toISOString();
+      const payload = {
+        name: formValues.title.trim(),
+        amount,
+        status: formValues.status.toUpperCase(),
+        dueDate,
+      };
+
+      if (editingBill) {
+        await updateBill(parseInt(editingBill.id), payload);
+      } else {
+        await createBill(payload);
+      }
+
+      closeModal();
+      await loadBills();
+    } catch (err) {
+      console.error("Error saving bill:", err);
+      alert("Failed to save bill. Please try again.");
+    }
+  };
+
   const handleDelete = async (billId: number) => {
+    if (!confirm("Remove this bill from the schedule? This cannot be undone.")) {
+      return;
+    }
     try {
       await deleteBill(billId);
       await loadBills();
     } catch (err) {
       console.error("Error deleting bill:", err);
-      setConfirmDialog({ isOpen: true, message: "Failed to delete bill. Please try again." });
+      alert("Failed to delete bill. Please try again.");
     }
   };
 
-  const handleContextMenu = (event: MouseEvent<HTMLDivElement>, bill: Bill) => {
+  const openContextMenu = (event: MouseEvent<HTMLElement>, bill: Bill) => {
     event.preventDefault();
     setContextMenu({
-      x: event.clientX,
-      y: event.clientY,
+      x: Math.min(event.clientX, window.innerWidth - 176),
+      y: Math.min(event.clientY, window.innerHeight - 96),
       bill,
     });
   };
 
+  const masthead = (
+    <div className={styles.head}>
+      <div>
+        <p className={styles.eyebrow}>The Ledger</p>
+        <h1 className={styles.title}>Recurring Bills</h1>
+        <p className={styles.subtitle}>
+          A schedule of what&rsquo;s due, and what&rsquo;s been settled.
+        </p>
+      </div>
+      <button type="button" className={styles.newBtn} onClick={handleOpenNew}>
+        <Plus size={15} aria-hidden />
+        New bill
+      </button>
+    </div>
+  );
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-beige-100 py-10 sm:py-12">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
-          <PageTitle title="Recurring Bills" />
-          <div className="rounded-3xl bg-white p-12 shadow-xl text-center">
-            <p className="text-gray-600">Loading bills...</p>
-          </div>
-        </div>
+      <div className={styles.page}>
+        {masthead}
+        <div className={styles.state}>Pulling the schedule…</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-beige-100 py-10 sm:py-12">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
-          <PageTitle title="Recurring Bills" />
-          <div className="rounded-3xl bg-white p-12 shadow-xl text-center">
-            <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={loadBills} className={primaryActionButtonClass}>
-              Try Again
-            </Button>
-          </div>
+      <div className={styles.page}>
+        {masthead}
+        <div className={styles.state}>
+          <p>{error}</p>
+          <button type="button" onClick={loadBills} className={styles.retry}>
+            Try again
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-beige-100 py-10 sm:py-12">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
-        <PageTitle title="Recurring Bills" />
+    <div className={styles.page}>
+      {masthead}
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,320px)_1fr]">
-          <div className="flex flex-col gap-6">
-            <div className="rounded-[32px] bg-slate-900 px-6 py-8 shadow-2xl">
-              <p className="text-xs uppercase tracking-[0.6em] text-slate-400">
-                Total bills
-              </p>
-              <p className="mt-4 text-4xl font-semibold text-white">
-                {formatCurrency(summary.totalAmount)}
-              </p>
-              <p className="mt-2 text-sm text-slate-300">
-                Net monthly commitments
-              </p>
-            </div>
-
-            <div className="rounded-[32px] bg-white p-6 shadow-xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.35em] text-slate-400">
-                Summary
-              </p>
-              <div className="mt-6 space-y-4 text-sm">
-                <div className="flex items-center justify-between text-slate-500">
-                  <span>Paid bills</span>
-                  <span className="font-semibold text-slate-900">
-                    {summary.paid.count} ({formatCurrency(summary.paid.amount)})
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-slate-500">
-                  <span>Pending bills</span>
-                  <span className="font-semibold text-slate-900">
-                    {summary.pending.count} ({formatCurrency(summary.pending.amount)})
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-rose-600">
-                  <span>Overdue bills</span>
-                  <span className="font-semibold text-rose-600">
-                    {summary.overdue.count} ({formatCurrency(summary.overdue.amount)})
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="relative">
-            <div className="rounded-[32px] bg-white p-6 shadow-xl">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="relative flex-1 min-w-[220px] max-w-[300px]">
-                  <input
-                    type="search"
-                    placeholder="Search bills"
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-sm text-slate-600 placeholder:text-slate-400 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                  />
-                  <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-400">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-4 w-4"
-                    >
-                      <circle cx="11" cy="11" r="7" />
-                      <line x1="17.5" y1="17.5" x2="22" y2="22" />
-                    </svg>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 md:hidden">
-                  <CustomSelect
-                    value={currentSortLabel}
-                    options={billSortOptions.map((option) => option.label)}
-                    onChange={handleSortSelection}
-                    icon={<ArrowUpDown className="h-4 w-4" />}
-                    ariaLabel="Sort by"
-                    isMobile
-                  />
-                </div>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={primaryActionButtonClass}
-                  onClick={() => setIsModalOpen(true)}
-                >
-                  New bill
-                </Button>
-
-                <div className="hidden items-center gap-3 md:flex md:justify-end">
-                  <span className="text-xs uppercase tracking-[0.5em] text-slate-400">
-                    Sort by
-                  </span>
-                  <CustomSelect
-                    value={currentSortLabel}
-                    options={billSortOptions.map((option) => option.label)}
-                    onChange={handleSortSelection}
-                    icon={<ChevronDown className="h-4 w-4" />}
-                    trailingIcon={<ChevronDown className="h-4 w-4" />}
-                    ariaLabel="Sort by"
-                    className="w-[180px]"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 space-y-4">
-                {visibleBills.map((bill) => (
-                  <div
-                    key={bill.id}
-                    onContextMenu={(e) => handleContextMenu(e, bill)}
-                    className="cursor-context-menu"
-                  >
-                    <BillCard bill={bill} />
-                  </div>
-                ))}
-                {visibleBills.length === 0 && (
-                  <p className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
-                    No bills match your search.
-                  </p>
-                )}
-                {Array.from({ length: placeholderCount }).map((_, index) => (
-                  <div
-                    key={`placeholder-${index}`}
-                    className="h-[104px] rounded-3xl border border-dashed border-slate-200 bg-slate-50/80"
-                    aria-hidden="true"
-                  />
-                ))}
-              </div>
-
-              <div className="mt-6">
-                <PaginationControls
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  itemsOnPage={visibleBills.length}
-                  pageSize={BILL_PAGE_SIZE}
-                  totalItems={totalItems}
-                  onPageChange={setPage}
-                  itemLabel="bills"
-                />
-              </div>
-            </div>
-
-            {isModalOpen && (
-              <div className="absolute inset-0 z-40 flex items-center justify-center rounded-[32px] bg-black/40 px-4 py-8">
-                <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
-                  <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-(--color-grey-900)">
-                      {editingBill ? "Edit bill" : "New bill"}
-                    </h3>
-                    <button
-                      type="button"
-                      className="text-sm font-semibold text-slate-500 hover:text-slate-700"
-                      onClick={() => {
-                        setIsModalOpen(false);
-                        setEditingBill(null);
-                        setFormValues(billModalFields);
-                      }}
-                    >
-                      Close
-                    </button>
-                  </div>
-                  <form className="mt-2 space-y-4" onSubmit={handleFormSubmit}>
-                    <label className="flex flex-col gap-2 text-sm text-slate-600">
-                      <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
-                        Title
-                      </span>
-                      <input
-                        name="title"
-                        value={formValues.title}
-                        onChange={handleFormChange}
-                        placeholder="Electricity subscription"
-                        className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                      />
-                    </label>
-                    <label className="flex flex-col gap-2 text-sm text-slate-600">
-                      <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
-                        Due Date
-                      </span>
-                      <input
-                        name="date"
-                        type="date"
-                        value={formValues.date}
-                        onChange={handleFormChange}
-                        className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                      />
-                    </label>
-                    <label className="flex flex-col gap-2 text-sm text-slate-600">
-                      <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
-                        Amount
-                      </span>
-                      <input
-                        name="amount"
-                        value={formValues.amount}
-                        onChange={handleFormChange}
-                        placeholder="0.00"
-                        type="number"
-                        min={0}
-                        step="0.01"
-                        className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                      />
-                    </label>
-                    <label className="flex flex-col gap-2 text-sm text-slate-600">
-                      <span className="text-xs uppercase tracking-wide text-(--color-grey-500)">
-                        Description
-                      </span>
-                      <input
-                        name="description"
-                        value={formValues.description}
-                        onChange={handleFormChange}
-                        placeholder="What the bill covers"
-                        className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                      />
-                    </label>
-                    <div className="flex justify-center gap-3 pt-1">
-                      <Button
-                        variant="ghost"
-                        className="rounded-2xl px-6 py-3 text-sm font-semibold bg-rose-600 text-white shadow-lg focus-visible:ring-rose-500 active:translate-y-px active:scale-95 hover:bg-rose-600 hover:text-white hover:shadow-none"
-                        onClick={() => {
-                          setIsModalOpen(false);
-                          setEditingBill(null);
-                          setFormValues(billModalFields);
-                        }}
-                        type="button"
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        type="submit"
-                        className="rounded-2xl px-6 py-3 text-sm font-semibold bg-emerald-600 text-white shadow-lg focus-visible:ring-emerald-500 active:translate-y-px active:scale-95 hover:bg-emerald-600 hover:text-white hover:shadow-none"
-                      >
-                        Save
-                      </Button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            )}
-          </div>
+      <div className={styles.summary}>
+        <div className={styles.sumCell}>
+          <p className={styles.sumK}>Outstanding</p>
+          <p className={styles.sumV}>{formatCurrency(outstanding)}</p>
+          <p className={styles.sumSub}>Pending &amp; overdue</p>
+        </div>
+        <div className={styles.sumCell}>
+          <p className={styles.sumK}>Paid</p>
+          <p className={styles.sumV}>{formatCurrency(summary.paid.amount)}</p>
+          <p className={styles.sumSub}>{summary.paid.count} settled</p>
+        </div>
+        <div className={styles.sumCell}>
+          <p className={styles.sumK}>Pending</p>
+          <p className={styles.sumV}>{formatCurrency(summary.pending.amount)}</p>
+          <p className={styles.sumSub}>{summary.pending.count} awaiting</p>
+        </div>
+        <div className={`${styles.sumCell} ${styles.sumOverdue}`}>
+          <p className={styles.sumK}>Overdue</p>
+          <p className={styles.sumV}>{formatCurrency(summary.overdue.amount)}</p>
+          <p className={styles.sumSub}>{summary.overdue.count} past due</p>
         </div>
       </div>
 
-      {contextMenu && (
-        <ContextMenu
-          x={contextMenu.x}
-          y={contextMenu.y}
-          items={[
-            createEditMenuItem(() => {
-              handleEdit(contextMenu.bill);
-            }),
-            createDeleteMenuItem(() => {
-              setConfirmDialog({
-                isOpen: true,
-                billId: typeof contextMenu.bill.id === 'string' ? parseInt(contextMenu.bill.id) : contextMenu.bill.id,
-                message: "Are you sure you want to delete this bill? This action cannot be undone.",
-              });
-            }),
-          ]}
-          onClose={() => setContextMenu(null)}
-        />
+      <div className={styles.toolbar}>
+        <div className={styles.search}>
+          <Search className={styles.searchIcon} aria-hidden />
+          <input
+            className={styles.searchInput}
+            type="search"
+            placeholder="Search by payee"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPage(1);
+            }}
+            aria-label="Search bills"
+          />
+        </div>
+
+        <div className={styles.selectWrap}>
+          <select
+            className={styles.select}
+            value={sortBy}
+            onChange={(e) => {
+              setSortBy(e.target.value as BillSortOption);
+              setPage(1);
+            }}
+            aria-label="Sort bills"
+          >
+            {billSortOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className={styles.selectChevron} aria-hidden />
+        </div>
+      </div>
+
+      <section className={styles.sheet}>
+        <div className={styles.sheetHd}>
+          <h2 className={styles.sheetTitle}>Schedule of Payables</h2>
+          <span className={styles.sheetMeta}>
+            {totalItems} {totalItems === 1 ? "bill" : "bills"}
+          </span>
+        </div>
+
+        {data.length === 0 ? (
+          <p className={styles.emptyPaper}>
+            {bills.length === 0
+              ? "No bills scheduled yet. Add your first to start the register."
+              : "No bills match this view."}
+          </p>
+        ) : (
+          <div className={styles.scroll}>
+            <table className={styles.ledger}>
+              <thead>
+                <tr>
+                  <th className={`${styles.th} ${styles.thLeft}`}>Due</th>
+                  <th className={`${styles.th} ${styles.thLeft}`}>Payee</th>
+                  <th className={`${styles.th} ${styles.thLeft}`}>Status</th>
+                  <th className={styles.th}>Amount</th>
+                  <th className={styles.th} aria-label="Actions" />
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((bill) => (
+                  <tr
+                    key={bill.id}
+                    className={styles.tr}
+                    onContextMenu={(e) => openContextMenu(e, bill)}
+                  >
+                    <td className={`${styles.td} ${styles.tdLeft} ${styles.date}`}>
+                      {formatBillDueDate(bill.nextDue)}
+                    </td>
+                    <td className={`${styles.td} ${styles.tdLeft}`}>
+                      <span className={styles.payee}>{bill.title}</span>
+                    </td>
+                    <td className={`${styles.td} ${styles.tdLeft}`}>
+                      <span className={`${styles.stamp} ${stampClass[bill.status]}`}>
+                        {bill.status}
+                      </span>
+                    </td>
+                    <td className={`${styles.td} ${styles.figure}`}>
+                      {formatCurrency(bill.amount)}
+                    </td>
+                    <td className={styles.td}>
+                      <button
+                        type="button"
+                        className={styles.rowActions}
+                        onClick={(e) => openContextMenu(e, bill)}
+                        aria-label={`Actions for ${bill.title}`}
+                      >
+                        <MoreHorizontal size={16} aria-hidden />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className={styles.foot}>
+                <tr>
+                  <td className={`${styles.td} ${styles.tdLeft}`} colSpan={3}>
+                    <span className={styles.footLabel}>Page total</span>
+                  </td>
+                  <td className={`${styles.td} ${styles.figure} ${styles.footFig}`}>
+                    {formatCurrency(pageTotal)}
+                  </td>
+                  <td className={styles.td} />
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {totalItems > 0 && (
+        <div className={styles.pager}>
+          <p className={styles.pagerInfo}>
+            Page <b>{currentPage}</b> of <b>{totalPages}</b> · showing{" "}
+            <b>{data.length}</b> of <b>{totalItems}</b>
+          </p>
+          <div className={styles.pagerBtns}>
+            <button
+              type="button"
+              className={styles.pageBtn}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage <= 1}
+            >
+              <ChevronLeft size={15} aria-hidden />
+              Prev
+            </button>
+            <button
+              type="button"
+              className={styles.pageBtn}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage >= totalPages}
+            >
+              Next
+              <ChevronRight size={15} aria-hidden />
+            </button>
+          </div>
+        </div>
       )}
 
-      <ConfirmDialog
-        isOpen={confirmDialog.isOpen}
-        title={confirmDialog.billId ? "Delete Bill" : "Notice"}
-        message={confirmDialog.message || ""}
-        confirmLabel={confirmDialog.billId ? "Delete" : "OK"}
-        cancelLabel={confirmDialog.billId ? "Cancel" : "Close"}
-        variant={confirmDialog.billId ? "danger" : "default"}
-        onConfirm={() => {
-          if (confirmDialog.billId) {
-            handleDelete(confirmDialog.billId);
-          }
-        }}
-        onCancel={() => setConfirmDialog({ isOpen: false })}
-      />
+      {contextMenu && (
+        <div
+          className={styles.menu}
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            className={styles.menuItem}
+            onClick={() => {
+              handleEdit(contextMenu.bill);
+              setContextMenu(null);
+            }}
+          >
+            <Pencil size={15} aria-hidden />
+            Edit bill
+          </button>
+          <button
+            type="button"
+            className={`${styles.menuItem} ${styles.menuDanger}`}
+            onClick={() => {
+              handleDelete(parseInt(contextMenu.bill.id));
+              setContextMenu(null);
+            }}
+          >
+            <Trash2 size={15} aria-hidden />
+            Delete bill
+          </button>
+        </div>
+      )}
+
+      {isModalOpen && (
+        <div
+          className={styles.overlay}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) closeModal();
+          }}
+        >
+          <div className={styles.modal} role="dialog" aria-modal="true">
+            <div className={styles.modalHd}>
+              <h3 className={styles.modalTitle}>
+                {editingBill ? "Edit bill" : "New bill"}
+              </h3>
+              <button
+                type="button"
+                className={styles.modalClose}
+                onClick={closeModal}
+                aria-label="Close"
+              >
+                <X size={18} aria-hidden />
+              </button>
+            </div>
+            <form className={styles.form} onSubmit={handleFormSubmit}>
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="bill-title">
+                  Payee
+                </label>
+                <input
+                  id="bill-title"
+                  name="title"
+                  className={styles.input}
+                  value={formValues.title}
+                  onChange={handleFormChange}
+                  placeholder="Who it's paid to"
+                  required
+                />
+              </div>
+
+              <div className={styles.fieldRow}>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="bill-amount">
+                    Amount
+                  </label>
+                  <input
+                    id="bill-amount"
+                    name="amount"
+                    className={`${styles.input} ${styles.inputNum}`}
+                    value={formValues.amount}
+                    onChange={handleFormChange}
+                    placeholder="0.00"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    required
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="bill-date">
+                    Due date
+                  </label>
+                  <input
+                    id="bill-date"
+                    name="date"
+                    className={styles.input}
+                    value={formValues.date}
+                    onChange={handleFormChange}
+                    type="date"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="bill-status">
+                  Status
+                </label>
+                <div className={styles.selectWrap}>
+                  <select
+                    id="bill-status"
+                    name="status"
+                    className={styles.select}
+                    value={formValues.status}
+                    onChange={handleFormChange}
+                  >
+                    {billStatuses.map((s) => (
+                      <option key={s.value} value={s.value}>
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className={styles.selectChevron} aria-hidden />
+                </div>
+              </div>
+
+              <div className={styles.modalActions}>
+                <button
+                  type="button"
+                  className={styles.btnGhost}
+                  onClick={closeModal}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className={styles.btnPrimary}>
+                  {editingBill ? "Save changes" : "Add bill"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
