@@ -1,7 +1,25 @@
-@import url("https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&display=swap");
 @import "tailwindcss";
 
 :root {
+  /* =========================
+     Ledger — dark ink identity
+     (see docs/superpowers/specs/2026-07-02-ledgerly-visual-identity-design.md)
+     ========================= */
+  --ink: #14120e; /* app background / desk */
+  --ink-2: #1d1a14; /* raised ink panel */
+  --ink-line: #2c2820; /* hairlines on ink */
+  --paper: #e9ece3; /* pale-green ledger sheet */
+  --paper-rule: #c0c9b6; /* row ruling on sheets */
+  --paper-ink: #211e17; /* text on paper */
+  --paper-muted: #6a6c5d; /* muted text on paper */
+  --debit: #b23a2e; /* red — money out. the accent. */
+  --credit: #2c6e49; /* green — money in */
+  --brass: #9c7c2a; /* rare accent: stamp / seal / active nav */
+  --brass-lt: #c6a54e;
+  --cream-text: #e7e3d6; /* text on ink */
+  --cream-muted: #9a9584;
+
+
   /* =========================
      Beige
      ========================= */
@@ -293,12 +311,18 @@
      ========================= */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--ink);
+  color: var(--cream-text);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+/* tabular monospaced figures — all monetary numbers */
+.num {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1;
 }
