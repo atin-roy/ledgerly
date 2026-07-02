@@ -1,9 +1,11 @@
 "use client";
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import { AUTH_LOGIN_URL } from "@/lib/api";
 import { persistAuthTokens, AuthResponse } from "@/lib/auth";
+import styles from "@/components/auth/auth.module.css";
 
 interface FormData {
   email: string;
@@ -102,82 +104,67 @@ export default function LoginCard({
   };
 
   return (
-    <section className="flex h-full min-h-[420px] w-full flex-col gap-4 rounded-3xl text-grey-900 justify-center md:rounded-3xl">
-      <div className="space-y-2 p-8">
-        <h1 className="text-4xl font-bold leading-tight">Login</h1>
-        <p className="text-base text-gray-600">Welcome back to Ledgerly</p>
-      </div>
+    <>
+      <p className={styles.eyebrow}>The Ledger</p>
+      <h1 className={styles.heading}>Sign in</h1>
+      <p className={styles.sub}>Welcome back to Ledgerly.</p>
 
       {errors.general && (
-        <div className="mx-8 rounded-lg bg-red-50 p-3 text-red-700 border border-red-200">
-          {errors.general}
+        <div className={styles.general}>
+          <div className={styles.generalBox}>{errors.general}</div>
         </div>
       )}
 
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-col gap-4 w-full px-8"
-        noValidate
-      >
-        <div>
-          <label
-            htmlFor="email"
-            className="text-sm font-semibold uppercase tracking-wide text-grey-900"
-          >
-            Email
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleInputChange}
-            className={`rounded-xl border p-3 text-base w-full ${
-              errors.email
-                ? "border-red-500 focus:border-red-500"
-                : "border-gray-300"
-            }`}
-            placeholder="Enter your email"
-          />
-          {errors.email && (
-            <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-          )}
+      <form onSubmit={handleSubmit} noValidate>
+        <div className={styles.fields}>
+          <div className={styles.field}>
+            <label htmlFor="email" className={styles.label}>
+              Email
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              className={`${styles.input} ${errors.email ? styles.inputError : ""}`}
+              placeholder="you@example.com"
+            />
+            {errors.email && (
+              <p className={styles.fieldError}>{errors.email}</p>
+            )}
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="password" className={styles.label}>
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              className={`${styles.input} ${errors.password ? styles.inputError : ""}`}
+              placeholder="Enter your password"
+            />
+            {errors.password && (
+              <p className={styles.fieldError}>{errors.password}</p>
+            )}
+          </div>
         </div>
 
-        <div>
-          <label
-            htmlFor="password"
-            className="text-sm font-semibold uppercase tracking-wide text-grey-900"
-          >
-            Password
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={handleInputChange}
-            className={`rounded-xl border p-3 text-base w-full ${
-              errors.password
-                ? "border-red-500 focus:border-red-500"
-                : "border-gray-300"
-            }`}
-            placeholder="Enter your password"
-          />
-          {errors.password && (
-            <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-          )}
-        </div>
-
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="mt-2 rounded-full bg-[#277c78] px-6 py-3 text-white transition hover:bg-[#277c78]/90 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isLoading ? "Logging in..." : "Login"}
+        <button type="submit" disabled={isLoading} className={styles.submit}>
+          {isLoading ? "Signing in…" : "Sign in"}
         </button>
       </form>
-      <div className="h-8" />
-    </section>
+
+      <p className={styles.alt}>
+        New to Ledgerly?{" "}
+        <Link href="/register" className={styles.altLink}>
+          Open an account
+        </Link>
+      </p>
+    </>
   );
 }

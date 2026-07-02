@@ -241,22 +241,6 @@
   margin-bottom: var(--space-50);
 }
 
-.register-book {
-  width: min(90vw, 1100px);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
-  background: white;
-}
-
-.register-image {
-  min-height: 420px;
-}
-
-@media (min-width: 1080px) {
-  .register-book {
-    width: min(75vw, 1200px);
-  }
-}
-
 @theme inline {
   /* =========================
      Beige Colors

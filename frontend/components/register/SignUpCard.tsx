@@ -1,9 +1,11 @@
 "use client";
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import { AUTH_REGISTER_URL } from "@/lib/api";
 import { persistAuthTokens, AuthResponse } from "@/lib/auth";
+import styles from "@/components/auth/auth.module.css";
 
 interface FormData {
   name: string;
@@ -129,110 +131,87 @@ export default function SignUpCard({
   };
 
   return (
-    <section className="flex h-full min-h-[420px] w-full flex-col gap-4 rounded-3xl text-grey-900 justify-center md:rounded-3xl">
-      <div className="space-y-2 p-8">
-        <h1 className="text-4xl font-bold leading-tight">Sign Up</h1>
-        <p className="text-base text-gray-600">
-          Create your Ledgerly account today
-        </p>
-      </div>
+    <>
+      <p className={styles.eyebrow}>The Ledger</p>
+      <h1 className={styles.heading}>Open an account</h1>
+      <p className={styles.sub}>Create your Ledgerly account today.</p>
 
       {errors.general && (
-        <div className="mx-8 rounded-lg bg-red-50 p-3 text-red-700 border border-red-200">
-          {errors.general}
+        <div className={styles.general}>
+          <div className={styles.generalBox}>{errors.general}</div>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full px-8">
-        <div>
-          <label
-            htmlFor="name"
-            className="text-sm font-semibold uppercase tracking-wide text-grey-900"
-          >
-            Name
-          </label>
-          <input
-            id="name"
-            name="name"
-            type="text"
-            value={formData.name}
-            onChange={handleInputChange}
-            className={`rounded-xl border p-3 text-base w-full ${
-              errors.name
-                ? "border-red-500 focus:border-red-500"
-                : "border-gray-300"
-            }`}
-            placeholder="Enter your full name"
-          />
-          {errors.name && (
-            <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-          )}
+      <form onSubmit={handleSubmit} noValidate>
+        <div className={styles.fields}>
+          <div className={styles.field}>
+            <label htmlFor="name" className={styles.label}>
+              Name
+            </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              value={formData.name}
+              onChange={handleInputChange}
+              className={`${styles.input} ${errors.name ? styles.inputError : ""}`}
+              placeholder="Your full name"
+            />
+            {errors.name && <p className={styles.fieldError}>{errors.name}</p>}
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="email" className={styles.label}>
+              Email
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              className={`${styles.input} ${errors.email ? styles.inputError : ""}`}
+              placeholder="you@example.com"
+            />
+            {errors.email && (
+              <p className={styles.fieldError}>{errors.email}</p>
+            )}
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="password" className={styles.label}>
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              className={`${styles.input} ${errors.password ? styles.inputError : ""}`}
+              placeholder="Create a strong password"
+            />
+            <p className={styles.hint}>
+              At least 8 characters, with an uppercase, a lowercase, and a
+              number.
+            </p>
+            {errors.password && (
+              <p className={styles.fieldError}>{errors.password}</p>
+            )}
+          </div>
         </div>
 
-        <div>
-          <label
-            htmlFor="email"
-            className="text-sm font-semibold uppercase tracking-wide text-grey-900"
-          >
-            Email
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleInputChange}
-            className={`rounded-xl border p-3 text-base w-full ${
-              errors.email
-                ? "border-red-500 focus:border-red-500"
-                : "border-gray-300"
-            }`}
-            placeholder="Enter your email address"
-          />
-          {errors.email && (
-            <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-          )}
-        </div>
-
-        <div>
-          <label
-            htmlFor="password"
-            className="text-sm font-semibold uppercase tracking-wide text-grey-900"
-          >
-            Password
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={handleInputChange}
-            className={`rounded-xl border p-3 text-base w-full ${
-              errors.password
-                ? "border-red-500 focus:border-red-500"
-                : "border-gray-300"
-            }`}
-            placeholder="Create a strong password"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Password must be at least 8 characters with uppercase, lowercase,
-            and number.
-          </p>
-          {errors.password && (
-            <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-          )}
-        </div>
-
-        <button
-          type="submit"
-          disabled={isLoading}
-          style={{ backgroundColor: "var(--color-green)" }}
-          className="mt-2 rounded-full px-6 py-3 text-white transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isLoading ? "Creating Account..." : "Sign Up"}
+        <button type="submit" disabled={isLoading} className={styles.submit}>
+          {isLoading ? "Creating account…" : "Open account"}
         </button>
       </form>
-      <div className="h-8" />
-    </section>
+
+      <p className={styles.alt}>
+        Already keeping books?{" "}
+        <Link href="/login" className={styles.altLink}>
+          Sign in
+        </Link>
+      </p>
+    </>
   );
 }
