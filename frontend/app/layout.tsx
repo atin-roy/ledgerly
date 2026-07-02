@@ -40,7 +40,7 @@ export default function RootLayout({
       <body
         className={`${display.variable} ${mono.variable} ${body.variable}`}
       >
-        <div className="flex flex-col min-h-screen md:h-svh">{children}</div>
+        <div className="app-shell">{children}</div>
       </body>
     </html>
   );

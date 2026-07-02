@@ -1,23 +1,5 @@
 export type TransactionType = "income" | "expense";
 
-export const baseCategories = [
-  "General",
-  "Dining Out",
-  "Groceries",
-  "Entertainment",
-  "Utilities",
-  "Travel",
-] as const;
-
-export type TransactionCategory = string;
-
-export const transactionCategoryOptions = [
-  "All Transactions",
-  "Income",
-  "Expense",
-  ...baseCategories,
-] as const;
-
 export type TransactionSortOption =
   | "latest"
   | "oldest"
@@ -38,7 +20,7 @@ export interface Transaction {
   id: string;
   recipient: string;
   description?: string;
-  category: TransactionCategory;
+  category: string;
   categoryId: number;
   date: string; // ISO date
   amount: number;
