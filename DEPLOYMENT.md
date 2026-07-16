@@ -1,119 +1,86 @@
-# Deployment Guide — VPS with Caddy + Docker Compose
+# Deployment — VPS with Caddy + Docker Compose
+
+Every push to `main` deploys automatically via GitHub Actions. This document describes how the pieces fit and how to operate them.
 
 ## Architecture
 
 ```
-Internet → Caddy (reverse proxy, TLS) → Docker network
-                                            ├── backend  (Spring Boot :8080)
-                                            ├── frontend (Next.js :3000)
-                                            └── db       (PostgreSQL :5432)
+push to main
+   └─▶ GitHub Actions
+         ├── verify   : backend tests (Gradle/H2), frontend lint + build
+         ├── build    : docker build → push to ghcr.io/atin-roy/ledgerly-{api,web}
+         └── deploy   : SSH to VPS → git pull → compose pull → compose up -d
+
+Internet → Caddy (TLS, shared container)
+   ├── ledgerly.atinroy.com/*      → ledgerly-web:3000   (Next.js)
+   └── ledgerly.atinroy.com/api/*  → ledgerly-api:8080   (Spring Boot)
+                                        └── ledgerly-postgres:5432
 ```
 
-Caddy handles HTTPS automatically via Let's Encrypt. Each project on the VPS gets its own `docker-compose.yml`; Caddy is shared across projects.
+The frontend is built with `NEXT_PUBLIC_API_BASE_URL=/api`, so browser API calls are same-origin — Caddy splits traffic by path and CORS never fires in production.
 
-## Directory layout on the VPS
+## Layout on the VPS
 
 ```
 /srv/
-├── caddy/
-│   └── Caddyfile          ← shared across all projects
-└── ledgerly/
-    ├── docker-compose.yml
-    └── .env               ← secrets (not committed)
+├── infra/caddy/           # shared Caddy container + Caddyfile (all apps)
+└── apps/ledgerly/         # clone of this repo
+    ├── docker-compose.prod.yml
+    └── .env               # secrets — never committed (template: .env.production.example)
 ```
 
-## Environment variables
+Containers join two Docker networks: the project-private `ledgerly_default` (api ↔ postgres) and the external `shared` network, which is how the Caddy container reaches `ledgerly-web` and `ledgerly-api` by container name. Nothing binds host ports; Caddy is the only entry point.
 
-Create `/srv/ledgerly/.env`:
+## GitHub repository secrets
 
-```env
-# Database
-DATABASE_URL=jdbc:postgresql://db:5432/ledgerly
-DATABASE_USERNAME=ledgerly
-DATABASE_PASSWORD=<strong-password>
+| Secret        | Purpose                                      |
+| ------------- | -------------------------------------------- |
+| `VPS_HOST`    | VPS IP address                               |
+| `VPS_USER`    | SSH user                                     |
+| `VPS_SSH_KEY` | Private key of a dedicated deploy keypair    |
 
-# JWT
-JWT_SECRET=<at-least-64-char-random-string>
+Image pulls on the VPS use a persistent `docker login ghcr.io` (stored in `~/.docker/config.json`). If pulls start failing with 401/denied, re-login on the VPS with a token that has `read:packages`.
 
-# CORS — set to your actual frontend domain
-CORS_ALLOWED_ORIGINS=https://ledgerly.yourdomain.com
+## Caddy vhost
 
-# Postgres container
-POSTGRES_DB=ledgerly
-POSTGRES_USER=ledgerly
-POSTGRES_PASSWORD=<same-as-DATABASE_PASSWORD>
-```
-
-## `docker-compose.yml`
-
-```yaml
-services:
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    env_file: .env
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks:
-      - ledgerly
-
-  backend:
-    image: ghcr.io/<your-username>/ledgerly-backend:latest
-    restart: unless-stopped
-    env_file: .env
-    environment:
-      SPRING_PROFILES_ACTIVE: prod
-    depends_on:
-      - db
-    networks:
-      - ledgerly
-
-  frontend:
-    image: ghcr.io/<your-username>/ledgerly-frontend:latest
-    restart: unless-stopped
-    environment:
-      NEXT_PUBLIC_API_BASE_URL: https://api.ledgerly.yourdomain.com/api
-    networks:
-      - ledgerly
-
-volumes:
-  pgdata:
-
-networks:
-  ledgerly:
-    name: ledgerly
-```
-
-## `Caddyfile` (add to shared Caddy config)
+In `/srv/infra/caddy/Caddyfile`:
 
 ```
-ledgerly.yourdomain.com {
-    reverse_proxy frontend:3000
-}
+ledgerly.atinroy.com {
+    import common_headers
 
-api.ledgerly.yourdomain.com {
-    reverse_proxy backend:8080
+    handle /api/* {
+        reverse_proxy ledgerly-api:8080
+    }
+
+    handle {
+        reverse_proxy ledgerly-web:3000
+    }
 }
 ```
 
-> Make sure the Caddy container is on the `ledgerly` Docker network:
-> `docker network connect ledgerly caddy`
+Reload after edits: `docker exec caddy caddy reload --config /etc/caddy/Caddyfile`
 
-## Deploy
+## Manual operations
 
 ```bash
-# First deploy
-cd /srv/ledgerly
-docker compose pull
-docker compose up -d
+cd /srv/apps/ledgerly
 
-# Update
-docker compose pull
-docker compose up -d --no-deps backend frontend
+docker compose -f docker-compose.prod.yml logs -f ledgerly-api   # logs
+docker compose -f docker-compose.prod.yml ps                     # status
+docker compose -f docker-compose.prod.yml up -d                  # manual deploy (after pull)
+docker compose -f docker-compose.prod.yml down                   # stop (data survives in volume)
+```
+
+Rollback: images are also tagged `sha-<commit>`, so pin a known-good tag:
+
+```bash
+IMAGE_OWNER=atin-roy docker compose -f docker-compose.prod.yml up -d \
+  --no-deps ledgerly-api ledgerly-web  # after editing the tag in the compose file
 ```
 
 ## Notes
 
-- Flyway runs automatically on backend startup when `SPRING_PROFILES_ACTIVE=prod`.
-- The `DATABASE_URL` must use the `jdbc:postgresql://` prefix (not the legacy `postgres://` format).
-- To view logs: `docker compose logs -f backend`
+- Flyway runs migrations automatically on backend startup (`SPRING_PROFILES_ACTIVE=prod` is baked into the image).
+- `DATABASE_URL` must use the `jdbc:postgresql://` prefix.
+- Postgres data lives in the `ledgerly-pgdata` volume; back it up with `docker exec ledgerly-postgres pg_dump -U ledgerly ledgerly > backup.sql`.

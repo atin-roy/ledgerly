@@ -1,40 +1,31 @@
-# Multi-stage Dockerfile for Ledgerly Backend
-
 # Stage 1: Build
-FROM eclipse-temurin:21-jdk-alpine as builder
+FROM eclipse-temurin:21-jdk-alpine AS builder
 
 WORKDIR /build
 
-# Copy gradle wrapper
-COPY gradlew .
+# Gradle files first — this layer (and the dependency download below) is
+# cached until build.gradle.kts or the wrapper changes
+COPY gradlew build.gradle.kts settings.gradle.kts ./
 COPY gradle ./gradle
+RUN ./gradlew dependencies --no-daemon > /dev/null
 
-# Copy source code
+# Source changes only invalidate from here down
 COPY src ./src
-COPY build.gradle.kts .
-COPY settings.gradle.kts .
-
-# Build the application
-RUN ./gradlew clean build -x test --no-daemon
+RUN ./gradlew bootJar -x test --no-daemon
 
 # Stage 2: Runtime
 FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-# Copy the built jar from builder stage
 COPY --from=builder /build/build/libs/app.jar .
 
-# Create non-root user for security
 RUN addgroup -g 1000 ledgerly && adduser -D -u 1000 -G ledgerly ledgerly
 USER ledgerly
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
-# Expose port
 EXPOSE 8080
 
-# Start application
 CMD ["java", "-Dspring.profiles.active=prod", "-jar", "app.jar"]

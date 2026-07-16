@@ -1,0 +1,57 @@
+name: ledgerly
+
+services:
+  ledgerly-web:
+    image: ghcr.io/${IMAGE_OWNER:-atin-roy}/ledgerly-web:latest
+    build:
+      context: ./frontend
+    container_name: ledgerly-web
+    restart: unless-stopped
+    depends_on:
+      ledgerly-api:
+        condition: service_started
+    networks:
+      - default
+      - shared
+
+  ledgerly-api:
+    image: ghcr.io/${IMAGE_OWNER:-atin-roy}/ledgerly-api:latest
+    build:
+      context: ./backend
+    container_name: ledgerly-api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: jdbc:postgresql://ledgerly-postgres:5432/${POSTGRES_DB:-ledgerly}
+      DATABASE_USERNAME: ${POSTGRES_USER:-ledgerly}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://ledgerly.atinroy.com}
+    depends_on:
+      ledgerly-postgres:
+        condition: service_healthy
+    networks:
+      - default
+      - shared
+
+  ledgerly-postgres:
+    image: postgres:17-alpine
+    container_name: ledgerly-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ledgerly}
+      POSTGRES_USER: ${POSTGRES_USER:-ledgerly}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - ledgerly-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ledgerly} -d ${POSTGRES_DB:-ledgerly}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  ledgerly-pgdata:
+
+networks:
+  shared:
+    external: true
