@@ -34,7 +34,9 @@ import {
   createTransaction,
   updateTransaction,
   deleteTransaction,
+  getParties,
   type CategoryResponse,
+  type PartyResponse,
 } from "@/lib/services";
 import styles from "./transactions.module.css";
 
@@ -98,6 +100,7 @@ export default function TransactionsPage() {
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  const [parties, setParties] = useState<PartyResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<{
@@ -114,9 +117,11 @@ export default function TransactionsPage() {
     try {
       setIsLoading(true);
       setError(null);
-      const [transactionsData, categoriesData] = await Promise.all([
+      const [transactionsData, categoriesData, partiesData] = await Promise.all([
         getTransactions(),
         getCategories(),
+        // parties feed the datalist; an empty list just means no suggestions
+        getParties().catch(() => []),
       ]);
 
       const transactionsArray = Array.isArray(transactionsData)
@@ -141,6 +146,7 @@ export default function TransactionsPage() {
 
       setTransactions(convertedTransactions);
       setCategories(categoriesArray);
+      setParties(Array.isArray(partiesData) ? partiesData : []);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to load transactions",
@@ -655,7 +661,14 @@ export default function TransactionsPage() {
                   value={formValues.recipient}
                   onChange={handleFormChange}
                   placeholder="Who it was with"
+                  list="party-options"
+                  autoComplete="off"
                 />
+                <datalist id="party-options">
+                  {parties.map((p) => (
+                    <option key={p.id} value={p.name} />
+                  ))}
+                </datalist>
               </div>
 
               <div className={styles.field}>
