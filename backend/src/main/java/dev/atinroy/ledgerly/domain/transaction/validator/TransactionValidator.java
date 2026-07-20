@@ -58,7 +58,9 @@ public class TransactionValidator {
             return;
         }
 
-        if (date.isAfter(LocalDateTime.now())) {
+        // allow through end of tomorrow: clients send local wall-clock dates and
+        // the server runs in UTC, so "today" for a user can be "tomorrow" here
+        if (date.toLocalDate().isAfter(java.time.LocalDate.now().plusDays(1))) {
             result.addFieldError("date", ErrorCode.INVALID_DATE,
                     "transaction date cannot be in the future");
         }

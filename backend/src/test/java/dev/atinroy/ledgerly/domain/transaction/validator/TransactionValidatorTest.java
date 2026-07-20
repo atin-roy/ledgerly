@@ -126,7 +126,7 @@ class TransactionValidatorTest {
             // Arrange: Future date - not allowed for transactions
             TransactionCreateRequest request = new TransactionCreateRequest(
                     new BigDecimal("100.00"),
-                    LocalDateTime.now().plusDays(1),  // Tomorrow - invalid
+                    LocalDateTime.now().plusDays(2),  // Beyond tomorrow - invalid (tomorrow is allowed as timezone slack)
                     1L,
                     null,
                     null
@@ -250,7 +250,7 @@ class TransactionValidatorTest {
             // Arrange: Multiple invalid fields
             TransactionCreateRequest request = new TransactionCreateRequest(
                     BigDecimal.ZERO,                      // Invalid: zero amount
-                    LocalDateTime.now().plusDays(1),      // Invalid: future date
+                    LocalDateTime.now().plusDays(2),      // Invalid: beyond tomorrow
                     -1L,                                   // Invalid: negative category
                     null,
                     null
@@ -290,7 +290,7 @@ class TransactionValidatorTest {
         void shouldValidateProvidedDate() {
             TransactionUpdateRequest request = new TransactionUpdateRequest(
                     null,
-                    LocalDateTime.now().plusDays(1),  // Future date - invalid
+                    LocalDateTime.now().plusDays(2),  // Beyond tomorrow - invalid
                     null,
                     null,
                     null

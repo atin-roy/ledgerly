@@ -3,6 +3,7 @@
 import {
   SyntheticEvent,
   useEffect,
+  useRef,
   useMemo,
   useState,
   type MouseEvent,
@@ -131,18 +132,29 @@ export default function BillsPage() {
   }, [currentPage, page]);
 
   // Close the context menu on any outside interaction.
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     if (!contextMenu) return;
     const close = () => setContextMenu(null);
+    // Guard by target: React delegates events from `document` in the app
+    // router, so a mousedown on a menu item reaches this listener too and
+    // stopPropagation on the menu cannot block it.
+    const onDown = (e: Event) => {
+      if (e.target instanceof Node && menuRef.current?.contains(e.target)) {
+        return;
+      }
+      close();
+    };
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
     const id = setTimeout(() => {
-      document.addEventListener("mousedown", close);
+      document.addEventListener("mousedown", onDown);
       document.addEventListener("keydown", onKey);
       window.addEventListener("scroll", close, true);
     }, 0);
     return () => {
       clearTimeout(id);
-      document.removeEventListener("mousedown", close);
+      document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
       window.removeEventListener("scroll", close, true);
     };
@@ -441,6 +453,7 @@ export default function BillsPage() {
 
       {contextMenu && (
         <div
+          ref={menuRef}
           className={styles.menu}
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onMouseDown={(e) => e.stopPropagation()}

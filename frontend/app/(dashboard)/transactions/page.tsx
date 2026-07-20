@@ -3,6 +3,7 @@
 import {
   SyntheticEvent,
   useEffect,
+  useRef,
   useMemo,
   useState,
   type MouseEvent,
@@ -39,19 +40,44 @@ import styles from "./transactions.module.css";
 
 const PAGE_SIZE = 12;
 
+/** Today as yyyy-mm-dd in the user's own timezone, not UTC. */
+function localToday() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 const emptyForm = {
   recipient: "",
   description: "",
   amount: "",
   category: "",
   type: "expense",
-  date: new Date().toISOString().split("T")[0],
+  date: "",
 };
 
 const transactionTypes = [
   { label: "Expense", value: "expense" },
   { label: "Income", value: "income" },
 ];
+
+/** Server validation details, flattened to one human sentence. */
+function extractApiError(err: unknown): string {
+  if (err && typeof err === "object" && "data" in err) {
+    const data = (err as { data?: { details?: unknown; message?: string } }).data;
+    const details = data?.details;
+    if (Array.isArray(details) && details.length > 0) {
+      const first = details[0] as { message?: string };
+      if (first?.message) return first.message;
+    } else if (details && typeof details === "object") {
+      const first = Object.values(details as Record<string, string>)[0];
+      if (typeof first === "string") return first;
+    }
+    if (data?.message) return data.message;
+  }
+  return err instanceof Error && err.message
+    ? err.message
+    : "Could not record the entry. Try again.";
+}
 
 /** Signed contribution of an entry to the running account balance. */
 function signedAmount(t: Transaction) {
@@ -66,6 +92,7 @@ export default function TransactionsPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formValues, setFormValues] = useState(emptyForm);
+  const [formError, setFormError] = useState<string | null>(null);
   const [editingTransaction, setEditingTransaction] =
     useState<Transaction | null>(null);
 
@@ -174,18 +201,29 @@ export default function TransactionsPage() {
   }, [currentPage, page]);
 
   // Close the context menu on any outside interaction.
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     if (!contextMenu) return;
     const close = () => setContextMenu(null);
+    // Guard by target: React delegates events from `document` in the app
+    // router, so a mousedown on a menu item reaches this listener too and
+    // stopPropagation on the menu cannot block it.
+    const onDown = (e: Event) => {
+      if (e.target instanceof Node && menuRef.current?.contains(e.target)) {
+        return;
+      }
+      close();
+    };
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
     const id = setTimeout(() => {
-      document.addEventListener("mousedown", close);
+      document.addEventListener("mousedown", onDown);
       document.addEventListener("keydown", onKey);
       window.addEventListener("scroll", close, true);
     }, 0);
     return () => {
       clearTimeout(id);
-      document.removeEventListener("mousedown", close);
+      document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
       window.removeEventListener("scroll", close, true);
     };
@@ -202,6 +240,7 @@ export default function TransactionsPage() {
     setEditingTransaction(null);
     setFormValues({
       ...emptyForm,
+      date: localToday(),
       category: categories.length > 0 ? categories[0].name : "",
     });
     setIsModalOpen(true);
@@ -227,6 +266,7 @@ export default function TransactionsPage() {
     setIsModalOpen(false);
     setEditingTransaction(null);
     setFormValues(emptyForm);
+    setFormError(null);
   };
 
   const handleFormChange = (
@@ -243,17 +283,19 @@ export default function TransactionsPage() {
         (c) => c.name === formValues.category,
       );
       if (!selectedCategory) {
-        alert("Please select a valid category");
+        setFormError("Pick a category for this entry.");
         return;
       }
 
       const amount = parseFloat(formValues.amount);
       if (isNaN(amount) || amount <= 0) {
-        alert("Please enter a valid amount");
+        setFormError("Enter an amount greater than zero.");
         return;
       }
 
-      const dateTime = new Date(formValues.date + "T00:00:00").toISOString();
+      // send the local wall-clock date as-is; converting to UTC shifts the
+      // entry to the previous day for anyone east of Greenwich
+      const dateTime = formValues.date + "T00:00:00";
       const payload = {
         amount: formValues.type === "expense" ? -amount : amount,
         date: dateTime,
@@ -272,7 +314,7 @@ export default function TransactionsPage() {
       await loadData();
     } catch (err) {
       console.error("Error saving transaction:", err);
-      alert("Failed to save transaction. Please try again.");
+      setFormError(extractApiError(err));
     }
   };
 
@@ -550,6 +592,7 @@ export default function TransactionsPage() {
 
       {contextMenu && (
         <div
+          ref={menuRef}
           className={styles.menu}
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onMouseDown={(e) => e.stopPropagation()}
@@ -710,6 +753,12 @@ export default function TransactionsPage() {
                   </div>
                 </div>
               </div>
+
+              {formError ? (
+                <p className={styles.formError} role="alert">
+                  {formError}
+                </p>
+              ) : null}
 
               <div className={styles.modalActions}>
                 <button
