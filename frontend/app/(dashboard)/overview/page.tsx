@@ -149,6 +149,8 @@ export default function OverviewPage() {
     .filter((t) => t.type === "expense")
     .reduce((sum, t) => sum + t.amount, 0);
   const currentBalance = incomeTotal - expenseTotal;
+  const reservedInPots = pots.reduce((sum, p) => sum + p.saved, 0);
+  const available = currentBalance - reservedInPots;
 
   const recentTransactions = [...transactions]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -192,6 +194,16 @@ export default function OverviewPage() {
           <p className={styles.balanceSub}>
             Current balance across all recorded activity.
           </p>
+          {reservedInPots > 0 ? (
+            <p className={styles.availableLine}>
+              <span>− Reserves {formatTransactionCurrency(reservedInPots)}</span>
+              <span
+                className={available < 0 ? styles.availableNeg : undefined}
+              >
+                = Available {formatTransactionCurrency(available)}
+              </span>
+            </p>
+          ) : null}
           <div className={styles.dc}>
             <div className={styles.dcCell}>
               <div className={styles.dcK}>Money out</div>

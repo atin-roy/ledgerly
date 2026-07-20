@@ -424,3 +424,21 @@
 .retry:hover {
   color: var(--brass);
 }
+
+/* reserves / available breakdown under the headline balance */
+.availableLine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 10px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--cream-muted);
+}
+.availableLine span:last-child {
+  color: var(--cream-text);
+}
+.availableNeg {
+  color: var(--debit) !important;
+}
