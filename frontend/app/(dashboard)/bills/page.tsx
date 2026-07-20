@@ -9,6 +9,7 @@ import {
   type MouseEvent,
 } from "react";
 import {
+  CheckCircle2,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -31,7 +32,16 @@ import {
   type Bill,
   type BillStatus,
 } from "@/app/bills/data";
-import { getBills, createBill, updateBill, deleteBill } from "@/lib/services";
+import {
+  getBills,
+  createBill,
+  updateBill,
+  deleteBill,
+  getCategories,
+  createTransaction,
+  type CategoryResponse,
+} from "@/lib/services";
+import { localToday } from "@/app/transactions/data";
 import styles from "./bills.module.css";
 
 const emptyForm = {
@@ -78,6 +88,13 @@ export default function BillsPage() {
   const [editingBill, setEditingBill] = useState<Bill | null>(null);
 
   const [bills, setBills] = useState<Bill[]>([]);
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  const [payModal, setPayModal] = useState<{
+    bill: Bill;
+    categoryId: string;
+    error: string | null;
+    isSubmitting: boolean;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<{
@@ -94,7 +111,10 @@ export default function BillsPage() {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await getBills();
+      const [data, categoriesData] = await Promise.all([
+        getBills(),
+        getCategories().catch(() => []),
+      ]);
       const billsArray = Array.isArray(data) ? data : [];
       const converted: Bill[] = billsArray.map((b) => ({
         id: b.id.toString(),
@@ -104,6 +124,7 @@ export default function BillsPage() {
         status: normalizeBillStatus(b.status),
       }));
       setBills(converted);
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load bills");
     } finally {
@@ -232,6 +253,60 @@ export default function BillsPage() {
     } catch (err) {
       console.error("Error deleting bill:", err);
       alert("Failed to delete bill. Please try again.");
+    }
+  };
+
+  const openPayModal = (bill: Bill) => {
+    const remembered = localStorage.getItem("ledgerly_last_bill_category");
+    const validRemembered = categories.some(
+      (c) => c.id.toString() === remembered,
+    );
+    setPayModal({
+      bill,
+      categoryId: validRemembered
+        ? (remembered as string)
+        : (categories[0]?.id.toString() ?? ""),
+      error: null,
+      isSubmitting: false,
+    });
+  };
+
+  const handleConfirmPay = async () => {
+    if (!payModal || payModal.isSubmitting) return;
+    const { bill, categoryId } = payModal;
+    setPayModal({ ...payModal, isSubmitting: true, error: null });
+    // entry first: if the status update then fails, the books are still right
+    // and a retry must not double-book the expense
+    try {
+      await createTransaction({
+        amount: -bill.amount,
+        date: localToday() + "T00:00:00",
+        categoryId: parseInt(categoryId, 10),
+        partyName: bill.title,
+        description: "Bill payment",
+      });
+      localStorage.setItem("ledgerly_last_bill_category", categoryId);
+    } catch (err) {
+      console.error("Error recording bill payment:", err);
+      setPayModal({
+        ...payModal,
+        isSubmitting: false,
+        error: "Could not record the entry. Nothing was changed - try again.",
+      });
+      return;
+    }
+    try {
+      await updateBill(parseInt(bill.id, 10), { status: "PAID" });
+      setPayModal(null);
+      await loadBills();
+    } catch (err) {
+      console.error("Error updating bill status:", err);
+      setPayModal({
+        ...payModal,
+        isSubmitting: false,
+        error:
+          "The entry was recorded, but the bill status could not be updated - set it to Paid manually.",
+      });
     }
   };
 
@@ -458,6 +533,20 @@ export default function BillsPage() {
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onMouseDown={(e) => e.stopPropagation()}
         >
+          {contextMenu.bill.status !== "paid" &&
+          contextMenu.bill.status !== "cancelled" ? (
+            <button
+              type="button"
+              className={styles.menuItem}
+              onClick={() => {
+                openPayModal(contextMenu.bill);
+                setContextMenu(null);
+              }}
+            >
+              <CheckCircle2 size={15} aria-hidden />
+              Mark paid
+            </button>
+          ) : null}
           <button
             type="button"
             className={styles.menuItem}
@@ -589,6 +678,90 @@ export default function BillsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {payModal && (
+        <div
+          className={styles.overlay}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && !payModal.isSubmitting) {
+              setPayModal(null);
+            }
+          }}
+        >
+          <div className={styles.modal} role="dialog" aria-modal="true">
+            <div className={styles.modalHd}>
+              <h3 className={styles.modalTitle}>Mark paid</h3>
+              <button
+                type="button"
+                className={styles.modalClose}
+                onClick={() => setPayModal(null)}
+                aria-label="Close"
+              >
+                <X size={18} aria-hidden />
+              </button>
+            </div>
+            <div className={styles.payBody}>
+              <p className={styles.payText}>
+                Record {formatCurrency(payModal.bill.amount)} to{" "}
+                <strong>{payModal.bill.title}</strong> as paid today? The entry
+                goes straight into the ledger.
+              </p>
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="pay-category">
+                  Category
+                </label>
+                <div className={styles.selectWrap}>
+                  <select
+                    id="pay-category"
+                    className={styles.select}
+                    value={payModal.categoryId}
+                    onChange={(e) =>
+                      setPayModal({ ...payModal, categoryId: e.target.value })
+                    }
+                  >
+                    {categories.length === 0 ? (
+                      <option value="">No categories</option>
+                    ) : (
+                      categories.map((c) => (
+                        <option key={c.id} value={c.id.toString()}>
+                          {c.name}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                  <ChevronDown className={styles.selectChevron} aria-hidden />
+                </div>
+              </div>
+              {categories.length === 0 ? (
+                <p className={styles.payHint}>Create a category first.</p>
+              ) : null}
+              {payModal.error ? (
+                <p className={styles.payError} role="alert">
+                  {payModal.error}
+                </p>
+              ) : null}
+              <div className={styles.modalActions}>
+                <button
+                  type="button"
+                  className={styles.btnGhost}
+                  onClick={() => setPayModal(null)}
+                  disabled={payModal.isSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className={styles.btnPrimary}
+                  onClick={handleConfirmPay}
+                  disabled={payModal.isSubmitting || categories.length === 0}
+                >
+                  {payModal.isSubmitting ? "Recording…" : "Record & mark paid"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
