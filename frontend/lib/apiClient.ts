@@ -16,6 +16,26 @@ export class ApiError extends Error {
   }
 }
 
+
+/** Server validation details, flattened to one human sentence. */
+export function extractApiError(err: unknown): string {
+  if (err && typeof err === "object" && "data" in err) {
+    const data = (err as { data?: { details?: unknown; message?: string } }).data;
+    const details = data?.details;
+    if (Array.isArray(details) && details.length > 0) {
+      const first = details[0] as { message?: string };
+      if (first?.message) return first.message;
+    } else if (details && typeof details === "object") {
+      const first = Object.values(details as Record<string, string>)[0];
+      if (typeof first === "string") return first;
+    }
+    if (data?.message) return data.message;
+  }
+  return err instanceof Error && err.message
+    ? err.message
+    : "Something went wrong. Try again.";
+}
+
 interface RequestOptions extends RequestInit {
   requiresAuth?: boolean;
 }

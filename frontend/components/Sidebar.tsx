@@ -10,6 +10,7 @@ import {
   PieChart,
   PiggyBank,
   Repeat,
+  Settings,
   Tag,
 } from "lucide-react";
 import { clearAuthTokens } from "@/lib/auth";
@@ -29,6 +30,7 @@ export const navItems: NavItem[] = [
   { label: "Budgets", href: "/budgets", Icon: PieChart },
   { label: "Pots", href: "/pots", Icon: PiggyBank },
   { label: "Bills", href: "/bills", Icon: CreditCard },
+  { label: "Settings", href: "/settings", Icon: Settings },
 ];
 
 export default function Sidebar() {

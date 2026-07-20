@@ -82,6 +82,13 @@ public class UserValidator {
         }
     }
 
+    /** Standalone password-strength check for the change-password flow. */
+    public ValidationResult validateNewPassword(String password) {
+        ValidationResult result = ValidationResult.withErrors();
+        validatePassword(password, result);
+        return result;
+    }
+
     private void validatePassword(String password, ValidationResult result) {
         if (password == null || password.length() < 8) {
             result.addFieldError(

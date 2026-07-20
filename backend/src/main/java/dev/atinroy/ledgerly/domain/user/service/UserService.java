@@ -4,6 +4,9 @@ import dev.atinroy.ledgerly.domain.bill.repository.BillRepository;
 import dev.atinroy.ledgerly.domain.budget.repository.BudgetRepository;
 import dev.atinroy.ledgerly.domain.party.repository.PartyRepository;
 import dev.atinroy.ledgerly.domain.pot.repository.PotRepository;
+import dev.atinroy.ledgerly.domain.auth.exception.InvalidCredentialsException;
+import dev.atinroy.ledgerly.domain.user.dto.AccountDeleteRequest;
+import dev.atinroy.ledgerly.domain.user.dto.PasswordChangeRequest;
 import dev.atinroy.ledgerly.domain.user.dto.UserCreateRequest;
 import dev.atinroy.ledgerly.domain.user.dto.UserUpdateRequest;
 import dev.atinroy.ledgerly.domain.user.dto.UserResponse;
@@ -119,6 +122,36 @@ public class UserService {
 
         User saved = userRepository.save(user);
         return userMapper.toResponse(saved);
+    }
+
+    @Transactional
+    public void changePassword(Long userId, PasswordChangeRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new InvalidCredentialsException("Current password is incorrect");
+        }
+
+        ValidationResult result = userValidator.validateNewPassword(request.newPassword());
+        if (result.hasErrors()) {
+            throw new ValidationException(result);
+        }
+
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void deleteAccount(Long userId, AccountDeleteRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new InvalidCredentialsException("Current password is incorrect");
+        }
+
+        deleteUser(userId);
     }
 
     @Transactional

@@ -1,5 +1,7 @@
 package dev.atinroy.ledgerly.domain.user.controller;
 
+import dev.atinroy.ledgerly.domain.user.dto.AccountDeleteRequest;
+import dev.atinroy.ledgerly.domain.user.dto.PasswordChangeRequest;
 import dev.atinroy.ledgerly.domain.user.dto.UserUpdateRequest;
 import dev.atinroy.ledgerly.domain.user.dto.UserResponse;
 import dev.atinroy.ledgerly.security.AuthenticatedUserId;
@@ -29,14 +31,29 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteUser(
+    @PostMapping("/{userId}/password")
+    public ResponseEntity<Void> changePassword(
             @AuthenticatedUserId Long authenticatedUserId,
-            @PathVariable Long userId) {
+            @PathVariable Long userId,
+            @Valid @RequestBody PasswordChangeRequest request) {
+        if (!authenticatedUserId.equals(userId)) {
+            throw new AccessDeniedException("You can only change your own password");
+        }
+        userService.changePassword(userId, request);
+        return ResponseEntity.noContent().build();
+    }
+
+    // deletion requires the current password in the body; the bare DELETE
+    // without confirmation is deliberately not exposed
+    @PostMapping("/{userId}/account-deletion")
+    public ResponseEntity<Void> deleteAccount(
+            @AuthenticatedUserId Long authenticatedUserId,
+            @PathVariable Long userId,
+            @Valid @RequestBody AccountDeleteRequest request) {
         if (!authenticatedUserId.equals(userId)) {
             throw new AccessDeniedException("You can only delete your own account");
         }
-        userService.deleteUser(userId);
+        userService.deleteAccount(userId, request);
         return ResponseEntity.noContent().build();
     }
 }
