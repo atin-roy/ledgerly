@@ -3,11 +3,14 @@
  * Final design asset. To swap in a hand-drawn version later, replace this SVG
  * (or point an <img> at your own file). Ink color comes from `currentColor`.
  */
+import { useId } from "react";
+
 export default function WordmarkStamp({
   className,
 }: {
   className?: string;
 }) {
+  const inkId = `wordmark-ink${useId()}`;
   return (
     <svg
       className={className}
@@ -17,7 +20,7 @@ export default function WordmarkStamp({
       fill="none"
     >
       <defs>
-        <filter id="wordmark-ink" x="-6%" y="-15%" width="112%" height="130%">
+        <filter id={inkId} x="-6%" y="-15%" width="112%" height="130%">
           <feTurbulence
             type="fractalNoise"
             baseFrequency="0.85"
@@ -36,7 +39,7 @@ export default function WordmarkStamp({
       </defs>
 
       <g
-        filter="url(#wordmark-ink)"
+        filter={`url(#${inkId})`}
         stroke="currentColor"
         fill="currentColor"
         opacity="0.96"

@@ -1,22 +1,28 @@
 /**
  * Ledgerly seal — a circular rubber-stamp mark for statement/summary contexts.
- * Final design asset; swap the SVG to use a hand-drawn version later.
- * Ink color comes from `currentColor`.
+ * Designed to read as red ink pressed onto paper: pass the ink color via
+ * `currentColor` and let the parent set blend/rotation.
  */
+import { useId } from "react";
+
 export default function SealStamp({ className }: { className?: string }) {
+  const uid = useId();
+  const inkId = `seal-ink${uid}`;
+  const topId = `seal-top${uid}`;
+  const bottomId = `seal-bottom${uid}`;
   return (
     <svg
       className={className}
       viewBox="0 0 200 200"
       role="img"
-      aria-label="Ledgerly seal"
+      aria-label="Ledgerly seal — kept in order"
       fill="none"
     >
       <defs>
-        <filter id="seal-ink" x="-8%" y="-8%" width="116%" height="116%">
+        <filter id={inkId} x="-8%" y="-8%" width="116%" height="116%">
           <feTurbulence
             type="fractalNoise"
-            baseFrequency="0.8"
+            baseFrequency="0.9"
             numOctaves="2"
             seed="4"
             result="noise"
@@ -24,24 +30,20 @@ export default function SealStamp({ className }: { className?: string }) {
           <feDisplacementMap
             in="SourceGraphic"
             in2="noise"
-            scale="1.5"
+            scale="2.2"
             xChannelSelector="R"
             yChannelSelector="G"
           />
         </filter>
-        <path id="seal-top" d="M30,100 a70,70 0 0 1 140,0" />
-        <path id="seal-bottom" d="M34,104 a66,66 0 0 0 132,0" />
+        <path id={topId} d="M28,100 a72,72 0 0 1 144,0" />
+        <path id={bottomId} d="M36,102 a64,64 0 0 0 128,0" />
       </defs>
 
-      <g
-        filter="url(#seal-ink)"
-        stroke="currentColor"
-        fill="currentColor"
-        opacity="0.95"
-      >
+      <g filter={`url(#${inkId})`} stroke="currentColor" fill="currentColor">
         {/* rings */}
-        <circle cx="100" cy="100" r="94" fill="none" strokeWidth="2.5" />
-        <circle cx="100" cy="100" r="80" fill="none" strokeWidth="1" />
+        <circle cx="100" cy="100" r="95" fill="none" strokeWidth="5" />
+        <circle cx="100" cy="100" r="87" fill="none" strokeWidth="1.5" />
+        <circle cx="100" cy="100" r="55" fill="none" strokeWidth="1.5" />
 
         {/* curved text */}
         <text
@@ -49,11 +51,11 @@ export default function SealStamp({ className }: { className?: string }) {
           style={{
             fontFamily: "var(--font-display), Georgia, serif",
             fontWeight: 700,
-            fontSize: "15px",
-            letterSpacing: "3px",
+            fontSize: "21px",
+            letterSpacing: "4px",
           }}
         >
-          <textPath href="#seal-top" startOffset="50%" textAnchor="middle">
+          <textPath href={`#${topId}`} startOffset="50%" textAnchor="middle">
             LEDGERLY
           </textPath>
         </text>
@@ -61,25 +63,25 @@ export default function SealStamp({ className }: { className?: string }) {
           stroke="none"
           style={{
             fontFamily: "var(--font-body), system-ui, sans-serif",
-            fontWeight: 600,
-            fontSize: "9px",
-            letterSpacing: "3.5px",
+            fontWeight: 700,
+            fontSize: "12.5px",
+            letterSpacing: "4px",
           }}
         >
-          <textPath href="#seal-bottom" startOffset="50%" textAnchor="middle">
+          <textPath href={`#${bottomId}`} startOffset="50%" textAnchor="middle">
             KEPT IN ORDER
           </textPath>
         </text>
 
-        {/* side diamonds where the arcs meet */}
-        <path d="M16,100 l4,-4 4,4 -4,4 z" stroke="none" />
-        <path d="M184,100 l-4,-4 -4,4 4,4 z" stroke="none" />
+        {/* side stars where the arcs meet */}
+        <path d="M22,100 l5,-5 5,5 -5,5 z" stroke="none" />
+        <path d="M178,100 l-5,-5 -5,5 5,5 z" stroke="none" />
 
         {/* center emblem — stacked ledger rules */}
-        <g strokeWidth="2" strokeLinecap="square">
-          <line x1="78" y1="93" x2="122" y2="93" />
-          <line x1="85" y1="100" x2="115" y2="100" />
-          <line x1="78" y1="107" x2="122" y2="107" />
+        <g strokeWidth="4" strokeLinecap="square">
+          <line x1="76" y1="90" x2="124" y2="90" />
+          <line x1="84" y1="100" x2="116" y2="100" />
+          <line x1="76" y1="110" x2="124" y2="110" />
         </g>
       </g>
     </svg>
