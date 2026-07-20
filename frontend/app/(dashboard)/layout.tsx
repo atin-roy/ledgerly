@@ -3,7 +3,13 @@
 import Link from "next/link";
 import Sidebar, { navItems } from "@/components/Sidebar";
 import { usePathname, useRouter } from "next/navigation";
-import { type MouseEvent, useRef, useState, useEffect } from "react";
+import {
+  type MouseEvent,
+  useRef,
+  useState,
+  useEffect,
+  useSyncExternalStore,
+} from "react";
 import { clearAuthTokens, isAuthenticated } from "@/lib/auth";
 import type { ReactNode } from "react";
 import styles from "./dashboard.module.css";
@@ -134,23 +140,30 @@ function MobileNav() {
   );
 }
 
+const emptySubscribe = () => () => {};
+
 export default function DashboardLayout({
   children,
 }: {
   children: ReactNode;
 }) {
   const router = useRouter();
-  const [isChecking] = useState(() =>
-    typeof window === "undefined" ? true : !isAuthenticated(),
+  // false on the server and the hydration render, true right after — so the
+  // hydrated tree always matches the server HTML (the loading branch).
+  const hydrated = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
   );
+  const authed = hydrated && isAuthenticated();
 
   useEffect(() => {
-    if (typeof window !== "undefined" && !isAuthenticated()) {
+    if (hydrated && !authed) {
       router.replace("/login");
     }
-  }, [router]);
+  }, [hydrated, authed, router]);
 
-  if (isChecking) {
+  if (!authed) {
     return (
       <div className={styles.loading}>
         <p>Loading…</p>
