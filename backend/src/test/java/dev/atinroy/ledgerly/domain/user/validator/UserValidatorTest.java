@@ -267,7 +267,7 @@ class UserValidatorTest {
         void shouldPassValidationWithAllNullFields() {
             // Arrange: Update request with all null fields
             // In updates, all fields are optional - only provided fields are validated
-            UserUpdateRequest request = new UserUpdateRequest(null, null, null);
+            UserUpdateRequest request = new UserUpdateRequest(null, null);
 
             // Act
             ValidationResult result = userValidator.validate(request);
@@ -282,8 +282,7 @@ class UserValidatorTest {
             // Arrange: Only email is being updated
             UserUpdateRequest request = new UserUpdateRequest(
                     "newemail@example.com",  // Valid new email
-                    null,                     // Not updating username
-                    null                      // Not updating password
+                    null                      // Not updating username
             );
 
             // Act
@@ -299,7 +298,6 @@ class UserValidatorTest {
             // Arrange: Invalid email format in update
             UserUpdateRequest request = new UserUpdateRequest(
                     "invalid-email",  // Invalid format
-                    null,
                     null
             );
 
@@ -310,25 +308,6 @@ class UserValidatorTest {
             assertThat(result.hasErrors()).isTrue();
             assertThat(result.getFieldErrors("email"))
                     .anyMatch(error -> error.errorCode().equals(ErrorCode.INVALID_FORMAT));
-        }
-
-        @Test
-        @DisplayName("should fail validation when provided password is too short")
-        void shouldFailValidationWhenProvidedPasswordIsTooShort() {
-            // Arrange: Password update with too short password
-            UserUpdateRequest request = new UserUpdateRequest(
-                    null,
-                    null,
-                    "short"  // Less than 8 characters
-            );
-
-            // Act
-            ValidationResult result = userValidator.validate(request);
-
-            // Assert
-            assertThat(result.hasErrors()).isTrue();
-            assertThat(result.getFieldErrors("password"))
-                    .anyMatch(error -> error.errorCode().equals(ErrorCode.TOO_SHORT));
         }
 
         @Test
@@ -349,8 +328,7 @@ class UserValidatorTest {
             // Arrange: Valid update with all fields
             UserUpdateRequest request = new UserUpdateRequest(
                     "updated@example.com",
-                    "updateduser",
-                    "newpassword123"
+                    "updateduser"
             );
 
             // Act

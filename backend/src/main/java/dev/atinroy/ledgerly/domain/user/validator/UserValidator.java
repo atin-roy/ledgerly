@@ -46,10 +46,6 @@ public class UserValidator {
             validateUsername(request.username(), result);
         }
 
-        if (request.password() != null) {
-            validatePassword(request.password(), result);
-        }
-
         return result;
     }
 

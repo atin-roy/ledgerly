@@ -73,7 +73,6 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
-        boolean passwordUpdated = false;
         ValidationResult result = userValidator.validate(request);
 
         if (request.email() != null &&
@@ -108,15 +107,6 @@ public class UserService {
 
         if (request.username() != null) {
             user.setUsername(request.username());
-        }
-
-        if (request.password() != null) {
-            user.setPassword(request.password());
-            passwordUpdated = true;
-        }
-
-        if (passwordUpdated) {
-            hashPassword(user);
         }
 
         User saved = userRepository.save(user);
