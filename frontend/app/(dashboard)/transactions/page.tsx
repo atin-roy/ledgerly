@@ -23,7 +23,9 @@ import {
 import {
   formatCurrency,
   formatTransactionDate,
+  getMonthOptions,
   getTransactionPage,
+  localToday,
   transactionSortOptions,
   type TransactionSortOption,
   type Transaction,
@@ -41,12 +43,6 @@ import {
 import styles from "./transactions.module.css";
 
 const PAGE_SIZE = 12;
-
-/** Today as yyyy-mm-dd in the user's own timezone, not UTC. */
-function localToday() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
 
 const emptyForm = {
   recipient: "",
@@ -89,6 +85,7 @@ function signedAmount(t: Transaction) {
 export default function TransactionsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [category, setCategory] = useState("All Transactions");
+  const [month, setMonth] = useState("all");
   const [sortBy, setSortBy] = useState<TransactionSortOption>("latest");
   const [page, setPage] = useState(1);
 
@@ -188,16 +185,29 @@ export default function TransactionsPage() {
     [categories],
   );
 
+  const monthOptions = useMemo(
+    () => getMonthOptions(transactions),
+    [transactions],
+  );
+
+  // if the selected month vanishes (e.g. its last entry was deleted), fall back
+  useEffect(() => {
+    if (month !== "all" && !monthOptions.some((o) => o.value === month)) {
+      setMonth("all");
+    }
+  }, [month, monthOptions]);
+
   const { data, totalItems, totalPages, currentPage } = useMemo(
     () =>
       getTransactionPage(transactions, {
         searchTerm,
         category,
+        month,
         sortBy,
         page,
         pageSize: PAGE_SIZE,
       }),
-    [transactions, searchTerm, category, sortBy, page],
+    [transactions, searchTerm, category, month, sortBy, page],
   );
 
   useEffect(() => {
@@ -402,7 +412,7 @@ export default function TransactionsPage() {
           <input
             className={styles.searchInput}
             type="search"
-            placeholder="Search by party or category"
+            placeholder="Search party, note, or category"
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
@@ -425,6 +435,25 @@ export default function TransactionsPage() {
             {categoryFilterOptions.map((option) => (
               <option key={option} value={option}>
                 {option}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className={styles.selectChevron} aria-hidden />
+        </div>
+
+        <div className={styles.selectWrap}>
+          <select
+            className={styles.select}
+            value={month}
+            onChange={(e) => {
+              setMonth(e.target.value);
+              setPage(1);
+            }}
+            aria-label="Filter by month"
+          >
+            {monthOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>

@@ -46,9 +46,35 @@ export function formatTransactionDate(date: string) {
   return new Date(date).toLocaleDateString("en-US", dateOptions);
 }
 
+/** Today as yyyy-mm-dd in the user's own timezone, not UTC. */
+export function localToday() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+const monthLabelFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "long",
+  year: "numeric",
+});
+
+/** Distinct months present in the records, newest first, for the filter. */
+export function getMonthOptions(records: Transaction[]) {
+  const months = [...new Set(records.map((tx) => tx.date.slice(0, 7)))].sort(
+    (a, b) => b.localeCompare(a),
+  );
+  return [
+    { value: "all", label: "All months" },
+    ...months.map((m) => ({
+      value: m,
+      label: monthLabelFormatter.format(new Date(`${m}-01T00:00:00`)),
+    })),
+  ];
+}
+
 export interface TransactionQuery {
   searchTerm?: string;
   category?: string;
+  month?: string; // "all" or "yyyy-MM"
   sortBy?: TransactionSortOption;
   page?: number;
   pageSize?: number;
@@ -90,6 +116,7 @@ export function getTransactionPage(
   {
     searchTerm = "",
     category = "All Transactions",
+    month = "all",
     sortBy = "latest",
     page = 1,
     pageSize = 6,
@@ -109,13 +136,18 @@ export function getTransactionPage(
         return false;
       }
 
+      if (month !== "all" && !tx.date.startsWith(month)) {
+        return false;
+      }
+
       if (!normalizedSearch) {
         return true;
       }
 
       return (
         tx.recipient.toLowerCase().includes(normalizedSearch) ||
-        tx.category.toLowerCase().includes(normalizedSearch)
+        tx.category.toLowerCase().includes(normalizedSearch) ||
+        (tx.description ?? "").toLowerCase().includes(normalizedSearch)
       );
     })
     .map((tx) => tx);
