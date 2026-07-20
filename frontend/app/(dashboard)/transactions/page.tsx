@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Download,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -40,6 +41,7 @@ import {
   type CategoryResponse,
   type PartyResponse,
 } from "@/lib/services";
+import { downloadCsv, toCsv } from "@/lib/csv";
 import styles from "./transactions.module.css";
 
 const PAGE_SIZE = 12;
@@ -363,6 +365,31 @@ export default function TransactionsPage() {
     });
   };
 
+  const handleExportCsv = () => {
+    // the filtered view, all pages, in the same order as on screen
+    const { data: rows } = getTransactionPage(transactions, {
+      searchTerm,
+      category,
+      month,
+      sortBy,
+      page: 1,
+      pageSize: Math.max(transactions.length, 1),
+    });
+    const csv = toCsv([
+      ["Date", "Party", "Note", "Category", "Debit", "Credit", "Balance"],
+      ...rows.map((t) => [
+        t.date,
+        t.recipient,
+        t.description || "",
+        t.category,
+        t.type === "expense" ? t.amount.toFixed(2) : "",
+        t.type === "income" ? t.amount.toFixed(2) : "",
+        (balanceById.get(t.id) ?? 0).toFixed(2),
+      ]),
+    ]);
+    downloadCsv(`ledgerly-transactions-${localToday()}.csv`, csv);
+  };
+
   const masthead = (
     <div className={styles.head}>
       <div>
@@ -372,10 +399,21 @@ export default function TransactionsPage() {
           Every entry recorded in order, with a running balance.
         </p>
       </div>
-      <button type="button" className={styles.newBtn} onClick={handleOpenNew}>
-        <Plus size={15} aria-hidden />
-        New entry
-      </button>
+      <div className={styles.headActions}>
+        <button
+          type="button"
+          className={styles.exportBtn}
+          onClick={handleExportCsv}
+          disabled={transactions.length === 0}
+        >
+          <Download size={15} aria-hidden />
+          Export CSV
+        </button>
+        <button type="button" className={styles.newBtn} onClick={handleOpenNew}>
+          <Plus size={15} aria-hidden />
+          New entry
+        </button>
+      </div>
     </div>
   );
 
