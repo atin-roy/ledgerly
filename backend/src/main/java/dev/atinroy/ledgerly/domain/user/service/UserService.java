@@ -4,7 +4,6 @@ import dev.atinroy.ledgerly.domain.bill.repository.BillRepository;
 import dev.atinroy.ledgerly.domain.budget.repository.BudgetRepository;
 import dev.atinroy.ledgerly.domain.party.repository.PartyRepository;
 import dev.atinroy.ledgerly.domain.pot.repository.PotRepository;
-import dev.atinroy.ledgerly.domain.auth.exception.InvalidCredentialsException;
 import dev.atinroy.ledgerly.domain.user.dto.AccountDeleteRequest;
 import dev.atinroy.ledgerly.domain.user.dto.PasswordChangeRequest;
 import dev.atinroy.ledgerly.domain.user.dto.UserCreateRequest;
@@ -129,8 +128,13 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
+        // a wrong current password here is a form-validation failure, not a
+        // session-auth failure — keep it 400 so the client shows it inline
+        // instead of treating it as an expired token and logging the user out
         if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
-            throw new InvalidCredentialsException("Current password is incorrect");
+            ValidationResult result = ValidationResult.withErrors();
+            result.addFieldError("currentPassword", ErrorCode.INVALID_VALUE, "Current password is incorrect");
+            throw new ValidationException(result);
         }
 
         ValidationResult result = userValidator.validateNewPassword(request.newPassword());
@@ -148,7 +152,9 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
         if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
-            throw new InvalidCredentialsException("Current password is incorrect");
+            ValidationResult result = ValidationResult.withErrors();
+            result.addFieldError("currentPassword", ErrorCode.INVALID_VALUE, "Current password is incorrect");
+            throw new ValidationException(result);
         }
 
         deleteUser(userId);

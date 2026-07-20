@@ -1,6 +1,5 @@
 package dev.atinroy.ledgerly.domain.user.service;
 
-import dev.atinroy.ledgerly.domain.auth.exception.InvalidCredentialsException;
 import dev.atinroy.ledgerly.domain.bill.repository.BillRepository;
 import dev.atinroy.ledgerly.domain.budget.repository.BudgetRepository;
 import dev.atinroy.ledgerly.domain.category.repository.CategoryRepository;
@@ -68,7 +67,7 @@ class UserServicePasswordTest {
 
         assertThatThrownBy(() ->
                 userService.changePassword(1L, new PasswordChangeRequest("wrong", "new-password-1")))
-                .isInstanceOf(InvalidCredentialsException.class);
+                .isInstanceOf(ValidationException.class);
 
         verify(userRepository, never()).save(any());
     }
@@ -108,7 +107,7 @@ class UserServicePasswordTest {
 
         assertThatThrownBy(() ->
                 userService.deleteAccount(1L, new AccountDeleteRequest("wrong")))
-                .isInstanceOf(InvalidCredentialsException.class);
+                .isInstanceOf(ValidationException.class);
 
         verify(userRepository, never()).delete(any());
     }
