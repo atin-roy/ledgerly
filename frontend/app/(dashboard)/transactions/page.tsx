@@ -9,6 +9,7 @@ import {
   type MouseEvent,
 } from "react";
 import {
+  CircleAlert,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -89,6 +90,12 @@ export default function TransactionsPage() {
     y: number;
     transaction: Transaction;
   } | null>(null);
+  const [transactionToDelete, setTransactionToDelete] =
+    useState<Transaction | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const deleteDialogRef = useRef<HTMLDialogElement | null>(null);
+  const cancelDeleteRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     loadData();
@@ -229,6 +236,18 @@ export default function TransactionsPage() {
     };
   }, [contextMenu]);
 
+  useEffect(() => {
+    const dialog = deleteDialogRef.current;
+    if (!dialog) return;
+
+    if (transactionToDelete && !dialog.open) {
+      dialog.showModal();
+      cancelDeleteRef.current?.focus();
+    } else if (!transactionToDelete && dialog.open) {
+      dialog.close();
+    }
+  }, [transactionToDelete]);
+
   const pageDebit = data
     .filter((t) => t.type === "expense")
     .reduce((sum, t) => sum + t.amount, 0);
@@ -318,20 +337,26 @@ export default function TransactionsPage() {
     }
   };
 
-  const handleDelete = async (transactionId: number) => {
-    if (
-      !confirm(
-        "Delete this entry? This removes it from the ledger permanently.",
-      )
-    ) {
-      return;
-    }
+  const closeDeleteDialog = () => {
+    if (isDeleting) return;
+    setTransactionToDelete(null);
+    setDeleteError(null);
+  };
+
+  const handleDelete = async () => {
+    if (!transactionToDelete) return;
+
     try {
-      await deleteTransaction(transactionId);
+      setIsDeleting(true);
+      setDeleteError(null);
+      await deleteTransaction(parseInt(transactionToDelete.id));
+      setTransactionToDelete(null);
       await loadData();
     } catch (err) {
       console.error("Error deleting transaction:", err);
-      alert("Failed to delete transaction. Please try again.");
+      setDeleteError("The entry could not be removed. Please try again.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -667,7 +692,7 @@ export default function TransactionsPage() {
             type="button"
             className={`${styles.menuItem} ${styles.menuDanger}`}
             onClick={() => {
-              handleDelete(parseInt(contextMenu.transaction.id));
+              setTransactionToDelete(contextMenu.transaction);
               setContextMenu(null);
             }}
           >
@@ -676,6 +701,89 @@ export default function TransactionsPage() {
           </button>
         </div>
       )}
+
+      <dialog
+        ref={deleteDialogRef}
+        className={styles.confirmDialog}
+        aria-labelledby="delete-entry-title"
+        aria-describedby="delete-entry-description"
+        onCancel={(event) => {
+          event.preventDefault();
+          closeDeleteDialog();
+        }}
+        onClose={() => {
+          setTransactionToDelete(null);
+          setDeleteError(null);
+        }}
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) closeDeleteDialog();
+        }}
+      >
+        <div className={styles.confirmBody}>
+          <div className={styles.confirmIcon} aria-hidden>
+            <CircleAlert size={22} strokeWidth={1.7} />
+          </div>
+          <p className={styles.confirmKicker}>Permanent action</p>
+          <h3 id="delete-entry-title" className={styles.confirmTitle}>
+            Remove this entry?
+          </h3>
+          <p id="delete-entry-description" className={styles.confirmCopy}>
+            This will permanently remove the entry and recalculate your running
+            balance.
+          </p>
+
+          {transactionToDelete ? (
+            <div className={styles.confirmEntry}>
+              <div>
+                <strong className={styles.confirmParty}>
+                  {transactionToDelete.recipient}
+                </strong>
+                <span className={styles.confirmMeta}>
+                  {formatTransactionDate(transactionToDelete.date)} ·{" "}
+                  {transactionToDelete.category}
+                </span>
+              </div>
+              <span
+                className={`${styles.confirmAmount} ${
+                  transactionToDelete.type === "expense"
+                    ? styles.confirmDebit
+                    : styles.confirmCredit
+                }`}
+              >
+                {transactionToDelete.type === "expense" ? "−" : "+"}
+                {formatCurrency(transactionToDelete.amount)}
+              </span>
+            </div>
+          ) : null}
+
+          {deleteError ? (
+            <p className={styles.confirmError} role="alert">
+              {deleteError}
+            </p>
+          ) : null}
+
+          <div className={styles.confirmActions}>
+            <button
+              ref={cancelDeleteRef}
+              type="button"
+              className={styles.confirmCancel}
+              onClick={closeDeleteDialog}
+              disabled={isDeleting}
+            >
+              Keep entry
+            </button>
+            <button
+              type="button"
+              className={styles.confirmDelete}
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              <Trash2 size={15} aria-hidden />
+              {isDeleting ? "Removing…" : "Delete entry"}
+            </button>
+          </div>
+        </div>
+      </dialog>
 
       {isModalOpen && (
         <div
