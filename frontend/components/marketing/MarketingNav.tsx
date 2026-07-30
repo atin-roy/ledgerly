@@ -10,7 +10,10 @@ export default function MarketingNav() {
         <WordmarkStamp className={styles.wordmark} />
       </Link>
       <div className={styles.navLinks}>
-        <Link href="/about" className={styles.navLink}>
+        <Link
+          href="/about"
+          className={`${styles.navLink} ${styles.navOptional}`}
+        >
           About
         </Link>
         <Link href="/login" className={styles.navLink}>

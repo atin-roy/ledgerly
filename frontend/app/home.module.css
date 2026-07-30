@@ -1,6 +1,7 @@
 .landing {
   min-height: 100vh;
   width: 100%;
+  overflow-x: clip;
   color: var(--cream-text);
   background:
     radial-gradient(120% 80% at 50% -10%, #1b1811 0%, var(--ink) 55%, #100e0a 100%);
@@ -8,9 +9,16 @@
 }
 .inner {
   position: relative;
+  width: 100%;
+  min-width: 0;
   max-width: 1120px;
   margin: 0 auto;
   padding: 0 24px;
+}
+@media (max-width: 480px) {
+  .inner {
+    padding: 0 16px;
+  }
 }
 /* the ledger page's red margin rule, ghosted down the left edge */
 @media (min-width: 1240px) {
@@ -34,6 +42,9 @@
   gap: 40px;
   align-items: center;
   padding: 56px 0 72px;
+}
+.hero > * {
+  min-width: 0;
 }
 @media (min-width: 900px) {
   .hero {
@@ -135,6 +146,7 @@
 /* --- hero ledger sheet (the thesis) --- */
 .sheetWrap {
   position: relative;
+  min-width: 0;
   padding-bottom: 10px;
 }
 .sheet {
@@ -255,6 +267,71 @@
   transform: rotate(-9deg);
   pointer-events: none;
 }
+@media (max-width: 600px) {
+  .hero {
+    gap: 32px;
+    padding: 40px 0 56px;
+  }
+  .sheet {
+    overflow: hidden;
+    transform: none;
+  }
+  .sheet::before {
+    left: 14px;
+  }
+  .sheetHd {
+    gap: 8px;
+    padding: 12px 10px 10px 20px;
+  }
+  .sheetTitle {
+    font-size: 13px;
+  }
+  .sheetMeta {
+    font-size: 8px;
+    letter-spacing: 0.08em;
+  }
+  .ledger {
+    table-layout: fixed;
+    font-size: 9px;
+  }
+  .lth {
+    overflow: hidden;
+    padding: 7px 4px 6px;
+    font-size: 7px;
+    letter-spacing: 0.06em;
+    text-overflow: ellipsis;
+  }
+  .ltd {
+    overflow: hidden;
+    padding: 7px 4px;
+    text-overflow: ellipsis;
+  }
+  .lth:first-child,
+  .ltd:first-child {
+    padding-left: 20px;
+  }
+  .lth:nth-child(1),
+  .ltd:nth-child(1) {
+    width: 20%;
+  }
+  .lth:nth-child(2),
+  .ltd:nth-child(2) {
+    width: 26%;
+  }
+  .lth:nth-child(n + 3),
+  .ltd:nth-child(n + 3) {
+    width: 18%;
+  }
+  .footLabel {
+    font-size: 7px;
+    letter-spacing: 0.08em;
+  }
+  .seal {
+    right: 4px;
+    width: 80px;
+    height: 80px;
+  }
+}
 
 /* --- section chrome --- */
 .section {
@@ -332,6 +409,7 @@
 }
 .vignette {
   display: flex;
+  min-width: 0;
   flex-direction: column;
   border: 1px solid var(--ink-line);
   background: var(--ink-2);
@@ -467,6 +545,7 @@
 }
 .billRight {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: 12px;
 }

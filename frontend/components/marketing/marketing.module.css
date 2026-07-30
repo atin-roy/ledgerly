@@ -26,6 +26,7 @@
   letter-spacing: 0.04em;
   padding: 9px 14px;
   text-decoration: none;
+  white-space: nowrap;
   transition: color 0.15s ease;
 }
 .navLink:hover {
@@ -50,6 +51,33 @@
   color: var(--ink);
   background: var(--brass-lt);
   border-color: var(--brass-lt);
+}
+@media (max-width: 480px) {
+  .nav {
+    gap: 8px;
+    padding: 18px 0 12px;
+  }
+  .wordmark {
+    width: 96px;
+    flex: 0 0 auto;
+  }
+  .navLinks {
+    gap: 4px;
+  }
+  .navLink {
+    font-size: 12px;
+    padding: 8px 6px;
+  }
+  .navCta {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    padding: 9px 6px;
+  }
+}
+@media (max-width: 420px) {
+  .navOptional {
+    display: none;
+  }
 }
 
 /* --- footer --- */
@@ -151,6 +179,11 @@
   max-width: 1120px;
   margin: 0 auto;
   padding: 0 24px;
+}
+@media (max-width: 480px) {
+  .proseInner {
+    padding: 0 16px;
+  }
 }
 .proseMain {
   max-width: 68ch;
