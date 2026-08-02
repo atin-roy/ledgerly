@@ -151,6 +151,7 @@
 }
 .sheet {
   position: relative;
+  overflow: hidden;
   background: var(--paper);
   color: var(--paper-ink);
   border: 1px solid #10100c;
@@ -189,14 +190,17 @@
 }
 .ledger {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 12px;
 }
 .lth {
+  overflow: hidden;
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  text-overflow: ellipsis;
   color: var(--paper-muted);
   text-align: right;
   padding: 9px 22px 7px;
@@ -210,9 +214,11 @@
   padding-left: 52px;
 }
 .ltd {
+  overflow: hidden;
   padding: 9px 22px;
   border-bottom: 1px solid var(--paper-rule);
   text-align: right;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 .ltdLeft {
@@ -220,6 +226,18 @@
 }
 .ltd:first-child {
   padding-left: 52px;
+}
+.lth:nth-child(1),
+.ltd:nth-child(1) {
+  width: 20%;
+}
+.lth:nth-child(2),
+.ltd:nth-child(2) {
+  width: 26%;
+}
+.lth:nth-child(n + 3),
+.ltd:nth-child(n + 3) {
+  width: 18%;
 }
 .lDate {
   font-family: var(--font-mono), monospace;
@@ -273,7 +291,6 @@
     padding: 40px 0 56px;
   }
   .sheet {
-    overflow: hidden;
     transform: none;
   }
   .sheet::before {
@@ -291,36 +308,19 @@
     letter-spacing: 0.08em;
   }
   .ledger {
-    table-layout: fixed;
     font-size: 9px;
   }
   .lth {
-    overflow: hidden;
     padding: 7px 4px 6px;
     font-size: 7px;
     letter-spacing: 0.06em;
-    text-overflow: ellipsis;
   }
   .ltd {
-    overflow: hidden;
     padding: 7px 4px;
-    text-overflow: ellipsis;
   }
   .lth:first-child,
   .ltd:first-child {
     padding-left: 20px;
-  }
-  .lth:nth-child(1),
-  .ltd:nth-child(1) {
-    width: 20%;
-  }
-  .lth:nth-child(2),
-  .ltd:nth-child(2) {
-    width: 26%;
-  }
-  .lth:nth-child(n + 3),
-  .ltd:nth-child(n + 3) {
-    width: 18%;
   }
   .footLabel {
     font-size: 7px;
