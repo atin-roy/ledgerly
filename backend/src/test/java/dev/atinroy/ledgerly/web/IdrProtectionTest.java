@@ -104,6 +104,14 @@ class IdrProtectionTest {
     }
 
     @Test
+    @DisplayName("GET another user's pots returns 403")
+    void shouldForbidAccessToAnotherUsersPots() throws Exception {
+        mockMvc.perform(get("/api/users/{userId}/pots", user2.getId())
+                .header("Authorization", "Bearer " + tokenForUser1))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @DisplayName("Request with no token returns 401")
     void shouldReturn401WhenNoToken() throws Exception {
         mockMvc.perform(get("/api/users/{userId}/transactions", user1.getId()))

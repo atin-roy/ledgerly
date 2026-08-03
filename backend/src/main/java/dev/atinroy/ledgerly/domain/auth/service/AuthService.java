@@ -36,8 +36,9 @@ public class AuthService {
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         ValidationResult result = ValidationResult.withErrors();
+        String normalizedEmail = request.email().trim().toLowerCase();
 
-        if (userRepository.existsByEmail(request.email())) {
+        if (userRepository.existsByEmail(normalizedEmail)) {
             result.addFieldError("email", ErrorCode.ALREADY_EXISTS, "Email already exists");
         }
 
@@ -50,7 +51,7 @@ public class AuthService {
         }
 
         User user = new User();
-        user.setEmail(request.email());
+        user.setEmail(normalizedEmail);
         user.setUsername(request.username());
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setRole(UserRole.USER);
@@ -67,15 +68,16 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
+        String normalizedEmail = request.email().trim().toLowerCase();
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.email(), request.password())
+                    new UsernamePasswordAuthenticationToken(normalizedEmail, request.password())
             );
         } catch (BadCredentialsException e) {
             throw new InvalidCredentialsException("Invalid email or password");
         }
 
-        User user = userRepository.findByEmail(request.email())
+        User user = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
 
         return buildAuthResponse(user);

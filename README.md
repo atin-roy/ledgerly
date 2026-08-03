@@ -5,10 +5,9 @@ A full-stack personal finance management application built with modern web techn
 ## Tech Stack
 
 ### Frontend
-- **Next.js 16** - React framework with App Router for server-side rendering and optimal performance
+- **Next.js 16** - React framework with the App Router, used here as a client-rendered app (see [Architecture Decisions](#architecture-decisions))
 - **TypeScript** - Type-safe development with full end-to-end type checking
-- **TailwindCSS 4** - Utility-first CSS framework for rapid UI development
-- **shadcn/ui** - High-quality, accessible component library built on Radix UI
+- **CSS Modules** - Hand-written, scoped component styles (no utility framework or component library)
 
 ### Backend
 - **Spring Boot 4.0** - Enterprise-grade Java framework with dependency injection and auto-configuration
@@ -30,7 +29,7 @@ A full-stack personal finance management application built with modern web techn
 - **Transaction Tracking** - Record income and expenses with categories and detailed metadata
 - **Budget Management** - Set spending limits and track progress against targets
 - **Pots (Savings Goals)** - Create and monitor savings goals with visual progress indicators
-- **Recurring Bills** - Track and manage recurring expenses with payment status
+- **Bills** - Track one-off and regular bills with a due date and payment status; marking a bill paid records a matching ledger transaction
 - **Category Organization** - Organize transactions with customizable categories
 
 ### Technical Highlights
@@ -38,9 +37,8 @@ A full-stack personal finance management application built with modern web techn
 - **RESTful API** - Well-structured endpoints following REST principles
 - **Type Safety** - TypeScript on frontend, Java with validation annotations on backend
 - **Responsive Design** - Mobile-first UI that works seamlessly across devices
-- **Server Components** - Leveraging Next.js RSC for improved performance and SEO
-- **Data Validation** - Request validation with Bean Validation API on backend
-- **Security** - CORS configuration, CSRF protection, secure password storage
+- **Data Validation** - Request validation with Bean Validation API on backend, mirrored client-side
+- **Security** - CORS configuration, BCrypt password storage, rate-limited auth endpoints
 
 ## Getting Started
 
@@ -53,7 +51,7 @@ A full-stack personal finance management application built with modern web techn
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/ledgerly.git
+git clone https://github.com/atin-roy/ledgerly.git
 cd ledgerly
 ```
 
@@ -136,8 +134,7 @@ ledgerly/
 - **Exception Handling**: Centralized error handling with meaningful HTTP status codes
 
 ### Frontend Design
-- **Server Components**: Default to RSC for better performance and SEO
-- **Client Components**: Used only when interactivity or browser APIs are needed
+- **Client-rendered dashboard**: every authenticated route is a client component that fetches via the browser API client; no Server Component performs data fetching today, which is a deliberate trade-off for a simple SPA-shaped auth model rather than a Server Component claim
 - **API Client**: Centralized fetch wrapper with error handling and token refresh
 - **Component Organization**: Feature-based folder structure for scalability
 
@@ -162,9 +159,7 @@ Bruno API collection is available in `ledgerly-api/` with pre-configured request
 
 ## Deployment
 
-The application is configured for deployment on:
-- **Backend**: Railway (see `backend/railway.toml`)
-- **Frontend**: Vercel (see `frontend/vercel.json`)
+Live at [ledgerly.atinroy.com](https://ledgerly.atinroy.com). Deployed as Docker images (GitHub Actions → GHCR) to a VPS behind Caddy, with Postgres in a sibling container — see [DEPLOYMENT.md](./DEPLOYMENT.md) for the full pipeline and layout.
 
 ### Build for Production
 
