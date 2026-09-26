@@ -3,6 +3,9 @@ package dev.atinroy.ledgerly.domain.bill.service;
 import dev.atinroy.ledgerly.domain.bill.exception.BillNotFoundException;
 import dev.atinroy.ledgerly.domain.user.exception.UserNotFoundException;
 import dev.atinroy.ledgerly.domain.bill.dto.BillCreateRequest;
+import dev.atinroy.ledgerly.domain.bill.dto.BillPayRequest;
+import dev.atinroy.ledgerly.domain.transaction.dto.TransactionCreateRequest;
+import dev.atinroy.ledgerly.domain.transaction.service.TransactionService;
 import dev.atinroy.ledgerly.domain.bill.dto.BillUpdateRequest;
 import dev.atinroy.ledgerly.domain.bill.dto.BillResponse;
 import dev.atinroy.ledgerly.domain.bill.entity.Bill;
@@ -25,6 +28,7 @@ public class BillService {
     private final BillRepository billRepository;
     private final UserRepository userRepository;
     private final BillMapper billMapper;
+    private final TransactionService transactionService;
 
     @Transactional
     public BillResponse createBill(Long userId, BillCreateRequest request) {
@@ -88,6 +92,28 @@ public class BillService {
 
         Bill saved = billRepository.save(bill);
         return billMapper.toResponse(saved);
+    }
+
+    /**
+     * Records the expense and marks the bill PAID in one transaction, so a
+     * failure in either step rolls back both.
+     */
+    @Transactional
+    public BillResponse payBill(Long userId, Long billId, BillPayRequest request) {
+        Bill bill = billRepository.findForUpdate(userId, billId)
+                .orElseThrow(() -> new BillNotFoundException(billId));
+
+        if (bill.getStatus() == BillStatus.PAID || bill.getStatus() == BillStatus.CANCELLED) {
+            ValidationResult result = ValidationResult.withErrors();
+            result.addFieldError("status", ErrorCode.INVALID_VALUE, "Only pending or overdue bills can be paid");
+            throw new ValidationException(result);
+        }
+
+        transactionService.createTransaction(userId, new TransactionCreateRequest(
+                bill.getAmount().negate(), request.date(), request.categoryId(), bill.getName(), "Bill payment"));
+
+        bill.setStatus(BillStatus.PAID);
+        return billMapper.toResponse(billRepository.save(bill));
     }
 
     @Transactional

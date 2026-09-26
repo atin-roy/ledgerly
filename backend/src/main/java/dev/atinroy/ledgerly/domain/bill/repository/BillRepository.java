@@ -2,7 +2,9 @@ package dev.atinroy.ledgerly.domain.bill.repository;
 
 import dev.atinroy.ledgerly.domain.bill.entity.Bill;
 import dev.atinroy.ledgerly.domain.bill.entity.BillStatus;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -24,6 +26,11 @@ public interface BillRepository extends JpaRepository<Bill, Long> {
     // Get a specific bill with security check - for the "Pay" or "Mark Paid"
     // actions
     Optional<Bill> findByUser_IdAndId(Long userId, Long billId);
+
+    // Row lock for paying: a second concurrent pay waits, then sees PAID
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT b FROM Bill b WHERE b.user.id = :userId AND b.id = :billId")
+    Optional<Bill> findForUpdate(@Param("userId") Long userId, @Param("billId") Long billId);
 
     // Count bills by status - for summary statistics
     long countByUser_IdAndStatus(Long userId, BillStatus status);

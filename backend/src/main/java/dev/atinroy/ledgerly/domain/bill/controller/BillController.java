@@ -1,6 +1,7 @@
 package dev.atinroy.ledgerly.domain.bill.controller;
 
 import dev.atinroy.ledgerly.domain.bill.dto.BillCreateRequest;
+import dev.atinroy.ledgerly.domain.bill.dto.BillPayRequest;
 import dev.atinroy.ledgerly.domain.bill.dto.BillUpdateRequest;
 import dev.atinroy.ledgerly.domain.bill.dto.BillResponse;
 import dev.atinroy.ledgerly.domain.bill.entity.BillStatus;
@@ -60,6 +61,17 @@ public class BillController {
             @Valid @RequestBody BillUpdateRequest request) {
         requireOwnership(authenticatedUserId, userId);
         BillResponse response = billService.updateBill(userId, billId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{billId}/pay")
+    public ResponseEntity<BillResponse> payBill(
+            @AuthenticatedUserId Long authenticatedUserId,
+            @PathVariable Long userId,
+            @PathVariable Long billId,
+            @Valid @RequestBody BillPayRequest request) {
+        requireOwnership(authenticatedUserId, userId);
+        BillResponse response = billService.payBill(userId, billId, request);
         return ResponseEntity.ok(response);
     }
 

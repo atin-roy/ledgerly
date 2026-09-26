@@ -37,8 +37,8 @@ import {
   createBill,
   updateBill,
   deleteBill,
+  payBill,
   getCategories,
-  createTransaction,
   type CategoryResponse,
 } from "@/lib/services";
 import { localToday } from "@/app/transactions/data";
@@ -275,37 +275,22 @@ export default function BillsPage() {
     if (!payModal || payModal.isSubmitting) return;
     const { bill, categoryId } = payModal;
     setPayModal({ ...payModal, isSubmitting: true, error: null });
-    // entry first: if the status update then fails, the books are still right
-    // and a retry must not double-book the expense
+    // one request: the server records the expense and marks the bill paid
+    // in a single transaction, so it is all-or-nothing and safe to retry
     try {
-      await createTransaction({
-        amount: -bill.amount,
-        date: localToday() + "T00:00:00",
+      await payBill(parseInt(bill.id, 10), {
         categoryId: parseInt(categoryId, 10),
-        partyName: bill.title,
-        description: "Bill payment",
+        date: localToday() + "T00:00:00",
       });
       localStorage.setItem("ledgerly_last_bill_category", categoryId);
-    } catch (err) {
-      console.error("Error recording bill payment:", err);
-      setPayModal({
-        ...payModal,
-        isSubmitting: false,
-        error: "Could not record the entry. Nothing was changed - try again.",
-      });
-      return;
-    }
-    try {
-      await updateBill(parseInt(bill.id, 10), { status: "PAID" });
       setPayModal(null);
       await loadBills();
     } catch (err) {
-      console.error("Error updating bill status:", err);
+      console.error("Error paying bill:", err);
       setPayModal({
         ...payModal,
         isSubmitting: false,
-        error:
-          "The entry was recorded, but the bill status could not be updated - set it to Paid manually.",
+        error: "Could not record the payment. Nothing was changed - try again.",
       });
     }
   };

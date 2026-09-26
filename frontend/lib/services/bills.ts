@@ -67,6 +67,21 @@ export async function updateBill(
   });
 }
 
+export async function payBill(
+  billId: number,
+  data: { categoryId: number; date: string }
+): Promise<BillResponse> {
+  const userId = getUserIdFromToken();
+  if (!userId) {
+    throw new Error("User not authenticated - no userId found");
+  }
+
+  return apiRequest<BillResponse>(`/users/${userId}/bills/${billId}/pay`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
 export async function deleteBill(billId: number): Promise<void> {
   const userId = getUserIdFromToken();
   if (!userId) {
