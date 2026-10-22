@@ -11,9 +11,10 @@ import {
   PiggyBank,
   Repeat,
   Settings,
+  ShieldCheck,
   Tag,
 } from "lucide-react";
-import { clearAuthTokens } from "@/lib/auth";
+import { clearAuthTokens, getStoredUser } from "@/lib/auth";
 import WordmarkStamp from "@/components/brand/WordmarkStamp";
 import styles from "./Sidebar.module.css";
 
@@ -33,9 +34,17 @@ export const navItems: NavItem[] = [
   { label: "Settings", href: "/settings", Icon: Settings },
 ];
 
+const adminNavItem: NavItem = { label: "Admin", href: "/admin", Icon: ShieldCheck };
+
+// display only; the backend enforces the ADMIN role
+export function visibleNavItems(): NavItem[] {
+  return getStoredUser()?.role === "ADMIN" ? [...navItems, adminNavItem] : navItems;
+}
+
 export default function Sidebar() {
   const pathname = usePathname() ?? "/";
   const router = useRouter();
+  const items = visibleNavItems();
 
   const handleSignOut = () => {
     clearAuthTokens();
@@ -50,7 +59,7 @@ export default function Sidebar() {
             <WordmarkStamp className={styles.wordmark} />
           </div>
           <nav className={styles.nav}>
-            {navItems.map(({ label, href, Icon }) => {
+            {items.map(({ label, href, Icon }) => {
               const isActive =
                 pathname === href || pathname.startsWith(href + "/");
               return (

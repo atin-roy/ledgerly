@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Sidebar, { navItems } from "@/components/Sidebar";
+import Sidebar, { visibleNavItems } from "@/components/Sidebar";
 import { usePathname, useRouter } from "next/navigation";
 import {
   type MouseEvent,
@@ -23,6 +23,7 @@ function MobileNav() {
   const longPressTriggered = useRef(false);
   const [showSignOutPrompt, setShowSignOutPrompt] = useState(false);
 
+  const navItems = visibleNavItems();
   const overviewItem = navItems.find((item) => item.label === "Overview");
   const otherItems = navItems.filter((item) => item.label !== "Overview");
   const splitPoint = Math.ceil(otherItems.length / 2);

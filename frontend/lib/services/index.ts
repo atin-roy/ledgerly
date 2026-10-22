@@ -5,3 +5,4 @@ export * from "./bills";
 export * from "./categories";
 export * from "./parties";
 export * from "./users";
+export * from "./admin";
