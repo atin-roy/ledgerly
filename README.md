@@ -15,7 +15,7 @@ A full-stack personal finance management application built with modern web techn
 - **Spring Data JPA** - Database abstraction layer with Hibernate ORM
 - **PostgreSQL** - ACID-compliant relational database for financial data integrity
 - **MapStruct** - Compile-time DTO mapping for clean separation of concerns
-- **Gradle** - Build automation and dependency management
+- **Maven** - Build automation and dependency management
 
 ### DevOps & Tools
 - **Docker Compose** - Containerized development environment
@@ -63,7 +63,7 @@ docker-compose up -d
 3. **Run the backend**
 ```bash
 cd backend
-./gradlew bootRun
+./mvnw spring-boot:run
 ```
 The API will be available at `http://localhost:8080`
 
@@ -114,7 +114,7 @@ ledgerly/
 │   │   │   │       └── config/        # Spring configuration
 │   │   │   └── resources/
 │   │   └── test/                      # Unit & integration tests
-│   └── build.gradle.kts
+│   └── pom.xml
 ├── frontend/             # Next.js application
 │   ├── app/             # App Router pages
 │   ├── components/      # React components
@@ -150,8 +150,7 @@ ledgerly/
 ### Backend Tests
 ```bash
 cd backend
-./gradlew test
-./gradlew jacocoTestReport  # Generate coverage report
+./mvnw test  # Coverage report: target/site/jacoco/index.html
 ```
 
 ### API Testing
@@ -165,8 +164,8 @@ Live at [ledgerly.atinroy.com](https://ledgerly.atinroy.com). Deployed as Docker
 
 **Backend**:
 ```bash
-./gradlew bootJar
-# Output: backend/build/libs/app.jar
+./mvnw package -DskipTests
+# Output: backend/target/app.jar
 ```
 
 **Frontend**:

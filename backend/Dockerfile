@@ -3,22 +3,22 @@ FROM eclipse-temurin:21-jdk-alpine AS builder
 
 WORKDIR /build
 
-# Gradle files first — this layer (and the dependency download below) is
-# cached until build.gradle.kts or the wrapper changes
-COPY gradlew build.gradle.kts settings.gradle.kts ./
-COPY gradle ./gradle
-RUN ./gradlew dependencies --no-daemon > /dev/null
+# Maven files first — this layer (and the dependency download below) is
+# cached until pom.xml or the wrapper changes
+COPY mvnw pom.xml ./
+COPY .mvn ./.mvn
+RUN chmod +x mvnw && ./mvnw -B -q dependency:go-offline
 
 # Source changes only invalidate from here down
 COPY src ./src
-RUN ./gradlew bootJar -x test --no-daemon
+RUN ./mvnw -B -q package -DskipTests
 
 # Stage 2: Runtime
 FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-COPY --from=builder /build/build/libs/app.jar .
+COPY --from=builder /build/target/app.jar .
 
 RUN addgroup -g 1000 ledgerly && adduser -D -u 1000 -G ledgerly ledgerly
 USER ledgerly

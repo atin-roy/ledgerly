@@ -7,7 +7,7 @@ Every push to `main` deploys automatically via GitHub Actions. This document des
 ```
 push to main
    └─▶ GitHub Actions
-         ├── verify   : backend tests (Gradle/H2), frontend lint + build
+         ├── verify   : backend tests (Maven/H2), frontend lint + build
          ├── build    : docker build → push to ghcr.io/atin-roy/ledgerly-{api,web}
          └── deploy   : SSH to VPS → git pull → compose pull → compose up -d
 

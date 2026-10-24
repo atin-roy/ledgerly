@@ -59,13 +59,8 @@ buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 
-# Gradle
-.gradle
-build/
-gradle-app.setting
-!gradle-wrapper.jar
-!gradle-wrapper.properties
-.gradletasknamecache
+# Maven
+target/
 
 # Spring Boot
 *.original
